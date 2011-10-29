@@ -1,0 +1,3 @@
+
+Classical combination: ./configure; make; make install should work on most systems.
+
