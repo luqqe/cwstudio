@@ -1,4 +1,4 @@
-/*$T src/cwstudio.c GC 1.140 10/29/11 15:55:10 */
+/*$T src/cwstudio.c GC 1.140 10/30/11 17:05:29 */
 
 /*$I0
 
@@ -381,17 +381,17 @@ int main(int argc, char **argv)
 		{
 		case 0:
 			if((text = cw_rand_groups(param.number, param.shape, charset, param.seed)) == NULL) return(CWALLOC);
-			fprintf(stderr, "* Charset: %s\n\n", charset);
+			if(output) fprintf(stderr, "* Charset: %s\n\n", charset);
 			break;
 
 		case 1:
 			if((text = cw_rand_words(param.number, param.shape, wordset, param.seed)) == NULL) return(CWALLOC);
-			fprintf(stderr, "* %i words from %i most common\n\n", param.number, wordset);
+			if(output) fprintf(stderr, "* %i words from %i most common\n\n", param.number, wordset);
 			break;
 
 		case 2:
 			if((text = cw_rand_calls(param.number, param.shape, param.seed)) == NULL) return(CWALLOC);
-			fprintf(stderr, "* %i calls\n\n", param.number);
+			if(output) fprintf(stderr, "* %i calls\n\n", param.number);
 			break;
 		}
 	}
@@ -434,9 +434,10 @@ int main(int argc, char **argv)
 			if(param.agc) fprintf(stderr, "* %i%% AGC ", param.agc);
 			fprintf(stderr, "\n");
 		}
+
+		fprintf(stderr, "----------------------------------------------------\n\n");
 	}
 
-	fprintf(stderr, "----------------------------------------------------\n\n");
 	fprintf(stderr, "\n%s\n\n", text);
 
 	/*
