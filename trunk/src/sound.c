@@ -163,7 +163,7 @@ void cw_append(cw_sample *sample1, cw_sample *sample2, long int length, int wind
 	s1 = (floating *) sample1->data;
 	s2 = (floating *) sample2->data;
 	if((length == 0) || (length > sample2->length)) length = sample2->length;
-	if((amplitude - 1) > 0.001)
+	if((1 - amplitude) > 0.001)
 		for(i = 0; i < length; i++)
 			s1[sample1->length + i] = s2[i] * amplitude;
 	else
@@ -409,7 +409,7 @@ int cw_signal(cw_sample *sound, cw_param param, char *text)
 		/* Amplitude of next dash/dot (in dB scale) if signal has QSB */
 		if(param.qsb) {
 			amplitude = *(qsbs + i) * (floating) param.qsb * 0.1;
-			amplitude = pow(10, -amplitude);
+			amplitude = pow(10, -amplitude); printf("%f\n",amplitude);
 		}
 		else
 			amplitude = 1;
