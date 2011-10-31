@@ -409,7 +409,7 @@ int cw_signal(cw_sample *sound, cw_param param, char *text)
 		/* Amplitude of next dash/dot (in dB scale) if signal has QSB */
 		if(param.qsb) {
 			amplitude = *(qsbs + i) * (floating) param.qsb * 0.1;
-			amplitude = pow(10, -amplitude); printf("%f\n",amplitude);
+			amplitude = pow(10, -amplitude);
 		}
 		else
 			amplitude = 1;
