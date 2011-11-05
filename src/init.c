@@ -1,4 +1,4 @@
-/*$T src/init.c GC 1.140 10/29/11 14:09:41 */
+/*$T src/init.c GC 1.140 11/05/11 20:22:29 */
 
 /*$I0
 
@@ -99,4 +99,6 @@ void cw_initparam(cw_param *param)
 	param->even = 0;
 	param->odd = 0;
 	param->shape = 0;
+	param->dashlen = 300;
+	param->spacelen = 100;
 }
