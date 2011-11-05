@@ -1,4 +1,4 @@
-/*$T src/noise.c GC 1.140 10/28/11 20:49:48 */
+/*$T src/noise.c GC 1.140 11/05/11 20:37:46 */
 
 /*$I0
 
@@ -21,6 +21,23 @@
 
  */
 #include "cwgen.h"
+
+/*$2- Declarations of functions in fft.c -----------------------------------------------------------------------------*/
+
+extern void cw_fftstep
+			(
+				floating	*tr,
+				floating	*ti,
+				floating	*fr,
+				floating	*fi,
+				floating	*tmpr,
+				floating	*tmpi,
+				long int	n,
+				long int	off,
+				long int	d
+			);
+extern void cw_fft(floating *tr, floating *ti, floating *fr, floating *fi, long int n);
+extern void cw_ifft(floating *tr, floating *ti, floating *fr, floating *fi, long int n);
 
 /*
  =======================================================================================================================
