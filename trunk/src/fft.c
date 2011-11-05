@@ -58,8 +58,8 @@ void cw_fftstep
 					k2 = d * nh + k1;
 					k3 = 2 * k * d + off;
 					k4 = k3 + d;
-					c = cos(6.283185 * (floating) k / (floating) n);
-					s = sin(6.283185 * (floating) k / (floating) n);
+					c = cw_cos(6.283185 * (floating) k / (floating) n);
+					s = cw_sin(6.283185 * (floating) k / (floating) n);
 					t0 = c * tmpr[k4] + s * tmpi[k4];
 					t1 = c * tmpi[k4] - s * tmpr[k4];
 					fr[k2] = tmpr[k3] - t0;
