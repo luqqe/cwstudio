@@ -145,6 +145,7 @@ extern void				cw_append
 						);
 extern void				cw_mix(cw_sample *sample1, cw_sample *sample2, floating amplitude);
 extern int				cw_add_noise(cw_sample *sample, cw_param param);
+extern int		cw_noisegen(cw_sample *anoise, long int duration, int low, int high);
 
 /* Memory allocation functions */
 extern void * (*cw_malloc) (size_t);
@@ -153,18 +154,3 @@ extern void		cw_setalloc(void * (*newmalloc) (size_t), void (*newfree) (void *))
 
 /* Internal functions */
 extern floating *cw_rms(cw_sample *sample, int window);
-extern int		cw_noisegen(cw_sample *anoise, long int duration, int low, int high);
-extern void		cw_fftstep
-				(
-					floating	*tr,
-					floating	*ti,
-					floating	*fr,
-					floating	*fi,
-					floating	*tmpr,
-					floating	*tmpi,
-					long int	n,
-					long int	off,
-					long int	d
-				);
-extern void		cw_fft(floating *tr, floating *ti, floating *fr, floating *fi, long int n);
-extern void		cw_ifft(floating *tr, floating *ti, floating *fr, floating *fi, long int n);
