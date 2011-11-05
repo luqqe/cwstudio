@@ -45,13 +45,13 @@
 #endif
 
 /* Math definitions */
-#define sin sinf
-#define pow powf
-#define cos cosf
-#define sqrt sqrtf
-#define pow powf
-#define log logf
-#define fabs fabsf
+#define cw_sin sinf
+#define cw_pow powf
+#define cw_cos cosf
+#define cw_sqrt sqrtf
+#define cw_pow powf
+#define cw_log logf
+#define cw_fabs fabsf
 typedef float	floating;
 
 /* Error codes */

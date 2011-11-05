@@ -51,7 +51,7 @@ int cw_tone(cw_sample *atone, cw_param param, long int duration, int freq)
 	 * along time
 	 */
 	if(param.sweepness == 0) {
-		for(i = 0; i < length; i++) data[i] = sin(6.283185 * i / length);
+		for(i = 0; i < length; i++) data[i] = cw_sin(6.283185 * i / length);
 		for(i = length; i < duration; i++) data[i] = data[i % length];
 	}
 
@@ -62,7 +62,7 @@ int cw_tone(cw_sample *atone, cw_param param, long int duration, int freq)
 		q = (p - 1) / swp;
 		for(i = 0; i < duration; i++) {
 			x = (6.283185 * (floating) i / (floating) length);
-			data[i] = sin(x - q * exp(-swp * x));
+			data[i] = cw_sin(x - q * exp(-swp * x));
 		}
 	}
 
@@ -100,7 +100,7 @@ int cw_tone(cw_sample *atone, cw_param param, long int duration, int freq)
 				(
 					(floating) param.hum *
 					0.01 *
-					sin(6.283185307 / humlength * i) -
+					cw_sin(6.283185307 / humlength * i) -
 					(floating) param.hum *
 					0.01 +
 					2
@@ -111,13 +111,13 @@ int cw_tone(cw_sample *atone, cw_param param, long int duration, int freq)
 
 	/* Apply raising sine attack profile */
 	for(i = 0; i <= param.window; i++)
-		data[i] *= sin((floating) i / (floating) param.window * 1.570796 * atone->samplerate / 44100);
+		data[i] *= cw_sin((floating) i / (floating) param.window * 1.570796 * atone->samplerate / 44100);
 
 	/* If click, apply decay profile and attenuate sustain part of signal */
 	if(param.click) {
-		cl = 1 / pow(10, (floating) param.click / 10.0);
+		cl = 1 / cw_pow(10, (floating) param.click / 10.0);
 		for(i = param.window; i < (3 * param.window); i++) {
-			x = cos((floating) (i - param.window) / (floating) param.window * 1.570796 * atone->samplerate / 44100);
+			x = cw_cos((floating) (i - param.window) / (floating) param.window * 1.570796 * atone->samplerate / 44100);
 			data[i] *= 0.5 * (x + 1) * (1 - cl) + cl;
 		}
 
@@ -170,7 +170,7 @@ void cw_append(cw_sample *sample1, cw_sample *sample2, long int length, int wind
 		for(i = 0; i < length; i++) s1[sample1->length + i] = s2[i];
 	sample1->length += length;
 	if(window)
-		for(i = 0; i < window; i++) s1[sample1->length - i - 1] *= sin((floating) i / (floating) window * 1.570796);
+		for(i = 0; i < window; i++) s1[sample1->length - i - 1] *= cw_sin((floating) i / (floating) window * 1.570796);
 }
 
 /*
@@ -267,7 +267,7 @@ floating *cw_rms(cw_sample *sample, int window)
 	min = 10;
 	for(i = 0; i < window; i++) {
 		rms += (s[i] * s[i]) / window;
-		*(result + i) = rms > 0 ? sqrt(rms) : 0;
+		*(result + i) = rms > 0 ? cw_sqrt(rms) : 0;
 		if(*(result + i) > max) max = *(result + i);
 		if(*(result + i) < min) min = *(result + i);
 	}
@@ -275,7 +275,7 @@ floating *cw_rms(cw_sample *sample, int window)
 	for(i = window; i < sample->length; i++) {
 		rms += (s[i] * s[i]) / window;
 		rms -= (s[i - window] * s[i - window]) / window;
-		*(result + i) = rms > 0 ? sqrt(rms) : 0;
+		*(result + i) = rms > 0 ? cw_sqrt(rms) : 0;
 		if(*(result + i) > max) max = *(result + i);
 		if(*(result + i) < min) min = *(result + i);
 	}
@@ -409,7 +409,7 @@ int cw_signal(cw_sample *sound, cw_param param, char *text)
 		/* Amplitude of next dash/dot (in dB scale) if signal has QSB */
 		if(param.qsb) {
 			amplitude = *(qsbs + i) * (floating) param.qsb * 0.1;
-			amplitude = pow(10, -amplitude);
+			amplitude = cw_pow(10, -amplitude);
 		}
 		else
 			amplitude = 1;
