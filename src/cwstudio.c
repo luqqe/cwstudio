@@ -239,8 +239,18 @@ int main(int argc, char **argv)
 
 		case 'B':
 			samplerate = atoi(optarg);
-			if((samplerate != 8000) && (samplerate != 11025) && (samplerate != 22050) && (samplerate != 44100))
-				samplerate = 44100;
+			if
+			(
+				(samplerate != 8000)
+			&&	(samplerate != 11025)
+			&&	(samplerate != 22050)
+			&&	(samplerate != 44100)
+			&&	(samplerate != 16000)
+			&&	(samplerate != 24000)
+			&&	(samplerate != 48000)
+			&&	(samplerate != 96000)
+			&&	(samplerate != 192000)
+			) samplerate = 44100;
 			break;
 
 		case 'c':
