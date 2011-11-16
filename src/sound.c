@@ -352,8 +352,8 @@ int cw_signal(cw_sample *sound, cw_param param, char *text)
 	cw_initsample(&atone, sound);
 	cw_initsample(&asilence, sound);
 
-	/* Length of the dot in samples */
-	dotlen = (int) 194800 / param.tempo * sound->samplerate / 44100;
+	/* Length of the dot in samples, 12 wpm PARIS should be 100 ms */
+	dotlen = 6 * sound->samplerate / param.tempo;
 	length = strlen(text);
 
 	/* Generate random detunes */
