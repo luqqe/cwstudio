@@ -1,4 +1,4 @@
-/*$T src/sound.c GC 1.140 10/28/11 20:51:22 */
+/*$T src/sound.c GC 1.140 11/05/11 20:22:38 */
 
 /*$I0
 
@@ -51,7 +51,7 @@ int cw_tone(cw_sample *atone, cw_param param, long int duration, int freq)
 	 * along time
 	 */
 	if(param.sweepness == 0) {
-		for(i = 0; i < length; i++) data[i] = sin(6.283185 * i / length);
+		for(i = 0; i < length; i++) data[i] = cw_sin(6.283185 * i / length);
 		for(i = length; i < duration; i++) data[i] = data[i % length];
 	}
 
@@ -62,7 +62,7 @@ int cw_tone(cw_sample *atone, cw_param param, long int duration, int freq)
 		q = (p - 1) / swp;
 		for(i = 0; i < duration; i++) {
 			x = (6.283185 * (floating) i / (floating) length);
-			data[i] = sin(x - q * exp(-swp * x));
+			data[i] = cw_sin(x - q * exp(-swp * x));
 		}
 	}
 
@@ -95,29 +95,31 @@ int cw_tone(cw_sample *atone, cw_param param, long int duration, int freq)
 	 */
 	if(param.hum) {
 		humlength = (unsigned int) (atone->samplerate / 50);
-		for(i = 0; i < humlength; i++)
+		for(i = 0; i < humlength; i++) {
 			humtable[i] =
 				(
 					(floating) param.hum *
 					0.01 *
-					sin(6.283185307 / humlength * i) -
+					cw_sin(6.283185307 / humlength * i) -
 					(floating) param.hum *
 					0.01 +
 					2
 				) *
 				0.5;
+		}
+
 		for(i = 0; i < atone->length; i++) data[i] *= humtable[i % humlength];
 	}
 
 	/* Apply raising sine attack profile */
 	for(i = 0; i <= param.window; i++)
-		data[i] *= sin((floating) i / (floating) param.window * 1.570796 * atone->samplerate / 44100);
+		data[i] *= cw_sin((floating) i / (floating) param.window * 1.570796);
 
 	/* If click, apply decay profile and attenuate sustain part of signal */
 	if(param.click) {
-		cl = 1 / pow(10, (floating) param.click / 10.0);
+		cl = 1 / cw_pow(10, (floating) param.click / 10.0);
 		for(i = param.window; i < (3 * param.window); i++) {
-			x = cos((floating) (i - param.window) / (floating) param.window * 1.570796 * atone->samplerate / 44100);
+			x = cw_cos((floating) (i - param.window) / (floating) param.window * 1.570796);
 			data[i] *= 0.5 * (x + 1) * (1 - cl) + cl;
 		}
 
@@ -136,7 +138,7 @@ int cw_silence(cw_sample *asilence, long int duration)
 {
 	/*~~~~~~~~~~~~~~*/
 	long int	i;
-	floating		*data;
+	floating	*data;
 	/*~~~~~~~~~~~~~~*/
 
 	if((asilence->data = cw_malloc(duration * sizeof(floating))) == NULL) return(CWALLOC);
@@ -163,14 +165,15 @@ void cw_append(cw_sample *sample1, cw_sample *sample2, long int length, int wind
 	s1 = (floating *) sample1->data;
 	s2 = (floating *) sample2->data;
 	if((length == 0) || (length > sample2->length)) length = sample2->length;
-	if((amplitude - 1) > 0.001)
+	if((1 - amplitude) > 0.001)
 		for(i = 0; i < length; i++)
 			s1[sample1->length + i] = s2[i] * amplitude;
 	else
 		for(i = 0; i < length; i++) s1[sample1->length + i] = s2[i];
 	sample1->length += length;
 	if(window)
-		for(i = 0; i < window; i++) s1[sample1->length - i - 1] *= sin((floating) i / (floating) window * 1.570796);
+		for(i = 0; i < window; i++)
+			s1[sample1->length - i - 1] *= cw_sin((floating) i / (floating) window * 1.570796);
 }
 
 /*
@@ -267,7 +270,7 @@ floating *cw_rms(cw_sample *sample, int window)
 	min = 10;
 	for(i = 0; i < window; i++) {
 		rms += (s[i] * s[i]) / window;
-		*(result + i) = rms > 0 ? sqrt(rms) : 0;
+		*(result + i) = rms > 0 ? cw_sqrt(rms) : 0;
 		if(*(result + i) > max) max = *(result + i);
 		if(*(result + i) < min) min = *(result + i);
 	}
@@ -275,7 +278,7 @@ floating *cw_rms(cw_sample *sample, int window)
 	for(i = window; i < sample->length; i++) {
 		rms += (s[i] * s[i]) / window;
 		rms -= (s[i - window] * s[i - window]) / window;
-		*(result + i) = rms > 0 ? sqrt(rms) : 0;
+		*(result + i) = rms > 0 ? cw_sqrt(rms) : 0;
 		if(*(result + i) > max) max = *(result + i);
 		if(*(result + i) < min) min = *(result + i);
 	}
@@ -335,13 +338,13 @@ int cw_convert(cw_sample *input, cw_sample *output, unsigned int bits)
  */
 int cw_signal(cw_sample *sound, cw_param param, char *text)
 {
-	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	cw_sample	atone, asilence;
 	int			i, j, dotlen, length, freq = 0;
 	long int	samples;
 	floating	*detunes, *qsbs, *hands;
-	floating	x, ahand, amplitude;
-	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+	floating	x, ahand, amplitude, ldash, lspace;
+	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 	detunes = NULL;
 	qsbs = NULL;
@@ -349,8 +352,8 @@ int cw_signal(cw_sample *sound, cw_param param, char *text)
 	cw_initsample(&atone, sound);
 	cw_initsample(&asilence, sound);
 
-	/* Length of the dot in samples */
-	dotlen = (int) 194800 / param.tempo * sound->samplerate / 44100;
+	/* Length of the dot in samples, 12 wpm PARIS should be 100 ms */
+	dotlen = 6 * sound->samplerate / param.tempo;
 	length = strlen(text);
 
 	/* Generate random detunes */
@@ -371,9 +374,12 @@ int cw_signal(cw_sample *sound, cw_param param, char *text)
 		}
 	}
 
+	lspace = (floating) param.spacelen / 100.0;
+	ldash = (floating) param.dashlen / 100.0;
+
 	/* If not detuned, generate one tone used across whole signal */
 	if(!param.detune)
-		if((i = cw_tone(&atone, param, 6 * dotlen, 0)) != CWOK) return(i);
+		if((i = cw_tone(&atone, param, 2 * ldash * dotlen, 0)) != CWOK) return(i);
 
 	/* A silence */
 	if((i = cw_silence(&asilence, 3 * dotlen)) != CWOK) return(i);
@@ -383,9 +389,9 @@ int cw_signal(cw_sample *sound, cw_param param, char *text)
 	for(i = 0; i < length; i++) {
 		ahand = param.hand ? hands[i] : 1;
 		if(*(text + i) == '-')
-			samples += (3 * ahand + 1) * dotlen;
+			samples += (ldash * ahand + lspace) * dotlen;
 		else if(*(text + i) == '.')
-			samples += (ahand + 1) * dotlen;
+			samples += (ahand + lspace) * dotlen;
 		else if((*(text + i) == ' ') || (*(text + i) == '\n'))
 			samples += (2 + param.cspaces) * ahand * dotlen;
 		else if(*(text + i) == '|')
@@ -409,20 +415,20 @@ int cw_signal(cw_sample *sound, cw_param param, char *text)
 		/* Amplitude of next dash/dot (in dB scale) if signal has QSB */
 		if(param.qsb) {
 			amplitude = *(qsbs + i) * (floating) param.qsb * 0.1;
-			amplitude = pow(10, -amplitude);
+			amplitude = cw_pow(10, -amplitude);
 		}
 		else
 			amplitude = 1;
 		if(*(text + i) == '-') {
-			if(param.detune) cw_tone(&atone, param, 6 * dotlen, freq);
-			cw_append(sound, &atone, 3 * ahand * dotlen, param.window, amplitude);
-			cw_append(sound, &asilence, dotlen, 0, 1);
+			if(param.detune) cw_tone(&atone, param, 2 * ldash * dotlen, freq);
+			cw_append(sound, &atone, ldash * ahand * dotlen, param.window, amplitude);
+			cw_append(sound, &asilence, lspace * dotlen, 0, 1);
 			if(param.detune) cw_freesample(&atone);
 		}
 		else if(*(text + i) == '.') {
-			if(param.detune) cw_tone(&atone, param, 6 * dotlen, freq);
+			if(param.detune) cw_tone(&atone, param, 2 * ldash * dotlen, freq);
 			cw_append(sound, &atone, ahand * dotlen, param.window, amplitude);
-			cw_append(sound, &asilence, dotlen, 0, 1);
+			cw_append(sound, &asilence, lspace * dotlen, 0, 1);
 			if(param.detune) cw_freesample(&atone);
 		}
 		else if((*(text + i) == ' ') || (*(text + i) == '\n')) {

@@ -1,4 +1,4 @@
-/*$T src/morse.c GC 1.140 10/28/11 20:48:37 */
+/*$T src/morse.c GC 1.140 11/27/11 17:14:04 */
 
 /*$I0
 
@@ -41,6 +41,9 @@ char *cw_encode(const char *text)
 	for(i = 0; i < length; i++) {
 		switch((char) *(text + i))
 		{
+
+		/*$3- International Morse Code ===============================================================================*/
+
 		case 'a':
 		case 'A':
 			strcat(decoded, ".- ");
@@ -227,33 +230,152 @@ char *cw_encode(const char *text)
 			strcat(decoded, "-...- ");
 			break;
 
-		case '#':
-			strcat(decoded, "---- ");
+		case '@':
+			strcat(decoded, ".--.-. ");
 			break;
 
-		case '%':
-			strcat(decoded, ".-.-. ");
+		/*$3- Additional four element combinations ===================================================================*/
+
+		case '\xa5':	/* Accented a */
+		case '\xb9':
+		case '\xa1':
+		case '\xb1':
+			strcat(decoded, ".-.- ");
 			break;
 
-		case '|':
-			strcat(decoded, "-.--. ");
-			break;
-
-		case '$':
-			strcat(decoded, "----.- ");
-			break;
-
-		case '&':
-			strcat(decoded, "-.-..-.. ");
-			break;
-
-		case '^':
+		case '\xd9':	/* Accented u */
+		case '\xda':
+		case '\xdb':
+		case '\xdc':
+		case '\xf9':
+		case '\xfa':
+		case '\xfb':
+		case '\xfc':
 			strcat(decoded, "..-- ");
 			break;
 
-		case '*':
-			strcat(decoded, ".-.- ");
+		case '\xd2':	/* Accented o */
+		case '\xd3':
+		case '\xd4':
+		case '\xd5':
+		case '\xd6':
+		case '\xf2':
+		case '\xf3':
+		case '\xf4':
+		case '\xf5':
+		case '\xf6':
+			strcat(decoded, "---. ");
 			break;
+
+		case '\xaa':	/* S with Cedilla */
+		case '\xba':
+			strcat(decoded, "---- ");
+			break;
+
+		/*$3- Additional five element combinations ===================================================================*/
+
+		case '\x8a':	/* S with circumflex */
+		case '\x9a':
+			strcat(decoded, "...-. ");
+			break;
+
+		case '\xc9':	/* E with acute */
+		case '\xe9':
+			strcat(decoded, "..-.. ");
+			break;
+
+		case '\xa3':	/* L with stroke (Polish) */
+		case '\xb3':
+		case '\xc8':	/* E with grave */
+		case '\xe8':
+			strcat(decoded, ".-..- ");
+			break;
+
+		case '\xc1':	/* A with grave */
+		case '\xe1':
+			strcat(decoded, ".--.- ");
+			break;
+
+		/*$F    case '\xac': J with circumflex - conflict with acute Z
+		case '\xbc':
+			strcat(decoded, ".---. ");
+			break;
+		*/
+		case '\xc6':	/* C with circumflex */
+		case '\xe6':
+			strcat(decoded, "-.-.. ");
+			break;
+
+		case '\xa6':	/* H with circumflex */
+		case '\xb6':
+			strcat(decoded, "-.--. ");
+			break;
+
+		case '\x8f':	/* Z with acute (Polish) */
+		case '\x9f':
+		case '\xac':
+		case '\xbc':
+			strcat(decoded, "--..- ");
+			break;
+
+		case '\xab':	/* G with circumflex */
+		case '\xbb':
+			strcat(decoded, "--.-. ");
+			break;
+
+		case '\xd1':	/* Spanish N with tilde and Polich N with acute */
+		case '\xf1':
+			strcat(decoded, "--.-- ");
+			break;
+
+		/*$3- Additional six element combinations ====================================================================*/
+
+		case '_':
+			strcat(decoded, "..--.- ");
+			break;
+
+		case '"':
+			strcat(decoded, ".-..-. ");
+			break;
+
+		case '.':
+			strcat(decoded, ".-.-.- ");
+			break;
+
+		case '\'':
+			strcat(decoded, ".----. ");
+			break;
+
+		case '-':
+			strcat(decoded, "-....- ");
+			break;
+
+		case ';':
+			strcat(decoded, "-.-.-. ");
+			break;
+
+		case '\xaf':	/* Z with dot (Polish */
+		case '\xbf':
+			strcat(decoded, "--..-. ");
+			break;
+
+		case '(':
+		case ')':
+			strcat(decoded, "-.--.- ");
+			break;
+
+		case ':':
+			strcat(decoded, "---... ");
+			break;
+
+		/*$3- Seven elements: Polish accented S ======================================================================*/
+
+		case '\x8c':
+		case '\x9c':
+			strcat(decoded, "...-... ");
+			break;
+
+		/*$3- Word space =============================================================================================*/
 
 		case ' ':
 		case '\n':

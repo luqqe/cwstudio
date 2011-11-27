@@ -40,8 +40,8 @@ floating *cw_rand_norm(long int length, unsigned int seed)
 	for(i = 0; i < length; i++) {
 		u1 = ((floating) (uniform[2 * i] + 1)) / 1000.0;
 		u2 = ((floating) (uniform[2 * i + 1] + 1)) / 1000.0;
-		r = sqrt(-2 * log(u1));
-		normal[i] = r * cos(6.283185 * u2);
+		r = cw_sqrt(-2 * cw_log(u1));
+		normal[i] = r * cw_cos(6.283185 * u2);
 	}
 
 	cw_free(uniform);
@@ -73,7 +73,7 @@ int *cw_rand_shaped(int range, int shape, long int length, unsigned int seed)
 
 	/* Transform to integers */
 	for(i = 0; i < length; i++) {
-		normals[i] = fabs(normals[i]) / (floating) (abs(shape) / 3.0) * (floating) range;
+		normals[i] = cw_fabs(normals[i]) / (floating) (abs(shape) / 3.0) * (floating) range;
 		pvector[i] = (((int) normals[i]) % range);
 	}
 

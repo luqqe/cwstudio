@@ -16,6 +16,7 @@ cwstudio \- lightweight and portable CW signals generator
 [\-\-chars nchars]
 [\-\-charset charset]
 [\-\-cspaces 0-100]
+[\-\-dashlen 100-10000]
 [\-\-detune 0-100]
 [\-\-even 0-100]
 [\-\-freq 50-4000]
@@ -32,6 +33,7 @@ cwstudio \- lightweight and portable CW signals generator
 [\-\-seed 1-32767]
 [\-\-shape -10 - 10]
 [\-\-signals 1-5]
+[\-\-spacelen 20-300]
 [\-\-sweep -4000 - 4000]
 [\-\-sweepness 0 - 10000]
 [\-\-tempo 5-500]
@@ -72,6 +74,9 @@ Set customized charset for random group generation in "groups" mode.
 .TP
 \-\-cspaces 0-100
 Set additional spaces (one space has a length of a dot) between chars. Default is 0.
+.TP
+\-\-dashlen 100-1000
+Length of dash, in percentage of dot. Default is 300% (3:1).
 .TP
 \-\-detune 0-100
 Simulate frequency drift of the signal. Default is 0.
@@ -121,6 +126,9 @@ Can be used to increase the number of newly learned letters/words. In practice, 
 .TP
 \-\-signals 1-5
 Generate given number of mixed signals, each of hardcoded frequency ratio, tempo ratio and amplitude ratio. Every signal plays the same text in a loop. Default is 3.
+.TP
+\-\-spacelen 20-300
+Space length (between dots and dashes) in percentage of dot. Default is 100% (1:1).
 .TP
 \-\-sweep -4000 - 4000
 Simulate sweep (chirp or filter ringing according to parameters) by starting each tone from given frequency (can be negative, which results in zero crossing). Frequency is then changed exponentially to this given in --freq with a rate given by --sweepness. Default is 0.

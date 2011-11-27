@@ -1,4 +1,4 @@
-/*$T src/cwgen.h GC 1.140 10/28/11 20:53:01 */
+/*$T src/cwgen.h GC 1.140 11/05/11 20:22:33 */
 
 /*$I0
 
@@ -45,13 +45,13 @@
 #endif
 
 /* Math definitions */
-#define sin sinf
-#define pow powf
-#define cos cosf
-#define sqrt sqrtf
-#define pow powf
-#define log logf
-#define fabs fabsf
+#define cw_sin	sinf
+#define cw_pow	powf
+#define cw_cos	cosf
+#define cw_sqrt sqrtf
+#define cw_pow	powf
+#define cw_log	logf
+#define cw_fabs fabsf
 typedef float	floating;
 
 /* Error codes */
@@ -62,7 +62,11 @@ typedef float	floating;
 #define CWFWRITE	4
 #define CWFCLOSE	5
 
-/* Sound sample types with corresponding length */
+/*
+ -----------------------------------------------------------------------------------------------------------------------
+    Sound sample types with corresponding length
+ -----------------------------------------------------------------------------------------------------------------------
+ */
 typedef struct
 {
 	unsigned int	samplerate;
@@ -81,6 +85,7 @@ typedef struct
 	int agc;
 	int click;
 	int cspaces;
+	int dashlen;
 	int detune;
 	int even;
 	int freq;
@@ -95,6 +100,7 @@ typedef struct
 	int seed;
 	int shape;
 	int signals;
+	int spacelen;
 	int sweep;
 	int sweepness;
 	int tempo;
@@ -113,13 +119,12 @@ extern const char		*cw_calls[10][2272];
 
 /* Random */
 extern int				*cw_rand_int(int range, long int length, unsigned int seed);
-extern int 				*cw_rand_shaped(int range, int shape, long int length, unsigned int seed);
+extern int				*cw_rand_shaped(int range, int shape, long int length, unsigned int seed);
 extern floating			*cw_rand_corr(int length, floating corr, unsigned int seed);
 extern char				*cw_rand_groups(int ngroup, int shape, const char *charset, unsigned int seed);
 extern char				*cw_rand_words(int nwords, int shape, int wordset, unsigned int seed);
 extern char				*cw_rand_calls(int ncalls, int shape, unsigned int seed);
 extern floating			*cw_rand_norm(long int length, unsigned int seed);
-
 
 /* CW Encoding */
 extern char				*cw_encode(const char *text);
@@ -140,6 +145,7 @@ extern void				cw_append
 						);
 extern void				cw_mix(cw_sample *sample1, cw_sample *sample2, floating amplitude);
 extern int				cw_add_noise(cw_sample *sample, cw_param param);
+extern int		cw_noisegen(cw_sample *anoise, long int duration, int low, int high);
 
 /* Memory allocation functions */
 extern void * (*cw_malloc) (size_t);
@@ -148,18 +154,3 @@ extern void		cw_setalloc(void * (*newmalloc) (size_t), void (*newfree) (void *))
 
 /* Internal functions */
 extern floating *cw_rms(cw_sample *sample, int window);
-extern int		cw_noisegen(cw_sample *anoise, long int duration, int low, int high);
-extern void		cw_fftstep
-				(
-					floating	*tr,
-					floating	*ti,
-					floating	*fr,
-					floating	*fi,
-					floating	*tmpr,
-					floating	*tmpi,
-					long int	n,
-					long int	off,
-					long int	d
-				);
-extern void		cw_fft(floating *tr, floating *ti, floating *fr, floating *fi, long int n);
-extern void		cw_ifft(floating *tr, floating *ti, floating *fr, floating *fi, long int n);

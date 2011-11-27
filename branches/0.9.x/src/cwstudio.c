@@ -1,4 +1,4 @@
-/*$T src/cwstudio.c GC 1.140 10/29/11 15:55:10 */
+/*$T src/cwstudio.c GC 1.140 11/05/11 20:22:22 */
 
 /*$I0
 
@@ -188,6 +188,7 @@ int main(int argc, char **argv)
 			{ "chars", required_argument, NULL, 'c' },
 			{ "charset", required_argument, NULL, 'C' },
 			{ "cspaces", required_argument, NULL, 's' },
+			{ "dashlen", required_argument, NULL, 'D' },
 			{ "detune", required_argument, NULL, 'd' },
 			{ "even", required_argument, NULL, 'E' },
 			{ "freq", required_argument, NULL, 'f' },
@@ -204,6 +205,7 @@ int main(int argc, char **argv)
 			{ "seed", required_argument, NULL, 'r' },
 			{ "shape", required_argument, NULL, 'X' },
 			{ "signals", required_argument, NULL, 'S' },
+			{ "spacelen", required_argument, NULL, 'L' },
 			{ "sweep", required_argument, NULL, 'p' },
 			{ "sweepness", required_argument, NULL, 'P' },
 			{ "tempo", required_argument, NULL, 't' },
@@ -218,7 +220,7 @@ int main(int argc, char **argv)
 			(
 				argc + envc,
 				totalv,
-				"a:b:B:c:C:d:E:f:g:h:H:l:n:o:O:p:P:q:r:s:S:t:v:w:W:x:X:y:",
+				"a:b:B:c:C:d:D:E:f:g:h:H:l:L:n:o:O:p:P:q:r:s:S:t:v:w:W:x:X:y:",
 				long_options,
 				&option_index
 			);
@@ -237,8 +239,18 @@ int main(int argc, char **argv)
 
 		case 'B':
 			samplerate = atoi(optarg);
-			if((samplerate != 8000) && (samplerate != 11025) && (samplerate != 22050) && (samplerate != 44100))
-				samplerate = 44100;
+			if
+			(
+				(samplerate != 8000)
+			&&	(samplerate != 11025)
+			&&	(samplerate != 22050)
+			&&	(samplerate != 44100)
+			&&	(samplerate != 16000)
+			&&	(samplerate != 24000)
+			&&	(samplerate != 48000)
+			&&	(samplerate != 96000)
+			&&	(samplerate != 192000)
+			) samplerate = 44100;
 			break;
 
 		case 'c':
@@ -253,6 +265,12 @@ int main(int argc, char **argv)
 		case 'd':
 			param.detune = atoi(optarg);
 			RANGE(detune, 0, 100);
+			break;
+
+		case 'D':
+			param.dashlen = atoi(optarg);
+			if(param.dashlen == 0) param.dashlen = 300;
+			RANGE(dashlen, 100, 10000);
 			break;
 
 		case 'E':
@@ -283,6 +301,12 @@ int main(int argc, char **argv)
 		case 'l':
 			param.click = atoi(optarg);
 			RANGE(click, 0, 100);
+			break;
+
+		case 'L':
+			param.spacelen = atoi(optarg);
+			if(param.spacelen == 0) param.spacelen = 100;
+			RANGE(spacelen, 20, 300);
 			break;
 
 		case 'N':
@@ -381,17 +405,17 @@ int main(int argc, char **argv)
 		{
 		case 0:
 			if((text = cw_rand_groups(param.number, param.shape, charset, param.seed)) == NULL) return(CWALLOC);
-			fprintf(stderr, "* Charset: %s\n\n", charset);
+			if(output) fprintf(stderr, "* Charset: %s\n\n", charset);
 			break;
 
 		case 1:
 			if((text = cw_rand_words(param.number, param.shape, wordset, param.seed)) == NULL) return(CWALLOC);
-			fprintf(stderr, "* %i words from %i most common\n\n", param.number, wordset);
+			if(output) fprintf(stderr, "* %i words from %i most common\n\n", param.number, wordset);
 			break;
 
 		case 2:
 			if((text = cw_rand_calls(param.number, param.shape, param.seed)) == NULL) return(CWALLOC);
-			fprintf(stderr, "* %i calls\n\n", param.number);
+			if(output) fprintf(stderr, "* %i calls\n\n", param.number);
 			break;
 		}
 	}
@@ -434,9 +458,13 @@ int main(int argc, char **argv)
 			if(param.agc) fprintf(stderr, "* %i%% AGC ", param.agc);
 			fprintf(stderr, "\n");
 		}
+
+		if(param.dashlen != 300) fprintf(stderr, "* Dash length: %i%% ", param.dashlen);
+		if(param.spacelen != 100) fprintf(stderr, "* Space length: %i%% ", param.spacelen);
+		if((param.dashlen != 300) || (param.spacelen != 100)) fprintf(stderr, "\n");
+		fprintf(stderr, "----------------------------------------------------\n\n");
 	}
 
-	fprintf(stderr, "----------------------------------------------------\n\n");
 	fprintf(stderr, "\n%s\n\n", text);
 
 	/*
