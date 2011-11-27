@@ -1,0 +1,154 @@
+.TH cwstudio 1  "October 29, 2010" "" ""
+.SH NAME
+cwstudio \- lightweight and portable CW signals generator
+.SH SYNOPSIS
+.B cwstudio
+[\-\-play]
+[\-\-noplay]
+[\-\-silent]
+[\-\-verbose]
+[\-\-groups]
+[\-\-words]
+[\-\-calls]
+[\-\-agc 0-100]
+[\-\-bits bits]
+[\-\-click 0-100]
+[\-\-chars nchars]
+[\-\-charset charset]
+[\-\-cspaces 0-100]
+[\-\-dashlen 100-10000]
+[\-\-detune 0-100]
+[\-\-even 0-100]
+[\-\-freq 50-4000]
+[\-\-number 1-100]
+[\-\-hand 0-100]
+[\-\-highcut 300-10000]
+[\-\-hum 0-100]
+[\-\-lowcut 50-1000]
+[\-\-noise 0-100]
+[\-\-odd 0-100]
+[\-\-output outfile]
+[\-\-qsb 0-100]
+[\-\-samplerate samplerate]
+[\-\-seed 1-32767]
+[\-\-shape -10 - 10]
+[\-\-signals 1-5]
+[\-\-spacelen 20-300]
+[\-\-sweep -4000 - 4000]
+[\-\-sweepness 0 - 10000]
+[\-\-tempo 5-500]
+[\-\-window 0-1000]
+[\-\-wordset 0-1000]
+[\-\-wspaces 0-100] 
+.SH DESCRIPTION
+Generates 1-5 mixed CW signals of various properties, adds optional noise and saves it to a WAV file. If compiled on proper environment, it can play the result.
+.PP
+All text output is written to stderr. If stdout is redirected, the created file is written here. If stdin is redirected, the generated text is taken from it.
+.PP
+Optional CWPARAM environment variable can be set to hold some parameters, for example CWPARAM="--even 10 --odd 10".
+.SH OPTIONS
+.TP
+\-\-play \-\-noplay
+Play the result (default), otherwise only save the WAV file.
+.TP
+\-\-silent \-\-verbose
+Verbose mode gives full output (default), silent mode presents only generated text.
+.TP
+\-\-groups \-\-words \-\-calls
+The "groups" mode generates random five-letter groups. The "words" mode generates most common English words. The "calls" mode generates real amateur callsigns.
+.TP
+\-\-agc 0-100
+Simulate AGC response of receiver by varying noise volume along RMS of the signal. Default is 100.
+.TP
+\-\-bits bits
+Set bitrate. Default is 16.
+.TP
+\-\-click 0-100
+Simulate click by lowering sustain part of tone at given level (in dB) below attack phase. Default is 1 dB.
+.TP
+\-\-chars nchars
+Take first "nchars" from default charset in "groups" mode.
+.TP
+\-\-charset charset
+Set customized charset for random group generation in "groups" mode.
+.TP
+\-\-cspaces 0-100
+Set additional spaces (one space has a length of a dot) between chars. Default is 0.
+.TP
+\-\-dashlen 100-1000
+Length of dash, in percentage of dot. Default is 300% (3:1).
+.TP
+\-\-detune 0-100
+Simulate frequency drift of the signal. Default is 0.
+.TP
+\-\-even 0-100
+Enhance the signal by given percent of even harmonics. Default is 0. Values 0-5 are most valuable in practice.
+.TP
+\-\-freq 50-4000
+Use given frequency in Hz..
+.TP
+\-\-number 1-100
+Generate given number of groups/words/calls. Default is 20.
+.TP
+\-\-hand 0-100
+Simulate hand transmitting by introduce random errors in dash/dot lengths.
+.TP
+\-\-highcut 300-10000
+Set high cutoff frequency (Hz) of generated noise. Default is 2400.
+.TP
+\-\-hum 0-100
+Add given percentage of 50 Hz mains hum. Default is 0.
+.TP
+\-\-lowcut 50-1000
+Set low cutoff frequency (Hz) of generated noise. Default is 300.
+.TP
+\-\-noise 0-100
+Add given percentage of noise. Default is 100.
+.TP
+\-\-odd odd
+Enhance the signal by given percent of odd harmonics. Default is 0. Values 0-5 are most valuable in practice.
+.TP
+\-\-output outfile
+Store the result in a WAV file of given name. Default is output.wav.
+.TP
+\-\-qsb 0-100
+Add given amount of signal QSB. Default is 0.
+.TP
+\-\-samplerate samplerate
+Set given samplerate. Default is 44100.
+.TP
+\-\-seed 0-32767
+Set explicitly the seed of random generator. If not set or set to 0, seed is also random generated. Otherwise it is set to given value, resulting in a possibility of repetitive random content generation.
+.TP
+\-\-shape -50 - +50
+Set the shape of random generated numbers. Positive value increases the fraction of higher numbers (last letters, words, calls). Negative values prefer first ones. Zero means flat uniform distribution. 
+Can be used to increase the number of newly learned letters/words. In practice, values -10 to 10 are well working.
+.TP
+\-\-signals 1-5
+Generate given number of mixed signals, each of hardcoded frequency ratio, tempo ratio and amplitude ratio. Every signal plays the same text in a loop. Default is 3.
+.TP
+\-\-spacelen 20-300
+Space length (between dots and dashes) in percentage of dot. Default is 100% (1:1).
+.TP
+\-\-sweep -4000 - 4000
+Simulate sweep (chirp or filter ringing according to parameters) by starting each tone from given frequency (can be negative, which results in zero crossing). Frequency is then changed exponentially to this given in --freq with a rate given by --sweepness. Default is 0.
+.TP
+\-\-sweepness 0-10000
+The rate of exponential frequency change from --sweep to --freq. Default is 0 (no sweep).
+.TP
+\-\-tempo 5-500
+Tempo of generated main signal in cpm (chars per minute) according to PARIS group.
+.TP
+\-\-window 0-1000
+Raised cosine window width (used to avoid clicks in each tone). Default is 100 samples.
+.TP
+\-\-wordset 0-1000
+Take only first given number of most common English words in "words" mode.
+.TP
+\-\-wspaces 0-100
+Set additional spaces between words/groups/calls. Default is zero.
+.PP
+.SH EXIT STATUS
+CWStudio returns 0 if everything is OK. In the case of error, return value is different.
+.SH AUTHOR
+Lukasz Komsta, SP8QED, 2008-2011
