@@ -1,5 +1,10 @@
-2011-10-31 : Fixed a --qsb bug (reverted "if" condition)
-
-2011-10-30 : Fixed a bug in --silent option.
+2011-11-27 : RELEASE 0.9.1
+	
+	* Tempo adjusted to PARIS (50 dots / min)
+	* More samplerates supported
+	* Math functions replaced by own macros
+	* Added --dashlen and --spacelen
+	* Fixed a --qsb bug (reverted "if" condition)
+	* Fixed a bug in --silent option.
 
 2011-10-29 : RELEASE 0.9.0
