@@ -4,6 +4,14 @@
 AC_PREREQ([2.60])
 AC_INIT(cwstudio, 0.9.1)
 AC_CONFIG_SRCDIR([src/cwstudio.c])
+
+# Canonical System
+AC_CANONICAL_SYSTEM
+AC_USE_SYSTEM_EXTENSIONS
+AC_DEFINE_UNQUOTED([CANONICAL_TARGET], "$target", [Canonical target])
+AC_DEFINE_UNQUOTED([CANONICAL_HOST], "$host", [Canoncal host])
+
+# 
 AM_INIT_AUTOMAKE(no-dependencies)
 AM_CONFIG_HEADER([src/config.h])
 

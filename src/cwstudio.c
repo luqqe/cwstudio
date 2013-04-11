@@ -48,6 +48,15 @@
 #include <pulse/error.h>
 #endif 
 
+#ifdef HAVE_LIBWINMM
+#define SOUND_INTERFACE "WinMM"
+#elif defined HAVE_PULSEAUDIO
+#define SOUND_INTERFACE "PulseAudio"
+#elif defined HAVE_OSS
+#define SOUND_INTERFACE "OSS"
+#else
+#define SOUND_INTERFACE "silent"
+#endif
 
 /*
  =======================================================================================================================
@@ -418,19 +427,9 @@ int main(int argc, char **argv)
 
 	if(output) {
 		fprintf(stderr, "\n----------------------------------------------------\n");
-		fprintf(stderr, "CWStudio %s\nCopyright 2009-2011 Lukasz Komsta, SP8QED\n", VERSION);
+		fprintf(stderr, "CWStudio %s (%s/%s)\nCopyright 2009-2011 Lukasz Komsta, SP8QED\n", VERSION, CANONICAL_HOST, SOUND_INTERFACE);
 		fprintf(stderr, "Licensed under GPLv3\n");
 		fprintf(stderr, "----------------------------------------------------\n");
-#ifdef HAVE_LIBWINMM
-		fprintf(stderr, "* Using WinMM for audio output\n");
-#elif defined HAVE_PULSEAUDIO
-		fprintf(stderr, "* Using PulseAudio for audio output\n");
-#elif defined HAVE_OSS
-		fprintf(stderr, "* Using /dev/dsp for audio output\n");
-#else
-		fprintf(stderr, "* No audio output compiled\n");
-#endif
-
 		fprintf(stderr, "* Working at %i Hz, %i bits\n", samplerate, bits);
 	}
 
