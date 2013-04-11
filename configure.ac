@@ -16,6 +16,8 @@ AC_PROG_RANLIB
 AC_CHECK_LIB([m],[sinf])
 AC_CHECK_LIB([winmm],[main])
 AC_CHECK_LIB([ossaudio],[main])
+AC_CHECK_LIB([pulse],[main])
+AC_CHECK_LIB([pulse-simple],[main])
 
 # Checks for header files.
 AC_CHECK_HEADERS([ctype.h getopt.h math.h stdlib.h string.h unistd.h fcntl.h sys/ioctl.h sys/time.h time.h windows.h])
@@ -23,7 +25,10 @@ AC_CHECK_HEADERS([sys/soundcard.h soundcard.h machine/soundcard.h],
                      [AC_DEFINE([HAVE_OSS], 1,
                         [Define to 1 if you have OSS.])],
                      [])
-
+AC_CHECK_HEADERS([pulse/simple.h pulse/error.h],
+                     [AC_DEFINE([HAVE_PULSEAUDIO], 1,
+                        [Define to 1 if you have PULSE AUDIO.])],
+                     [])
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_SIZE_T
 
