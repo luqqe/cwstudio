@@ -421,6 +421,16 @@ int main(int argc, char **argv)
 		fprintf(stderr, "CWStudio %s\nCopyright 2009-2011 Lukasz Komsta, SP8QED\n", VERSION);
 		fprintf(stderr, "Licensed under GPLv3\n");
 		fprintf(stderr, "----------------------------------------------------\n");
+#ifdef HAVE_LIBWINMM
+		fprintf(stderr, "* Using WinMM for audio output\n");
+#elif defined HAVE_PULSEAUDIO
+		fprintf(stderr, "* Using PulseAudio for audio output\n");
+#elif defined HAVE_OSS
+		fprintf(stderr, "* Using /dev/dsp for audio output\n");
+#else
+		fprintf(stderr, "* No audio output compiled\n");
+#endif
+
 		fprintf(stderr, "* Working at %i Hz, %i bits\n", samplerate, bits);
 	}
 
