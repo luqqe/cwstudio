@@ -43,6 +43,11 @@
 #elif defined HAVE_MACHINE_SOUNDCARD_H
 #include <machine/soundcard.h>
 #endif
+#ifdef HAVE_PULSEAUDIO
+#include <pulse/simple.h>
+#include <pulse/error.h>
+#endif 
+
 
 /*
  =======================================================================================================================
@@ -57,6 +62,11 @@ void playsample(cw_sample *sample)
 	WAVEFORMATEX	wf;
 	WAVEHDR			wh;
 	HANDLE			d;
+#endif
+#ifdef HAVE_PULSEAUDIO
+	static pa_sample_spec pas ;
+	pa_simple *pa = NULL;
+	int e;
 #elif defined HAVE_OSS
 	int				audio;
 	int				format, stereo;
@@ -85,6 +95,22 @@ void playsample(cw_sample *sample)
 	if(waveOutUnprepareHeader(h, &wh, sizeof(wh)) != MMSYSERR_NOERROR);
 	if(waveOutClose(h) != MMSYSERR_NOERROR);
 	CloseHandle(d);
+#elif defined HAVE_PULSEAUDIO
+	if((sample->bits == 8))
+		pas.format = PA_SAMPLE_U8;
+	else
+		pas.format = PA_SAMPLE_S16LE;
+	pas.rate = sample->samplerate;
+	pas.channels = 1;
+
+	if (!(pa = pa_simple_new(NULL, "qrq", PA_STREAM_PLAYBACK, NULL, 
+				"playback", &pas, NULL, NULL, &e))) {
+	        fprintf(stderr, "pa_simple_new() failed: %s\n", 
+				pa_strerror(e));
+	}
+
+	pa_simple_write(pa, sample->data, (sample->bits / 8) * sample->length - 2, &e);
+	pa_simple_drain(pa, &e);
 #elif defined HAVE_OSS
 	if((audio = open("/dev/dsp", O_WRONLY, 0)) == -1);
 	if((sample->bits == 8))
