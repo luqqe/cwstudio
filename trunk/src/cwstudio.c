@@ -62,8 +62,7 @@ void playsample(cw_sample *sample)
 	WAVEFORMATEX	wf;
 	WAVEHDR			wh;
 	HANDLE			d;
-#endif
-#ifdef HAVE_PULSEAUDIO
+#elif HAVE_PULSEAUDIO
 	static pa_sample_spec pas ;
 	pa_simple *pa = NULL;
 	int e;
@@ -516,6 +515,7 @@ int main(int argc, char **argv)
 
 	fflush(stderr);
 
+#if defined(HAVE_OSS) || defined(HAVE_PULSEAUDIO) || defined(HAVE_LIBWINMM)
 	/* Play if needed */
 	if(play) {
 		fprintf(stderr, "Playing...");
@@ -523,7 +523,7 @@ int main(int argc, char **argv)
 		playsample(&csound);
 		fprintf(stderr, "\n\n");
 	}
-
+#endif
 	/* Free memory */
 	cw_freesample(&asound);
 	cw_freesample(&csound);
