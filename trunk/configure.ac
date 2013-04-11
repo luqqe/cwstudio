@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.60])
-AC_INIT(cwstudio, 0.9.1)
+AC_INIT(cwstudio, 0.9.2)
 AC_CONFIG_SRCDIR([src/cwstudio.c])
 
 # Canonical System
