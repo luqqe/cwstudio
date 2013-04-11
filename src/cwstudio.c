@@ -427,7 +427,7 @@ int main(int argc, char **argv)
 
 	if(output) {
 		fprintf(stderr, "\n----------------------------------------------------\n");
-		fprintf(stderr, "CWStudio %s (%s/%s)\nCopyright 2009-2011 Lukasz Komsta, SP8QED\n", VERSION, CANONICAL_HOST, SOUND_INTERFACE);
+		fprintf(stderr, "CWStudio %s (%s/%s)\nCopyright 2009-2013 Lukasz Komsta, SP8QED\n", VERSION, CANONICAL_HOST, SOUND_INTERFACE);
 		fprintf(stderr, "Licensed under GPLv3\n");
 		fprintf(stderr, "----------------------------------------------------\n");
 		fprintf(stderr, "* Working at %i Hz, %i bits\n", samplerate, bits);
