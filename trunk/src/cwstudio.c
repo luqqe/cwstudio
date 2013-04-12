@@ -49,13 +49,21 @@
 #endif 
 
 #ifdef HAVE_LIBWINMM
-#define SOUND_INTERFACE "WinMM"
+#define SOUND_INTERFACE "/winmm"
 #elif defined HAVE_PULSEAUDIO
-#define SOUND_INTERFACE "PulseAudio"
+#define SOUND_INTERFACE "/pulseaudio"
 #elif defined HAVE_OSS
-#define SOUND_INTERFACE "OSS"
+#define SOUND_INTERFACE "/oss"
 #else
-#define SOUND_INTERFACE "silent"
+#define SOUND_INTERFACE ""
+#endif
+
+#ifdef HAVE_PROCESS_H
+#define THREAD_INTERFACE "/winthread"
+#elif defined HAVE_PTHREAD
+#define THREAD_INTERFACE "/pthread"
+#else
+#define THREAD_INTERFACE ""
 #endif
 
 /*
@@ -425,9 +433,10 @@ int main(int argc, char **argv)
 		}
 	}
 
+
 	if(output) {
 		fprintf(stderr, "\n----------------------------------------------------\n");
-		fprintf(stderr, "CWStudio %s (%s/%s)\nCopyright 2009-2013 Lukasz Komsta, SP8QED\n", VERSION, CANONICAL_HOST, SOUND_INTERFACE);
+		fprintf(stderr, "CWStudio %s (%s%s%s)\nCopyright 2009-2013 Lukasz Komsta, SP8QED\n", VERSION, CANONICAL_HOST, SOUND_INTERFACE, THREAD_INTERFACE);
 		fprintf(stderr, "Licensed under GPLv3\n");
 		fprintf(stderr, "----------------------------------------------------\n");
 		fprintf(stderr, "* Working at %i Hz, %i bits\n", samplerate, bits);
@@ -541,4 +550,7 @@ int main(int argc, char **argv)
 
 	/* Exit */
 	return(CWOK);
+	
+	
+
 }
