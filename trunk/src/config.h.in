@@ -36,8 +36,14 @@
 /* Define to 1 if you have the `m' library (-lm). */
 #undef HAVE_LIBM
 
+/* Define to 1 if you have the `ncurses' library (-lncurses). */
+#undef HAVE_LIBNCURSES
+
 /* Define to 1 if you have the `ossaudio' library (-lossaudio). */
 #undef HAVE_LIBOSSAUDIO
+
+/* Define to 1 if you have the `pthread' library (-lpthread). */
+#undef HAVE_LIBPTHREAD
 
 /* Define to 1 if you have the `pulse' library (-lpulse). */
 #undef HAVE_LIBPULSE
