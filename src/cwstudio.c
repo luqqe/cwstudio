@@ -120,8 +120,9 @@ static unsigned int bits = 16;
 static unsigned int samplerate = 44100;
 static char			filename[256] = "output.wav";
 static char			charset[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
+static char			charset_backup[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
 #ifdef HAVE_CURSES
-static WINDOW		*win_title, *win_param, *win_text;
+static WINDOW		*win_title, *win_param, *win_text, *win_help;
 #endif
 
 /*
@@ -242,6 +243,7 @@ void cwstudio_parseparam(int argc, char **argv)
 
 		case 'C':
 			strncpy(charset, optarg, 256);
+			strncpy(charset_backup, optarg, 256);
 			break;
 
 		case 'd':
@@ -419,6 +421,7 @@ void cwstudio_resetwindows()
 		start_color();
 		init_pair(1, COLOR_WHITE, COLOR_RED);
 		init_pair(2, COLOR_WHITE, COLOR_BLUE);
+		init_pair(3, COLOR_BLACK, COLOR_WHITE);
 	}
 
 	win_title = newwin(5, SPLIT, 0, 0);
@@ -497,12 +500,12 @@ void cwstudio_repaintwindows()
 	if(param.odd) wprintw(win_param, "* %i%% odd harmonics ", param.odd);
 	if(param.even || param.odd) wprintw(win_param, "\n");
 	if(param.click) wprintw(win_param, "* %i dB Click ", param.click);
-	if(param.hand) wprintw(win_param, "* Hand simulation %i%% ", param.detune);
+	if(param.hand) wprintw(win_param, "* Hand simulation %i%% ", param.hand);
 	if(param.hum) wprintw(win_param, "* %i%% Hum ", param.hum);
 	wprintw(win_param, "\n");
 	if(param.sweepness) wprintw(win_param, "* Sweep from %i Hz, sweepness %i\n", param.sweep, param.sweepness);
 	if(param.detune) wprintw(win_param, "* Detune %i%% ", param.detune);
-	if(param.qsb) wprintw(win_param, "* QSB %i%% ", param.detune);
+	if(param.qsb) wprintw(win_param, "* QSB %i%% ", param.qsb);
 	wprintw(win_param, "\n");
 	wprintw(win_param, "* Tempo is %i wpm ", param.tempo);
 	if(param.cspaces) wprintw(win_param, "* Char spacing +%i ", param.cspaces);
@@ -543,6 +546,56 @@ void cwstudio_resizeterm()
 	cwstudio_repaintwindows();
 }
 #endif
+
+
+void cwstudio_help()
+{
+	int ncol, nrow;
+	getmaxyx(stdscr, nrow, ncol);
+	
+	win_help = newwin(20, 40, nrow / 2 - 10, ncol / 2 - 20);
+	if(has_colors()) {
+		wattron(win_help, COLOR_PAIR(3));
+		wbkgd(win_help, COLOR_PAIR(3));
+	}
+	box(win_help, 0, 0);
+	wrefresh(win_help);
+	delwin(win_help);
+
+	win_help = newwin(18, 38, nrow / 2 - 9, ncol / 2 - 19);
+	if(has_colors()) {
+		wattron(win_help, COLOR_PAIR(3));
+		wbkgd(win_help, COLOR_PAIR(3));
+	}
+
+	wprintw(win_help, "F1 - help, F2 - save to WAV file\n");
+	wprintw(win_help, "F3 - reset parameters\n");
+	wprintw(win_help, "F4, SPACE - regenerate random\n");
+	wprintw(win_help, "F5, ENTER - play\n");
+	wprintw(win_help, "F6 - stop, F7 - pause\n");
+	wprintw(win_help, "F8 - noise mode, F9/F10 - freq\n");
+	wprintw(win_help, "F11 - detune/qsb, F12 - mode\n");
+	wprintw(win_help, "UP/DOWN - groups\n");
+	wprintw(win_help, "LEFT/RIGHT - char spaces\n");
+	wprintw(win_help, "Shift-LEFT/RIGHT - word spaces\n");
+	wprintw(win_help, "HOME/END - charset\n");
+	wprintw(win_help, "PGUP/PGDN - tempo, BACKSPACE - shape\n");
+	wprintw(win_help, "INS/DEL - signals, Q - hand\n");
+	wprintw(win_help, "Ctrl-C - exit, S - sweep\n");
+	wprintw(win_help, "A - AGC, E - even harmonics\n");
+	wprintw(win_help, "H - hum, O - odd harmonics\n");
+	wprintw(win_help, "Shift-HOME - dash length\n");
+	wprintw(win_help, "Shift-END - space length\n");
+	wrefresh(win_help);
+	keypad(win_help, TRUE);
+		
+	wgetch(win_help);
+	
+	delwin(win_help);
+	cwstudio_resetwindows();
+	
+	
+}
 #endif
 
 /*
@@ -581,96 +634,32 @@ int main(int argc, char **argv)
 #if defined(HAVE_SIGNAL_H) && defined(SIGWINCH)
 		signal(SIGWINCH, cwstudio_resizeterm);
 #endif
-		chars = 41;
+		chars = strlen(charset);
 		cwstudio_resetwindows();
 		cwstudio_regeneratetext();
 		cwstudio_repaintwindows();
 
-		while((ch = wgetch(win_param)) != KEY_F(1)) {
+		while((ch = wgetch(win_param))) {
 			switch(ch)
 			{
-			case ' ':
-				param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
+			case KEY_F(1):
+				cwstudio_help();
+				break;
+			
+			case KEY_F(2):
+				sprintf(filename,"%x.wav",(int) time(NULL));
+				if((i = cw_wavout(filename, &csound)) != CWOK) return(i);
 				break;
 
-			case KEY_HOME:
+			case KEY_F(3):
 				i = param.seed;
 				cw_initparam(&param);
 				param.seed = i;
 				break;
 
-			case KEY_PPAGE:
-				param.tempo = param.tempo + 5;
-				RANGE(tempo, 5, 500);
-				break;
-
-			case KEY_NPAGE:
-				param.tempo = param.tempo - 5;
-				RANGE(tempo, 5, 500);
-				break;
-
-			case KEY_LEFT:
-				strcpy(charset, "abstgjnokqfmzixdrhewlypvcu8219376450?!/=");
-				chars--;
-				BOUND(chars, 1, 41);
-				charset[chars] = '\0';
-				break;
-
-			case KEY_RIGHT:
-				strcpy(charset, "abstgjnokqfmzixdrhewlypvcu8219376450?!/=");
-				chars++;
-				BOUND(chars, 1, 41);
-				charset[chars] = '\0';
-				break;
-
-			case KEY_SRIGHT:
-				param.cspaces++;
-				RANGE(cspaces, 0, 100);
-				break;
-
-			case KEY_SLEFT:
-				param.cspaces--;
-				RANGE(cspaces, 0, 100);
-				break;
-
-			case KEY_UP:
-				param.number = param.number - 5;
-				RANGE(number, 5, 100);
-				break;
-
-			case KEY_DOWN:
-				param.number = param.number + 5;
-				RANGE(number, 5, 100);
-				break;
-
-			case KEY_F(12):
-				mode++;
-				if(mode == 3) mode = 0;
-				break;
-
-			case 'n':
-				if(param.noise == 100)
-					param.noise = 0;
-				else
-					param.noise = param.noise + 25;
-				break;
-
-			case 'a':
-				if(param.agc == 100)
-					param.agc = 0;
-				else
-					param.agc = param.agc + 25;
-				break;
-
-			case 'N':
-				if(param.lowcut == 300) {
-					param.lowcut = 100;
-					param.highcut = 6000;
-				}
-				else {
-					param.lowcut = 300;
-					param.highcut = 2400;
-				}
+			case KEY_F(4):
+			case ' ':
+				param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
 				break;
 
 			case KEY_F(5):
@@ -692,6 +681,189 @@ int main(int argc, char **argv)
 			case KEY_F(7):
 				playmode = cwstudio_pause();
 				break;
+
+			case KEY_F(8):
+				if(param.noise == 100)
+					param.noise = 0;
+				else
+					param.noise = param.noise + 25;
+				if(param.lowcut == 300) {
+					param.lowcut = 100;
+					param.highcut = 6000;
+				}
+				else {
+					param.lowcut = 300;
+					param.highcut = 2400;
+				}
+				break;
+			
+			case KEY_F(9):
+				param.freq = param.freq - 100;
+				RANGE(freq, 100, 4000);
+				break;
+
+			case KEY_F(10):
+				param.freq = param.freq + 100;
+				RANGE(freq, 100, 4000);
+				break;
+
+			case KEY_F(11):
+				if(param.qsb == 0) param.qsb = 10;
+				else if(param.qsb == 10) param.qsb = 0;
+				
+				if(param.detune >= 100)
+					param.detune = 0;
+				else
+					param.detune = param.detune + 25;
+				break;
+				
+			case KEY_F(12):
+				mode++;
+				if(mode >= 3) mode = 0;
+				break;
+
+			case KEY_BACKSPACE:
+				if (param.shape >=20) param.shape = -20;
+				else param.shape = param.shape + 5;
+				break;
+
+			case KEY_PPAGE:
+				param.tempo = param.tempo + 5;
+				RANGE(tempo, 5, 500);
+				break;
+
+			case KEY_NPAGE:
+				param.tempo = param.tempo - 5;
+				RANGE(tempo, 5, 500);
+				break;
+
+			case KEY_HOME:
+				strncpy(charset, charset_backup, 256);
+				chars--;
+				BOUND(chars, 2, strlen(charset_backup));
+				charset[chars] = '\0';
+				break;
+
+			case KEY_END:
+				strncpy(charset, charset_backup, 256);
+				chars++;
+				BOUND(chars, 2, strlen(charset_backup));
+				charset[chars] = '\0';
+				break;
+			
+			case KEY_SHOME:
+				if (param.dashlen >= 800) param.dashlen = 200;
+				else param.dashlen = param.dashlen + 50;
+				break;
+
+			case KEY_SEND:
+				if (param.spacelen >= 200) param.spacelen = 50;
+				else param.spacelen = param.spacelen + 25;
+				break;
+			
+			case KEY_IC:
+				param.signals++;
+				RANGE(signals, 1, 5);
+				break;
+
+			case KEY_DC:
+				param.signals--;
+				RANGE(signals, 1, 5);
+				break;
+				
+			case KEY_RIGHT:
+				param.cspaces++;
+				RANGE(cspaces, 0, 100);
+				break;
+
+			case KEY_LEFT:
+				param.cspaces--;
+				RANGE(cspaces, 0, 100);
+				break;
+
+			case KEY_SRIGHT:
+				param.wspaces++;
+				RANGE(wspaces, 0, 100);
+				break;
+
+			case KEY_SLEFT:
+				param.wspaces--;
+				RANGE(wspaces, 0, 100);
+				break;
+
+			case KEY_UP:
+				param.number = param.number - 5;
+				RANGE(number, 5, 100);
+				break;
+
+			case KEY_DOWN:
+				param.number = param.number + 5;
+				RANGE(number, 5, 100);
+				break;
+
+			case 'A':
+			case 'a':
+				if(param.agc >= 100)
+					param.agc = 0;
+				else
+					param.agc = param.agc + 25;
+				break;
+
+			case 'C':
+			case 'c':
+				if(param.click >= 10)
+					param.click = 1;
+				else
+					param.click = param.click + 2;
+				break;
+
+			case 'E':
+			case 'e':
+				if(param.even >= 10)
+					param.even = 0;
+				else
+					param.even++;
+				break;
+
+			case 'H':
+			case 'h':
+				if(param.hum >= 100)
+					param.hum = 0;
+				else
+					param.hum = param.hum + 25;
+				break;
+				
+			case 'O':
+			case 'o':
+				if(param.odd >= 10)
+					param.odd = 0;
+				else
+					param.odd++;
+				break;
+
+			case 's':
+			case 'S':
+				if(param.sweepness == 200)
+					param.sweepness = 0;
+				else
+					param.sweepness = 200;
+
+				if(param.sweep >=3000)
+					param.sweep = -3000;
+				else
+					param.sweep = param.sweep + 1000;
+				break;
+
+			case 'Q':
+			case 'q':
+				if(param.hand >= 100)
+					param.hand = 0;
+				else
+					param.hand = param.hand + 20;
+				break;
+				
+					
+
 			}
 
 			cwstudio_regeneratetext();
@@ -755,12 +927,12 @@ int main(int argc, char **argv)
 			if(param.odd) fprintf(stderr, "* %i%% odd harmonics ", param.odd);
 			if(param.even || param.odd) fprintf(stderr, "\n");
 			if(param.click) fprintf(stderr, "* %i dB Click ", param.click);
-			if(param.hand) fprintf(stderr, "* Hand simulation %i%% ", param.detune);
+			if(param.hand) fprintf(stderr, "* Hand simulation %i%% ", param.hand);
 			if(param.hum) fprintf(stderr, "* %i%% Hum ", param.hum);
 			fprintf(stderr, "\n");
 			if(param.sweepness) fprintf(stderr, "* Sweep from %i Hz, sweepness %i\n", param.sweep, param.sweepness);
 			if(param.detune) fprintf(stderr, "* Detune %i%% ", param.detune);
-			if(param.qsb) fprintf(stderr, "* QSB %i%% ", param.detune);
+			if(param.qsb) fprintf(stderr, "* QSB %i%% ", param.qsb);
 			fprintf(stderr, "\n");
 			fprintf(stderr, "* Tempo is %i wpm ", param.tempo);
 			if(param.cspaces) fprintf(stderr, "* Char spacing +%i ", param.cspaces);
