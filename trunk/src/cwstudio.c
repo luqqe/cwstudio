@@ -47,10 +47,7 @@
 #elif defined HAVE_MACHINE_SOUNDCARD_H
 #include <machine/soundcard.h>
 #endif
-#ifdef HAVE_PULSEAUDIO
-#include <pulse/simple.h>
-#include <pulse/error.h>
-#endif
+
 #ifdef HAVE_CURSES_H
 #include <curses.h>
 #elif defined HAVE_NCURSES_H
@@ -415,13 +412,13 @@ void cwstudio_resetwindows()
 	initscr();
 	cbreak();
 	noecho();
+	curs_set(0);
 	getmaxyx(stdscr, nrow, ncol);
 
 	if(has_colors()) {
 		start_color();
-		init_color(COLOR_GREEN, 0, 200, 0);
-		init_pair(1, COLOR_YELLOW, COLOR_RED);
-		init_pair(2, COLOR_YELLOW, COLOR_BLUE);
+		init_pair(1, COLOR_WHITE, COLOR_RED);
+		init_pair(2, COLOR_WHITE, COLOR_BLUE);
 	}
 
 	win_title = newwin(5, SPLIT, 0, 0);
