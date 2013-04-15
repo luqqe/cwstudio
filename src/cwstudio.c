@@ -61,6 +61,9 @@
 #ifdef HAVE_PTHREAD
 #include <pthread.h>
 #endif
+#ifdef HAVE_SIGNAL_H
+#include <signal.h>
+#endif
 #ifdef HAVE_WINHREADS
 #include <process.h>
 #endif
@@ -578,7 +581,7 @@ int main(int argc, char **argv)
 #ifdef HAVE_CURSES
 	if(play)
 	{
-#ifdef HAVE_SIGNAL_H
+#if defined(HAVE_SIGNAL_H) && defined(SIGWINCH)
 		signal(SIGWINCH, cwstudio_resizeterm);
 #endif
 		chars = 41;
