@@ -1,4 +1,4 @@
-/*$T src/cwstudio.c GC 1.140 04/14/13 18:48:24 */
+/*$T src/cwstudio.c GC 1.140 04/15/13 18:06:22 */
 
 /*$I0
 
@@ -531,6 +531,8 @@ void cwstudio_repaintwindows()
 	wrefresh(win_text);
 }
 
+#ifdef HAVE_SIGNAL_H
+
 /*
  =======================================================================================================================
  =======================================================================================================================
@@ -540,6 +542,7 @@ void cwstudio_resizeterm()
 	cwstudio_resetwindows();
 	cwstudio_repaintwindows();
 }
+#endif
 #endif
 
 /*
@@ -573,9 +576,11 @@ int main(int argc, char **argv)
 	cwstudio_parseparam(argc, argv);
 
 #ifdef HAVE_CURSES
-	if(play) {
+	if(play)
+	{
+#ifdef HAVE_SIGNAL_H
 		signal(SIGWINCH, cwstudio_resizeterm);
-
+#endif
 		chars = 41;
 		cwstudio_resetwindows();
 		cwstudio_regeneratetext();
@@ -644,20 +649,30 @@ int main(int argc, char **argv)
 				break;
 
 			case 'n':
-				if (param.noise == 100) param.noise = 0;
-				else param.noise = param.noise + 25;
+				if(param.noise == 100)
+					param.noise = 0;
+				else
+					param.noise = param.noise + 25;
 				break;
 
 			case 'a':
-				if (param.agc == 100) param.agc = 0;
-				else param.agc = param.agc + 25;
+				if(param.agc == 100)
+					param.agc = 0;
+				else
+					param.agc = param.agc + 25;
 				break;
-				
+
 			case 'N':
-				if (param.lowcut == 300) { param.lowcut = 100; param.highcut = 6000; }
-				else { param.lowcut = 300; param.highcut = 2400; }
+				if(param.lowcut == 300) {
+					param.lowcut = 100;
+					param.highcut = 6000;
+				}
+				else {
+					param.lowcut = 300;
+					param.highcut = 2400;
+				}
 				break;
-				
+
 			case KEY_F(5):
 				if((playmode == CWPLAYING) || (playmode == CWPAUSED)) playmode = cwstudio_stop();
 				cw_freesample(&asound);
