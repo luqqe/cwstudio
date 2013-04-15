@@ -643,26 +643,31 @@ int main(int argc, char **argv)
 			switch(ch)
 			{
 			case KEY_F(1):
+			case '1':
 				cwstudio_help();
 				break;
 			
 			case KEY_F(2):
+			case '2':
 				sprintf(filename,"%x.wav",(int) time(NULL));
 				if((i = cw_wavout(filename, &csound)) != CWOK) return(i);
 				break;
 
 			case KEY_F(3):
+			case '3':
 				i = param.seed;
 				cw_initparam(&param);
 				param.seed = i;
 				break;
 
 			case KEY_F(4):
+			case '4':
 			case ' ':
 				param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
 				break;
 
 			case KEY_F(5):
+			case '5':
 				if((playmode == CWPLAYING) || (playmode == CWPAUSED)) playmode = cwstudio_stop();
 				cw_freesample(&asound);
 				cw_freesample(&csound);
@@ -675,14 +680,17 @@ int main(int argc, char **argv)
 				break;
 
 			case KEY_F(6):
+			case '6':
 				playmode = cwstudio_stop();
 				break;
 
 			case KEY_F(7):
+			case '7':
 				playmode = cwstudio_pause();
 				break;
 
 			case KEY_F(8):
+			case '8':
 				if(param.noise == 100)
 					param.noise = 0;
 				else
@@ -698,16 +706,19 @@ int main(int argc, char **argv)
 				break;
 			
 			case KEY_F(9):
+			case '9':
 				param.freq = param.freq - 100;
 				RANGE(freq, 100, 4000);
 				break;
 
 			case KEY_F(10):
+			case '0':
 				param.freq = param.freq + 100;
 				RANGE(freq, 100, 4000);
 				break;
 
 			case KEY_F(11):
+			case '-':
 				if(param.qsb == 0) param.qsb = 10;
 				else if(param.qsb == 10) param.qsb = 0;
 				
@@ -718,6 +729,7 @@ int main(int argc, char **argv)
 				break;
 				
 			case KEY_F(12):
+			case '=':
 				mode++;
 				if(mode >= 3) mode = 0;
 				break;
