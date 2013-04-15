@@ -12,6 +12,12 @@
 #if HAVE_WINDOWS_H
 #include <windows.h>
 #endif
+#ifdef HAVE_PULSEAUDIO
+#include <pulse/simple.h>
+#include <pulse/error.h>
+#endif
+
+
 static int				status = CWSTOPPED;
 
 #ifdef HAVE_LIBWINMM
@@ -35,9 +41,11 @@ int						speed;
  */
 void cwstudio_callback()
 {
+#ifdef HAVE_LIBWINMM
 	if(waveOutUnprepareHeader(h, &wh, sizeof(wh)) != MMSYSERR_NOERROR);
 	if(waveOutClose(h) != MMSYSERR_NOERROR);
 	CloseHandle(d);
+#endif
 }
 
 /*
@@ -83,7 +91,7 @@ int cwstudio_play(cw_sample *sample)
 			}
 
 			pa_simple_write(pa, sample->data, (sample->bits / 8) * sample->length - 2, &e);
-			pa_simple_drain(pa, &e);
+			//pa_simple_drain(pa, &e);
 #elif defined HAVE_OSS
 			if((audio = open("/dev/dsp", O_WRONLY, 0)) == -1);
 			if((sample->bits == 8))
@@ -124,11 +132,15 @@ int cwstudio_play(cw_sample *sample)
 int cwstudio_pause()
 {
 	if(status == CWPLAYING) {
+#ifdef HAVE_LIBWINMM
 		waveOutPause(h);
+#endif
 		status = CWPAUSED;
 	}
 	else if(status == CWPAUSED) {
+#ifdef HAVE_LIBWINMM
 		waveOutRestart(h);
+#endif
 		status = CWPLAYING;
 	}
 
@@ -141,7 +153,11 @@ int cwstudio_pause()
  */
 int cwstudio_stop()
 {
+#ifdef HAVE_LIBWINMM
 	waveOutReset(h);
+#elif defined HAVE_PULSE_AUDIO
+	pa_simple_flush(pa, &e);
+#endif
 	status = CWSTOPPED;
 
 	return(status);
@@ -155,6 +171,8 @@ int cwstudio_stop()
 void playsample(cw_sample *sample)
 {
 	cwstudio_play(sample);
+#ifdef HAVE_LIBWINMM
 	if(WaitForSingleObject(d, INFINITE) != WAIT_OBJECT_0);
+#endif
 	cwstudio_callback();
 }
