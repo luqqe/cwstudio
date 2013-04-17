@@ -16,6 +16,13 @@
 #include <pulse/simple.h>
 #include <pulse/error.h>
 #endif
+#ifdef HAVE_SYS_SOUNDCARD_H
+#include <sys/soundcard.h>
+#elif defined HAVE_SOUNDCARD_H
+#include <soundcard.h>
+#elif defined HAVE_MACHINE_SOUNDCARD_H
+#include <machine/soundcard.h>
+#endif
 
 
 static int				status = CWSTOPPED;
@@ -91,7 +98,7 @@ int cwstudio_play(cw_sample *sample)
 			}
 
 			pa_simple_write(pa, sample->data, (sample->bits / 8) * sample->length - 2, &e);
-			//pa_simple_drain(pa, &e);
+			/* pa_simple_drain(pa, &e); */
 #elif defined HAVE_OSS
 			if((audio = open("/dev/dsp", O_WRONLY, 0)) == -1);
 			if((sample->bits == 8))

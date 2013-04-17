@@ -40,13 +40,6 @@
 #ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif
-#ifdef HAVE_SYS_SOUNDCARD_H
-#include <sys/soundcard.h>
-#elif defined HAVE_SOUNDCARD_H
-#include <soundcard.h>
-#elif defined HAVE_MACHINE_SOUNDCARD_H
-#include <machine/soundcard.h>
-#endif
 
 #ifdef HAVE_CURSES_H
 #include <curses.h>
@@ -415,6 +408,7 @@ void cwstudio_resetwindows()
 	cbreak();
 	noecho();
 	curs_set(0);
+	mousemask(ALL_MOUSE_EVENTS, NULL);
 	getmaxyx(stdscr, nrow, ncol);
 
 	if(has_colors()) {
