@@ -29,6 +29,7 @@ AC_CHECK_LIB([ossaudio],[main])
 AC_CHECK_LIB([pulse],[main])
 AC_CHECK_LIB([pulse-simple],[main])
 AC_CHECK_LIB([ncurses],[main])
+AC_CHECK_LIB([curses],[main])
 AC_CHECK_LIB([pthread],[main])
 
 # Macros
