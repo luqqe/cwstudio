@@ -477,6 +477,8 @@ void cwstudio_repaintwindows()
 {
 	werase(win_param);
 
+	wprintw(win_param, "* %i Hz / %i bits\n", samplerate, bits);
+	
 	if(isatty(STDIN_FILENO)) {
 		switch(mode)
 		{
@@ -569,10 +571,10 @@ void cwstudio_help()
 	wprintw(win_help, "F6 - stop, F7 - pause\n");
 	wprintw(win_help, "F8 - noise mode, F9/F10 - freq\n");
 	wprintw(win_help, "F11 - detune/qsb, F12 - mode\n");
-	wprintw(win_help, "UP/DOWN - groups\n");
+	wprintw(win_help, "UP/DOWN - groups, ? - bits\n");
 	wprintw(win_help, "LEFT/RIGHT - char spaces\n");
 	wprintw(win_help, "Shift-LEFT/RIGHT - word spaces\n");
-	wprintw(win_help, "HOME/END - charset\n");
+	wprintw(win_help, "HOME/END - charset, / - samplerate\n");
 	wprintw(win_help, "PGUP/PGDN - tempo, BACKSPACE - shape\n");
 	wprintw(win_help, "INS/DEL - signals, Q - hand\n");
 	wprintw(win_help, "Ctrl-C - exit, S - sweep\n");
@@ -629,6 +631,7 @@ int main(int argc, char **argv)
 		signal(SIGWINCH, cwstudio_resizeterm);
 #endif
 		chars = strlen(charset);
+		initscr();
 		cwstudio_resetwindows();
 		cwstudio_regeneratetext();
 		cwstudio_repaintwindows();
@@ -643,8 +646,13 @@ int main(int argc, char **argv)
 			
 			case KEY_F(2):
 			case '2':
-				sprintf(filename,"%x.wav",(int) time(NULL));
-				if((i = cw_wavout(filename, &csound)) != CWOK) return(i);
+				if (csound.length) {
+					sprintf(filename,"%x.wav",(int) time(NULL));
+					if((i = cw_wavout(filename, &csound)) != CWOK) return(i);
+					wprintw(win_param,"* Saved to %s, press any key", filename);
+					wrefresh(win_param);
+					wgetch(win_param);
+					}
 				break;
 
 			case KEY_F(3):
@@ -807,6 +815,23 @@ int main(int argc, char **argv)
 				RANGE(number, 5, 100);
 				break;
 
+			case '/':
+			if 	(samplerate == 8000) samplerate = 11025;
+			else if	(samplerate == 11025) samplerate = 22050;
+			else if	(samplerate == 22050) samplerate = 44100;
+			else if	(samplerate == 44100) samplerate = 16000;
+			else if	(samplerate == 16000) samplerate = 24000;
+			else if	(samplerate == 24000) samplerate = 48000;
+			else if	(samplerate == 48000) samplerate = 96000;
+			else if	(samplerate == 96000) samplerate = 192000;
+			else if	(samplerate == 192000) samplerate = 8000;
+				break;
+				
+			case '?':
+			if (bits == 16) bits = 8;
+			else bits = 16;
+			break;
+			
 			case 'A':
 			case 'a':
 				if(param.agc >= 100)
