@@ -116,8 +116,10 @@ static char			charset[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
 static char			charset_backup[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
 #ifdef HAVE_CURSES
 static WINDOW		*win_title, *win_param, *win_text, *win_help;
+#ifdef ALL_MOUSE_EVENTS
+	   MEVENT		event;
 #endif
-
+#endif
 /*
  =======================================================================================================================
     Parse environmental and command line parameters
@@ -408,7 +410,6 @@ void cwstudio_resetwindows()
 	cbreak();
 	noecho();
 	curs_set(0);
-	mousemask(ALL_MOUSE_EVENTS, NULL);
 	getmaxyx(stdscr, nrow, ncol);
 
 	if(has_colors()) {
@@ -636,9 +637,41 @@ int main(int argc, char **argv)
 		cwstudio_regeneratetext();
 		cwstudio_repaintwindows();
 
+#ifdef ALL_MOUSE_EVENTS
+	mousemask(ALL_MOUSE_EVENTS, NULL);
+#endif
+
 		while((ch = wgetch(win_param))) {
 			switch(ch)
 			{
+
+#ifdef ALL_MOUSE_EVENTS			
+			case KEY_MOUSE:
+			if(getmouse(&event) == OK)
+			{	/* When the user clicks left mouse button */
+				if(event.bstate & BUTTON1_PRESSED)
+				{	
+					if((playmode == CWPLAYING) || (playmode == CWPAUSED)) playmode = cwstudio_stop();
+					else {
+					cw_freesample(&asound);
+					cw_freesample(&csound);
+					cw_initsample(&asound, NULL);
+					asound.samplerate = samplerate;
+					cw_initsample(&csound, &asound);
+					if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
+					if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
+					playmode = cwstudio_play(&csound);
+					}
+				}
+				else if(event.bstate & BUTTON2_PRESSED)
+					param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
+				else if(event.bstate & BUTTON3_PRESSED)
+					playmode = cwstudio_pause();
+			}
+				break;
+
+#endif
+			
 			case KEY_F(1):
 			case '1':
 				cwstudio_help();
