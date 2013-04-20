@@ -28,9 +28,9 @@ AC_CHECK_LIB([winmm],[main])
 AC_CHECK_LIB([ossaudio],[main])
 AC_CHECK_LIB([pulse],[main])
 AC_CHECK_LIB([pulse-simple],[main])
-AC_CHECK_LIB([ncurses],[main])
-AC_CHECK_LIB([curses],[main])
-AC_CHECK_LIB([pthread],[main])
+#AC_CHECK_LIB([ncurses],[main])
+#AC_CHECK_LIB([curses],[main])
+#AC_CHECK_LIB([pthread],[main])
 
 # Macros
 AX_WITH_CURSES
@@ -41,6 +41,10 @@ AC_CHECK_HEADERS([ctype.h getopt.h math.h stdlib.h string.h unistd.h fcntl.h sys
 AC_CHECK_HEADERS([sys/soundcard.h soundcard.h machine/soundcard.h],
                      [AC_DEFINE([HAVE_OSS], 1,
                         [Define to 1 if you have OSS.])],
+                     [])
+AC_CHECK_HEADERS([alsa/asoundlib.h],
+                     [AC_DEFINE([HAVE_ALSA], 1,
+                        [Define to 1 if you have ALSA.])],
                      [])
 AC_CHECK_HEADERS([pulse/simple.h pulse/error.h],
                      [AC_DEFINE([HAVE_PULSEAUDIO], 1,
