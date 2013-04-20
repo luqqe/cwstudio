@@ -6,6 +6,9 @@
 /* Canonical target */
 #undef CANONICAL_TARGET
 
+/* Define to 1 if you have ALSA. */
+#undef HAVE_ALSA
+
 /* Define to 1 if you have the <ctype.h> header file. */
 #undef HAVE_CTYPE_H
 
