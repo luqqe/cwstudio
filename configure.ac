@@ -36,7 +36,10 @@ AC_CHECK_LIB([pulse-simple],[main])
 # Macros
 AX_WITH_CURSES
 AX_PTHREAD
-AX_ALSA
+AX_ALSA([],
+                     [AC_DEFINE([HAVE_ALSA], 1,
+                        [Define to 1 if you have ALSA.])],
+                     [])
 
 # Checks for header files.
 AC_CHECK_HEADERS([ctype.h getopt.h math.h stdlib.h string.h unistd.h fcntl.h sys/ioctl.h sys/time.h time.h windows.h process.h signal.h])

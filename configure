@@ -6599,7 +6599,9 @@ fi
 fi
 
 if test "x$alsa_found" = "xyes" ; then
-   :
+
+$as_echo "#define HAVE_ALSA 1" >>confdefs.h
+
    LIBS=`echo $LIBS | sed 's/-lasound//g'`
    LIBS=`echo $LIBS | sed 's/  //'`
    LIBS="-lasound $LIBS"
