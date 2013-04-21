@@ -1,4 +1,4 @@
-/*$T src/cwstudio.c GC 1.140 04/15/13 18:06:22 */
+/*$T src/cwstudio.c GC 1.140 04/21/13 20:08:09 */
 
 /*$I0
 
@@ -37,19 +37,6 @@
 #if HAVE_WINDOWS_H
 #include <windows.h>
 #endif
-
-#if defined HAVE_NCURSESW_CURSES_H
-#include <ncursesw/curses.h>
-#elif defined HAVE_NCURSESW_H
-#include <ncursesw.h>
-#elif defined HAVE_NCURSES_CURSES_H
-#include <ncurses/curses.h>
-#elif defined HAVE_NCURSES_H
-#include <ncurses.h>
-#elif defined HAVE_CURSES_H
-#include <curses.h>
-#endif
-
 #ifdef HAVE_PTHREAD
 #include <pthread.h>
 #endif
@@ -74,6 +61,44 @@
 #define THREAD_INTERFACE	"/pthread"
 #else
 #define THREAD_INTERFACE	""
+#endif
+#define HAVE_TERMIOS_H
+
+#if defined HAVE_NCURSESW_CURSES_H
+#include <ncursesw/curses.h>
+#elif defined HAVE_NCURSESW_H
+#include <ncursesw.h>
+#elif defined HAVE_NCURSES_CURSES_H
+#include <ncurses/curses.h>
+#elif defined HAVE_NCURSES_H
+#include <ncurses.h>
+#elif defined HAVE_CURSES_H
+#include <curses.h>
+#elif defined HAVE_TERMIOS_H
+#include <termios.h>
+
+/*
+ =======================================================================================================================
+ =======================================================================================================================
+ */
+int getch()
+{
+	/*~~~~~~~~~~~~~~~~~~~~~~~*/
+	struct termios	oldt, newt;
+	int				ch;
+	/*~~~~~~~~~~~~~~~~~~~~~~~*/
+
+	tcgetattr(STDIN_FILENO, &oldt);
+	newt = oldt;
+	newt.c_lflag &= ~(ICANON | ECHO);
+	tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+	ch = getchar();
+	tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+	return ch;
+}
+
+#else
+#define getch	getchar
 #endif
 
 /*
@@ -120,9 +145,10 @@ static int			playmode = CWSTOPPED;
 static char			statustext[256] = "";
 static WINDOW		*win_title, *win_param, *win_text, *win_help;
 #ifdef ALL_MOUSE_EVENTS
-	   MEVENT		event;
+MEVENT				event;
 #endif
 #endif
+
 /*
  =======================================================================================================================
     Parse environmental and command line parameters
@@ -395,10 +421,7 @@ char *cwstudio_generate_text()
 }
 
 #ifdef HAVE_CURSES
-
-	/*~~~~~~~~~~~*/
-	static int ncol, nrow;
-	/*~~~~~~~~~~~*/
+static int	ncol, nrow;
 
 /*
  =======================================================================================================================
@@ -406,7 +429,6 @@ char *cwstudio_generate_text()
  */
 void cwstudio_resetwindows()
 {
-
 #define SPLIT	ncol / 2 + 8
 	endwin();
 	refresh();
@@ -472,7 +494,6 @@ void cwstudio_resetwindows()
 
 	keypad(win_text, TRUE);
 	wrefresh(win_text);
-		
 }
 
 /*
@@ -484,7 +505,7 @@ void cwstudio_repaintwindows()
 	werase(win_param);
 
 	wprintw(win_param, "* %i Hz / %i bits\n", samplerate, bits);
-	
+
 	if(isatty(STDIN_FILENO)) {
 		switch(mode)
 		{
@@ -534,7 +555,7 @@ void cwstudio_repaintwindows()
 	werase(win_text);
 	wprintw(win_text, "%s", text);
 	wrefresh(win_text);
-	mvwprintw(win_param,nrow-8,0,"* %s",statustext);
+	mvwprintw(win_param, nrow - 8, 0, "* %s", statustext);
 	wrefresh(win_param);
 }
 
@@ -551,17 +572,24 @@ void cwstudio_resizeterm()
 }
 #endif
 
-
+/*
+ =======================================================================================================================
+ =======================================================================================================================
+ */
 void cwstudio_help()
 {
+	/*~~~~~~~~~~~*/
 	int ncol, nrow;
+	/*~~~~~~~~~~~*/
+
 	getmaxyx(stdscr, nrow, ncol);
-	
+
 	win_help = newwin(20, 40, nrow / 2 - 10, ncol / 2 - 20);
 	if(has_colors()) {
 		wattron(win_help, COLOR_PAIR(3));
 		wbkgd(win_help, COLOR_PAIR(3));
 	}
+
 	box(win_help, 0, 0);
 	wrefresh(win_help);
 	delwin(win_help);
@@ -592,13 +620,11 @@ void cwstudio_help()
 	wprintw(win_help, "Shift-END - space length\n");
 	wrefresh(win_help);
 	keypad(win_help, TRUE);
-		
+
 	wgetch(win_help);
-	
+
 	delwin(win_help);
 	cwstudio_resetwindows();
-	
-	
 }
 #endif
 
@@ -615,7 +641,6 @@ int cwstudio_regeneratetext()
 	return(CWOK);
 }
 
-
 /*
  =======================================================================================================================
     CWStudio - Main
@@ -623,12 +648,10 @@ int cwstudio_regeneratetext()
  */
 int main(int argc, char **argv)
 {
-	/*~~~~~~~~~~~*/
-#ifdef HAVE_CURSES
+	/*~~~~~~~*/
 	int ch;
-#endif
 	int i, err;
-	/*~~~~~~~~~~~*/
+	/*~~~~~~~*/
 
 	/* Initialize parameters */
 	cw_initparam(&param);
@@ -649,52 +672,51 @@ int main(int argc, char **argv)
 		cwstudio_repaintwindows();
 
 #ifdef ALL_MOUSE_EVENTS
-	mousemask(ALL_MOUSE_EVENTS, NULL);
+		mousemask(ALL_MOUSE_EVENTS, NULL);
 #endif
-
 		while((ch = wgetch(win_param))) {
 			switch(ch)
 			{
+#ifdef ALL_MOUSE_EVENTS
 
-#ifdef ALL_MOUSE_EVENTS			
 			case KEY_MOUSE:
-			if(getmouse(&event) == OK)
-			{	/* When the user clicks left mouse button */
-				if(event.bstate & BUTTON1_PRESSED)
-				{	
-					if((playmode == CWPLAYING) || (playmode == CWPAUSED)) playmode = cwstudio_stop();
-					else {
-					cw_freesample(&asound);
-					cw_freesample(&csound);
-					cw_initsample(&asound, NULL);
-					asound.samplerate = samplerate;
-					cw_initsample(&csound, &asound);
-					if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
-					if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
-					playmode = cwstudio_play(&csound);
-					}
-				}
-				else if(event.bstate & BUTTON2_PRESSED)
-					param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
-				else if(event.bstate & BUTTON3_PRESSED)
-					playmode = cwstudio_pause();
-			}
-				break;
+				if(getmouse(&event) == OK) {
 
+					/* When the user clicks left mouse button */
+					if(event.bstate & BUTTON1_PRESSED) {
+						if((playmode == CWPLAYING) || (playmode == CWPAUSED))
+							playmode = cwstudio_stop();
+						else {
+							cw_freesample(&asound);
+							cw_freesample(&csound);
+							cw_initsample(&asound, NULL);
+							asound.samplerate = samplerate;
+							cw_initsample(&csound, &asound);
+							if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
+							if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
+							playmode = cwstudio_play(&csound);
+						}
+					}
+					else if(event.bstate & BUTTON2_PRESSED)
+						param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
+					else if(event.bstate & BUTTON3_PRESSED)
+						playmode = cwstudio_pause();
+				}
+				break;
 #endif
-			
+
 			case KEY_F(1):
 			case '1':
 				cwstudio_help();
 				break;
-			
+
 			case KEY_F(2):
 			case '2':
-				if (csound.length) {
-					sprintf(filename,"%x.wav",(int) time(NULL));
+				if(csound.length) {
+					sprintf(filename, "%x.wav", (int) time(NULL));
 					if((i = cw_wavout(filename, &csound)) != CWOK) return(i);
-					sprintf(statustext,"Saved to %s.", filename);
-					}
+					sprintf(statustext, "Saved to %s.", filename);
+				}
 				break;
 
 			case KEY_F(3):
@@ -713,29 +735,31 @@ int main(int argc, char **argv)
 			case KEY_F(5):
 			case '5':
 				if(playmode == CWSTOPPED) {
-				cw_freesample(&asound);
-				cw_freesample(&csound);
-				cw_initsample(&asound, NULL);
-				asound.samplerate = samplerate;
-				cw_initsample(&csound, &asound);
-				if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
-				if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
-				playmode = cwstudio_play(&csound);
-				if (playmode == CWPLAYING) strcpy(statustext,"Playback started.");
+					cw_freesample(&asound);
+					cw_freesample(&csound);
+					cw_initsample(&asound, NULL);
+					asound.samplerate = samplerate;
+					cw_initsample(&csound, &asound);
+					if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
+					if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
+					playmode = cwstudio_play(&csound);
+					if(playmode == CWPLAYING) strcpy(statustext, "Playback started.");
 				}
 				break;
 
 			case KEY_F(6):
 			case '6':
 				playmode = cwstudio_stop();
-				strcpy(statustext,"Playback stopped.");
+				strcpy(statustext, "Playback stopped.");
 				break;
 
 			case KEY_F(7):
 			case '7':
 				playmode = cwstudio_pause();
-				if (playmode == CWPLAYING) strcpy(statustext,"Playback resumed.");
-				else strcpy(statustext,"Playback paused.");
+				if(playmode == CWPLAYING)
+					strcpy(statustext, "Playback resumed.");
+				else
+					strcpy(statustext, "Playback paused.");
 				break;
 
 			case KEY_F(8):
@@ -753,7 +777,7 @@ int main(int argc, char **argv)
 					param.highcut = 2400;
 				}
 				break;
-			
+
 			case KEY_F(9):
 			case '9':
 				param.freq = param.freq - 100;
@@ -768,15 +792,17 @@ int main(int argc, char **argv)
 
 			case KEY_F(11):
 			case '-':
-				if(param.qsb == 0) param.qsb = 10;
-				else if(param.qsb == 10) param.qsb = 0;
-				
+				if(param.qsb == 0)
+					param.qsb = 10;
+				else if(param.qsb == 10)
+					param.qsb = 0;
+
 				if(param.detune >= 100)
 					param.detune = 0;
 				else
 					param.detune = param.detune + 25;
 				break;
-				
+
 			case KEY_F(12):
 			case '=':
 				mode++;
@@ -784,8 +810,10 @@ int main(int argc, char **argv)
 				break;
 
 			case KEY_BACKSPACE:
-				if (param.shape >=20) param.shape = -20;
-				else param.shape = param.shape + 5;
+				if(param.shape >= 20)
+					param.shape = -20;
+				else
+					param.shape = param.shape + 5;
 				break;
 
 			case KEY_PPAGE:
@@ -811,17 +839,21 @@ int main(int argc, char **argv)
 				BOUND(chars, 2, strlen(charset_backup));
 				charset[chars] = '\0';
 				break;
-			
+
 			case KEY_SHOME:
-				if (param.dashlen >= 800) param.dashlen = 200;
-				else param.dashlen = param.dashlen + 50;
+				if(param.dashlen >= 800)
+					param.dashlen = 200;
+				else
+					param.dashlen = param.dashlen + 50;
 				break;
 
 			case KEY_SEND:
-				if (param.spacelen >= 200) param.spacelen = 50;
-				else param.spacelen = param.spacelen + 25;
+				if(param.spacelen >= 200)
+					param.spacelen = 50;
+				else
+					param.spacelen = param.spacelen + 25;
 				break;
-			
+
 			case KEY_IC:
 				param.signals++;
 				RANGE(signals, 1, 5);
@@ -831,7 +863,7 @@ int main(int argc, char **argv)
 				param.signals--;
 				RANGE(signals, 1, 5);
 				break;
-				
+
 			case KEY_RIGHT:
 				param.cspaces++;
 				RANGE(cspaces, 0, 100);
@@ -863,22 +895,33 @@ int main(int argc, char **argv)
 				break;
 
 			case '/':
-			if 	(samplerate == 8000) samplerate = 11025;
-			else if	(samplerate == 11025) samplerate = 22050;
-			else if	(samplerate == 22050) samplerate = 44100;
-			else if	(samplerate == 44100) samplerate = 16000;
-			else if	(samplerate == 16000) samplerate = 24000;
-			else if	(samplerate == 24000) samplerate = 48000;
-			else if	(samplerate == 48000) samplerate = 96000;
-			else if	(samplerate == 96000) samplerate = 192000;
-			else if	(samplerate == 192000) samplerate = 8000;
+				if(samplerate == 8000)
+					samplerate = 11025;
+				else if(samplerate == 11025)
+					samplerate = 22050;
+				else if(samplerate == 22050)
+					samplerate = 44100;
+				else if(samplerate == 44100)
+					samplerate = 16000;
+				else if(samplerate == 16000)
+					samplerate = 24000;
+				else if(samplerate == 24000)
+					samplerate = 48000;
+				else if(samplerate == 48000)
+					samplerate = 96000;
+				else if(samplerate == 96000)
+					samplerate = 192000;
+				else if(samplerate == 192000)
+					samplerate = 8000;
 				break;
-				
+
 			case '?':
-			if (bits == 16) bits = 8;
-			else bits = 16;
-			break;
-			
+				if(bits == 16)
+					bits = 8;
+				else
+					bits = 16;
+				break;
+
 			case 'A':
 			case 'a':
 				if(param.agc >= 100)
@@ -910,7 +953,7 @@ int main(int argc, char **argv)
 				else
 					param.hum = param.hum + 25;
 				break;
-				
+
 			case 'O':
 			case 'o':
 				if(param.odd >= 10)
@@ -926,7 +969,7 @@ int main(int argc, char **argv)
 				else
 					param.sweepness = 200;
 
-				if(param.sweep >=3000)
+				if(param.sweep >= 3000)
 					param.sweep = -3000;
 				else
 					param.sweep = param.sweep + 1000;
@@ -939,9 +982,6 @@ int main(int argc, char **argv)
 				else
 					param.hand = param.hand + 20;
 				break;
-				
-					
-
 			}
 
 			cwstudio_regeneratetext();
@@ -984,7 +1024,6 @@ int main(int argc, char **argv)
 				SOUND_INTERFACE,
 				THREAD_INTERFACE
 			);
-			fprintf(stderr, "Licensed under GPLv3\n");
 			fprintf(stderr, "----------------------------------------------------\n");
 			fprintf(stderr, "* Working at %i Hz, %i bits\n", samplerate, bits);
 
@@ -1063,10 +1102,15 @@ int main(int argc, char **argv)
 #if defined(HAVE_OSS) || defined(HAVE_PULSEAUDIO) || defined(HAVE_LIBWINMM)
 		/* Play if needed */
 		if(play) {
-			fprintf(stderr, "Playing...");
-			fflush(stderr);
-			playsample(&csound);
-			fprintf(stderr, "\n\n");
+			printf("<5> - PLAY, <6> - STOP, <7> - PAUSE, Ctrl-C - EXIT\n");
+			while((ch = getch())) {
+				switch(ch)
+				{
+				case 53:	cwstudio_play(&csound); break;
+				case 54:	cwstudio_stop(); break;
+				case 55:	cwstudio_pause(); break;
+				}
+			}
 		}
 #endif
 
