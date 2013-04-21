@@ -111,6 +111,7 @@ static unsigned int samplerate = 44100;
 static char			filename[256] = "output.wav";
 static char			charset[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
 static char			charset_backup[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
+static char			statustext[256] = "";
 #ifdef HAVE_CURSES
 static WINDOW		*win_title, *win_param, *win_text, *win_help;
 #ifdef ALL_MOUSE_EVENTS
@@ -390,15 +391,16 @@ char *cwstudio_generate_text()
 
 #ifdef HAVE_CURSES
 
+	/*~~~~~~~~~~~*/
+	static int ncol, nrow;
+	/*~~~~~~~~~~~*/
+
 /*
  =======================================================================================================================
  =======================================================================================================================
  */
 void cwstudio_resetwindows()
 {
-	/*~~~~~~~~~~~*/
-	int ncol, nrow;
-	/*~~~~~~~~~~~*/
 
 #define SPLIT	ncol / 2 + 8
 	endwin();
@@ -465,6 +467,7 @@ void cwstudio_resetwindows()
 
 	keypad(win_text, TRUE);
 	wrefresh(win_text);
+		
 }
 
 /*
@@ -526,6 +529,8 @@ void cwstudio_repaintwindows()
 	werase(win_text);
 	wprintw(win_text, "%s", text);
 	wrefresh(win_text);
+	mvwprintw(win_param,nrow-8,0,"* %s",statustext);
+	wrefresh(win_param);
 }
 
 #ifdef HAVE_SIGNAL_H
@@ -605,6 +610,7 @@ int cwstudio_regeneratetext()
 	return(CWOK);
 }
 
+
 /*
  =======================================================================================================================
     CWStudio - Main
@@ -679,9 +685,7 @@ int main(int argc, char **argv)
 				if (csound.length) {
 					sprintf(filename,"%x.wav",(int) time(NULL));
 					if((i = cw_wavout(filename, &csound)) != CWOK) return(i);
-					wprintw(win_param,"* Saved to %s, press any key", filename);
-					wrefresh(win_param);
-					wgetch(win_param);
+					sprintf(statustext,"Saved to %s.", filename);
 					}
 				break;
 
@@ -709,17 +713,21 @@ int main(int argc, char **argv)
 				if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
 				if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
 				playmode = cwstudio_play(&csound);
+				if (playmode == CWPLAYING) strcpy(statustext,"Playback started.");
 				}
 				break;
 
 			case KEY_F(6):
 			case '6':
 				playmode = cwstudio_stop();
+				strcpy(statustext,"Playback stopped.");
 				break;
 
 			case KEY_F(7):
 			case '7':
 				playmode = cwstudio_pause();
+				if (playmode == CWPLAYING) strcpy(statustext,"Playback resumed.");
+				else strcpy(statustext,"Playback paused.");
 				break;
 
 			case KEY_F(8):

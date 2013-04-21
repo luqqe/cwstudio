@@ -1,4 +1,4 @@
-/*$T src/play.c GC 1.140 04/15/13 18:32:57 */
+/*$T src/play.c GC 1.140 04/21/13 14:57:14 */
 
 
 /*$6
@@ -26,18 +26,15 @@
 #ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif
-
-
-volatile static int				status = CWSTOPPED;
-unsigned long int counter;
-char *place;
+volatile static int		status = CWSTOPPED;
+unsigned long int		counter;
+char					*place;
 
 #ifdef HAVE_PTHREAD
 #include <pthread.h>
-pthread_t cwstudio_thread;	
-pthread_attr_t cwstudio_attr;
+pthread_t				cwstudio_thread;
+pthread_attr_t			cwstudio_attr;
 #endif
-
 #ifdef HAVE_LIBWINMM
 HWAVEOUT				h;
 WAVEFORMATEX			wf;
@@ -52,61 +49,69 @@ int						audio;
 int						format, stereo;
 int						speed;
 #endif
+#ifndef HAVE_LIBWINMM
 
+/*
+ =======================================================================================================================
+ =======================================================================================================================
+ */
 void *cwstudio_playthread(void *arg)
 {
-	cw_sample *sample;
-	sample = (cw_sample*)arg;
-	counter = (sample->bits / 8) * sample->length - 2 ;
-	place = (char *)sample->data;
+	/*~~~~~~~~~~~~~~~~*/
+	cw_sample	*sample;
+	/*~~~~~~~~~~~~~~~~*/
+
+	sample = (cw_sample *) arg;
+	counter = (sample->bits / 8) * sample->length - 2;
+	place = (char *) sample->data;
 
 #ifdef HAVE_PULSEAUDIO
 #define BUFSIZE 512
+	if((sample->bits == 8))
+		pas.format = PA_SAMPLE_U8;
+	else
+		pas.format = PA_SAMPLE_S16LE;
+	pas.rate = sample->samplerate;
+	pas.channels = 1;
+	if(!(pa = pa_simple_new(NULL, "qrq", PA_STREAM_PLAYBACK, NULL, "playback", &pas, NULL, NULL, &e))) {
+		fprintf(stderr, "pa_simple_new() failed: %s\n", pa_strerror(e));
+	}
 
-			if((sample->bits == 8))
-				pas.format = PA_SAMPLE_U8;
-			else
-				pas.format = PA_SAMPLE_S16LE;
-			pas.rate = sample->samplerate;
-			pas.channels = 1;
-			if(!(pa = pa_simple_new(NULL, "qrq", PA_STREAM_PLAYBACK, NULL, "playback", &pas, NULL, NULL, &e))) {
-				fprintf(stderr, "pa_simple_new() failed: %s\n", pa_strerror(e));
-			}
-			while ((counter > 0) && (status != CWSTOPPED))
-			{
-			while (status == CWPAUSED);
-				if (counter < BUFSIZE) pa_simple_write(pa, place, counter, &e);
-				else pa_simple_write(pa, place, BUFSIZE, &e);
-				place = place + BUFSIZE;
-				counter = counter - BUFSIZE;
-			} 
-			    pa_simple_drain(pa, &e);
-#elif defined HAVE_OSS 
-			audio = open("/dev/dsp", O_WRONLY, 0);
-			if((sample->bits == 8))
-				format = AFMT_U8;
-			else
-				format = AFMT_S16_LE;
-			ioctl(audio, SNDCTL_DSP_SETFMT, &format);
-			stereo = 0;
-			ioctl(audio, SNDCTL_DSP_STEREO, &stereo);
-			speed = sample->samplerate;
-			ioctl(audio, SNDCTL_DSP_SPEED, &speed);
-			status = CWPLAYING;
-			while ((counter > 0) && (status != CWSTOPPED))
-			{
-			while (status == CWPAUSED);
-				write(audio, place, 2);
-				place = place + 2;
-				counter = counter - 2;
-			} 
-			if(close(audio) == -1);
+	while((counter > 0) && (status != CWSTOPPED)) {
+		while(status == CWPAUSED);
+		if(counter < BUFSIZE)
+			pa_simple_write(pa, place, counter, &e);
+		else
+			pa_simple_write(pa, place, BUFSIZE, &e);
+		place = place + BUFSIZE;
+		counter = counter - BUFSIZE;
+	}
 
+	pa_simple_drain(pa, &e);
+#elif defined HAVE_OSS
+	audio = open("/dev/dsp", O_WRONLY, 0);
+	if((sample->bits == 8))
+		format = AFMT_U8;
+	else
+		format = AFMT_S16_LE;
+	ioctl(audio, SNDCTL_DSP_SETFMT, &format);
+	stereo = 0;
+	ioctl(audio, SNDCTL_DSP_STEREO, &stereo);
+	speed = sample->samplerate;
+	ioctl(audio, SNDCTL_DSP_SPEED, &speed);
+	status = CWPLAYING;
+	while((counter > 0) && (status != CWSTOPPED)) {
+		while(status == CWPAUSED);
+		write(audio, place, 2);
+		place = place + 2;
+		counter = counter - 2;
+	}
+
+	if(close(audio) == -1);
 #endif
-
-
-			return(NULL);
+	return(NULL);
 }
+#endif
 
 /*
  =======================================================================================================================
@@ -114,43 +119,42 @@ void *cwstudio_playthread(void *arg)
  */
 int cwstudio_play(cw_sample *sample)
 {
-
-	if (status == CWSTOPPED) {
+	if(status == CWSTOPPED)
+	{
 #ifdef HAVE_LIBWINMM
-			wf.wFormatTag = WAVE_FORMAT_PCM;
-			wf.nChannels = 1;
-			wf.wBitsPerSample = sample->bits;
-			wf.nSamplesPerSec = sample->samplerate;
-			wf.nBlockAlign = wf.nChannels * wf.wBitsPerSample / 8;
-			wf.nAvgBytesPerSec = wf.nSamplesPerSec * wf.nBlockAlign;
-			wf.cbSize = 0;
-			d = CreateEvent(0, FALSE, FALSE, 0);
-			if(waveOutOpen(&h, 0, &wf, (DWORD) d, 0, CALLBACK_EVENT) != MMSYSERR_NOERROR);
-			wh.lpData = sample->data;
-			wh.dwBufferLength = (sample->bits / 8) * sample->length - 2;
-			wh.dwFlags = 0;
-			wh.dwLoops = 0;
-			if(waveOutPrepareHeader(h, &wh, sizeof(wh)) != MMSYSERR_NOERROR);
-			ResetEvent(d);
-			if(waveOutWrite(h, &wh, sizeof(wh)) != MMSYSERR_NOERROR);
+		wf.wFormatTag = WAVE_FORMAT_PCM;
+		wf.nChannels = 1;
+		wf.wBitsPerSample = sample->bits;
+		wf.nSamplesPerSec = sample->samplerate;
+		wf.nBlockAlign = wf.nChannels * wf.wBitsPerSample / 8;
+		wf.nAvgBytesPerSec = wf.nSamplesPerSec * wf.nBlockAlign;
+		wf.cbSize = 0;
+		d = CreateEvent(0, FALSE, FALSE, 0);
+		if(waveOutOpen(&h, 0, &wf, (DWORD) d, 0, CALLBACK_EVENT) != MMSYSERR_NOERROR);
+		wh.lpData = sample->data;
+		wh.dwBufferLength = (sample->bits / 8) * sample->length - 2;
+		wh.dwFlags = 0;
+		wh.dwLoops = 0;
+		if(waveOutPrepareHeader(h, &wh, sizeof(wh)) != MMSYSERR_NOERROR);
+		ResetEvent(d);
+		if(waveOutWrite(h, &wh, sizeof(wh)) != MMSYSERR_NOERROR);
 #else
-
 #ifdef HAVE_PTHREAD
-			pthread_attr_init(&cwstudio_attr);
-			pthread_attr_setdetachstate(&cwstudio_attr, PTHREAD_CREATE_JOINABLE); 
-			pthread_create(&cwstudio_thread, NULL, &cwstudio_playthread, sample);
+		pthread_attr_init(&cwstudio_attr);
+		pthread_attr_setdetachstate(&cwstudio_attr, PTHREAD_CREATE_JOINABLE);
+		pthread_create(&cwstudio_thread, NULL, &cwstudio_playthread, sample);
 #else
-			cwstudio_playthread(sample);
+		cwstudio_playthread(sample);
 #endif
 #endif
-			status = CWPLAYING;
+		status = CWPLAYING;
 
-			/*
-			 * if(WaitForSingleObject(d, INFINITE) != WAIT_OBJECT_0);
-			 * while (playing);
-			 */
+		/*
+		 * if(WaitForSingleObject(d, INFINITE) != WAIT_OBJECT_0);
+		 * while (playing);
+		 */
 	}
-	
+
 	return(status);
 }
 
@@ -160,13 +164,15 @@ int cwstudio_play(cw_sample *sample)
  */
 int cwstudio_pause()
 {
-	if(status == CWPLAYING) {
+	if(status == CWPLAYING)
+	{
 #ifdef HAVE_LIBWINMM
 		waveOutPause(h);
 #endif
 		status = CWPAUSED;
 	}
-	else if(status == CWPAUSED) {
+	else if(status == CWPAUSED)
+	{
 #ifdef HAVE_LIBWINMM
 		waveOutRestart(h);
 #endif
@@ -191,7 +197,7 @@ int cwstudio_stop()
 	pa_simple_flush(pa, &e);
 #elif defined HAVE_OSS
 	status = CWSTOPPED;
-	pthread_join(cwstudio_thread,NULL);
+	pthread_join(cwstudio_thread, NULL);
 #endif
 	status = CWSTOPPED;
 
@@ -209,5 +215,8 @@ void playsample(cw_sample *sample)
 #ifdef HAVE_LIBWINMM
 	if(WaitForSingleObject(d, INFINITE) != WAIT_OBJECT_0);
 #endif
-	/* cwstudio_callback(); */
+
+	/*
+	 * cwstudio_callback();
+	 */
 }
