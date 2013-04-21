@@ -37,9 +37,6 @@
 #if HAVE_WINDOWS_H
 #include <windows.h>
 #endif
-#ifdef HAVE_SYS_IOCTL_H
-#include <sys/ioctl.h>
-#endif
 
 #ifdef HAVE_CURSES_H
 #include <curses.h>
@@ -703,7 +700,7 @@ int main(int argc, char **argv)
 
 			case KEY_F(5):
 			case '5':
-				if((playmode == CWPLAYING) || (playmode == CWPAUSED)) playmode = cwstudio_stop();
+				if(playmode == CWSTOPPED) {
 				cw_freesample(&asound);
 				cw_freesample(&csound);
 				cw_initsample(&asound, NULL);
@@ -712,6 +709,7 @@ int main(int argc, char **argv)
 				if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
 				if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
 				playmode = cwstudio_play(&csound);
+				}
 				break;
 
 			case KEY_F(6):
