@@ -214,9 +214,7 @@ void playsample(cw_sample *sample)
 	cwstudio_play(sample);
 #ifdef HAVE_LIBWINMM
 	if(WaitForSingleObject(d, INFINITE) != WAIT_OBJECT_0);
+#elif HAVE_PTHREAD
+	pthread_join(cwstudio_thread, NULL);
 #endif
-
-	/*
-	 * cwstudio_callback();
-	 */
 }
