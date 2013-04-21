@@ -4,11 +4,11 @@
 #define CWPLAYING 1
 #define CWPAUSED 2
 
-void playsample(cw_sample *sample);
-void *threadplay (void *arg);
+extern void playsample(cw_sample *sample);
+extern void *threadplay (void *arg);
 
-int cwstudio_play(cw_sample *sample);
-int cwstudio_pause();
-int cwstudio_stop();
+extern int cwstudio_play(cw_sample *sample);
+extern int cwstudio_pause();
+extern int cwstudio_stop();
 
 
