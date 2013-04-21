@@ -6,7 +6,7 @@ AC_INIT(cwstudio, 0.9.2)
 AC_CONFIG_SRCDIR([src/cwstudio.c])
 m4_include([m4/ax_with_curses.m4])
 m4_include([m4/ax_pthread.m4])
-m4_include([m4/ax_alsa.m4])
+#m4_include([m4/ax_alsa.m4])
 
 # Canonical System
 AC_CANONICAL_SYSTEM
@@ -36,10 +36,10 @@ AC_CHECK_LIB([pulse-simple],[main])
 # Macros
 AX_WITH_CURSES
 AX_PTHREAD
-AX_ALSA([],
-                     [AC_DEFINE([HAVE_ALSA], 1,
-                        [Define to 1 if you have ALSA.])],
-                     [ ])
+#AX_ALSA([],
+#                     [AC_DEFINE([HAVE_ALSA], 1,
+#                        [Define to 1 if you have ALSA.])],
+#                     [ ])
 
 # Checks for header files.
 AC_CHECK_HEADERS([ctype.h getopt.h math.h stdlib.h string.h unistd.h fcntl.h sys/ioctl.h sys/time.h time.h windows.h process.h signal.h])
