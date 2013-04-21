@@ -29,6 +29,8 @@
 
 
 volatile static int				status = CWSTOPPED;
+unsigned long int counter;
+char *place;
 
 #ifdef HAVE_PTHREAD
 #include <pthread.h>
@@ -49,9 +51,6 @@ int						e;
 int						audio;
 int						format, stereo;
 int						speed;
-unsigned long int counter;
-char *place;
-
 #endif
 
 void *cwstudio_playthread(void *arg)
