@@ -38,13 +38,18 @@
 #include <windows.h>
 #endif
 
-#ifdef HAVE_CURSES_H
-#include <curses.h>
-#elif defined HAVE_NCURSES_H
-#include <ncurses.h>
+#if defined HAVE_NCURSESW_CURSES_H
+#include <ncursesw/curses.h>
+#elif defined HAVE_NCURSESW_H
+#include <ncursesw.h>
 #elif defined HAVE_NCURSES_CURSES_H
 #include <ncurses/curses.h>
+#elif defined HAVE_NCURSES_H
+#include <ncurses.h>
+#elif defined HAVE_CURSES_H
+#include <curses.h>
 #endif
+
 #ifdef HAVE_PTHREAD
 #include <pthread.h>
 #endif
@@ -55,7 +60,7 @@
 #include <process.h>
 #endif
 #ifdef HAVE_LIBWINMM
-#define SOUND_INTERFACE "/winmm"
+#define SOUND_INTERFACE "/waveout"
 #elif defined HAVE_PULSEAUDIO
 #define SOUND_INTERFACE "/pulseaudio"
 #elif defined HAVE_OSS
@@ -64,7 +69,7 @@
 #define SOUND_INTERFACE ""
 #endif
 #ifdef HAVE_PROCESS_H
-#define THREAD_INTERFACE	"/winthread"
+#define THREAD_INTERFACE	""
 #elif defined HAVE_PTHREAD
 #define THREAD_INTERFACE	"/pthread"
 #else
@@ -101,7 +106,6 @@ int separg(char *options, char *argv[], int size)
 }
 
 /* Global variables */
-static int			playmode = CWSTOPPED;
 static char			*text = NULL, *morsetext = NULL;
 static cw_sample	asound, csound;
 static cw_param		param;
@@ -111,8 +115,9 @@ static unsigned int samplerate = 44100;
 static char			filename[256] = "output.wav";
 static char			charset[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
 static char			charset_backup[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
-static char			statustext[256] = "";
 #ifdef HAVE_CURSES
+static int			playmode = CWSTOPPED;
+static char			statustext[256] = "";
 static WINDOW		*win_title, *win_param, *win_text, *win_help;
 #ifdef ALL_MOUSE_EVENTS
 	   MEVENT		event;
@@ -619,7 +624,10 @@ int cwstudio_regeneratetext()
 int main(int argc, char **argv)
 {
 	/*~~~~~~~~~~~*/
-	int ch, i, err;
+#ifdef HAVE_CURSES
+	int ch;
+#endif
+	int i, err;
 	/*~~~~~~~~~~~*/
 
 	/* Initialize parameters */
