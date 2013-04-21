@@ -96,7 +96,10 @@ int getch()
 	return ch;
 }
 
-#elif not defined WIN32
+#elif defined WIN32
+#include <conio.h>
+#define getch	_getch
+#else
 #define getch	getchar
 #endif
 
