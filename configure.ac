@@ -6,7 +6,7 @@ AC_INIT(cwstudio, 0.9.2)
 AC_CONFIG_SRCDIR([src/cwstudio.c])
 m4_include([m4/ax_with_curses.m4])
 m4_include([m4/ax_pthread.m4])
-#m4_include([m4/ax_alsa.m4])
+m4_include([m4/ax_alsa.m4])
 
 # Canonical System
 AC_CANONICAL_SYSTEM

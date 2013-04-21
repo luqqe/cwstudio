@@ -2507,7 +2507,9 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 # information on what to do *after* running autoupdate.
 
 
-#m4_include([m4/ax_alsa.m4])
+##############################################################################
+
+
 
 # Canonical System
 ac_aux_dir=
