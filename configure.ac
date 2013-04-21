@@ -33,7 +33,7 @@ AC_CHECK_LIB([pthread],[main])
 AX_WITH_CURSES
 
 # Checks for header files.
-AC_CHECK_HEADERS([ctype.h getopt.h math.h stdlib.h string.h unistd.h fcntl.h sys/ioctl.h sys/time.h time.h windows.h process.h signal.h])
+AC_CHECK_HEADERS([ctype.h getopt.h math.h stdlib.h string.h unistd.h fcntl.h sys/ioctl.h sys/time.h time.h windows.h process.h signal.h termios.h])
 AC_CHECK_HEADERS([sys/soundcard.h soundcard.h machine/soundcard.h],
                      [AC_DEFINE([HAVE_OSS], 1,
                         [Define to 1 if you have OSS.])],

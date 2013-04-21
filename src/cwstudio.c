@@ -62,7 +62,6 @@
 #else
 #define THREAD_INTERFACE	""
 #endif
-#define HAVE_TERMIOS_H
 
 #if defined HAVE_NCURSESW_CURSES_H
 #include <ncursesw/curses.h>
@@ -97,7 +96,7 @@ int getch()
 	return ch;
 }
 
-#else
+#elif not defined WIN32
 #define getch	getchar
 #endif
 
@@ -1103,7 +1102,7 @@ int main(int argc, char **argv)
 		/* Play if needed */
 		if(play) {
 			printf("<5> - PLAY, <6> - STOP, <7> - PAUSE, Ctrl-C - EXIT\n");
-			while((ch = getch())) {
+			while((ch = getch()) != 3) {
 				switch(ch)
 				{
 				case 53:	cwstudio_play(&csound); break;
