@@ -134,6 +134,7 @@ int cwstudio_play(cw_sample *sample)
 			ResetEvent(d);
 			if(waveOutWrite(h, &wh, sizeof(wh)) != MMSYSERR_NOERROR);
 #else
+
 #ifdef HAVE_PTHREAD
 			pthread_attr_init(&cwstudio_attr);
 			pthread_attr_setdetachstate(&cwstudio_attr, PTHREAD_CREATE_JOINABLE); 
