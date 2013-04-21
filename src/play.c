@@ -136,9 +136,9 @@ int cwstudio_play(cw_sample *sample)
 			pthread_attr_init(&cwstudio_attr);
 			pthread_attr_setdetachstate(&cwstudio_attr, PTHREAD_CREATE_JOINABLE); 
 			pthread_create(&cwstudio_thread, NULL, &cwstudio_playthread, sample);
+#endif
+#endif
 			status = CWPLAYING;
-#endif
-#endif
 
 			/*
 			 * if(WaitForSingleObject(d, INFINITE) != WAIT_OBJECT_0);
@@ -184,9 +184,10 @@ int cwstudio_stop()
 	CloseHandle(d);
 #elif defined HAVE_PULSE_AUDIO
 	pa_simple_flush(pa, &e);
+#elif defined HAVE_OSS
+	pthread_join(cwstudio_thread,NULL);
 #endif
 	status = CWSTOPPED;
-	pthread_join(cwstudio_thread,NULL);
 
 	return(status);
 }
