@@ -60,7 +60,9 @@ void *cwstudio_playthread(void *arg)
 	counter = (sample->bits / 8) * sample->length - 2 ;
 	place = (char *)sample->data;
 
-#ifdef HAVE_PULSEAUDIO	
+#ifdef HAVE_PULSEAUDIO
+#define BUFSIZE 512
+
 			if((sample->bits == 8))
 				pas.format = PA_SAMPLE_U8;
 			else
@@ -70,15 +72,15 @@ void *cwstudio_playthread(void *arg)
 			if(!(pa = pa_simple_new(NULL, "qrq", PA_STREAM_PLAYBACK, NULL, "playback", &pas, NULL, NULL, &e))) {
 				fprintf(stderr, "pa_simple_new() failed: %s\n", pa_strerror(e));
 			}
-
 			while ((counter > 0) && (status != CWSTOPPED))
 			{
 			while (status == CWPAUSED);
-				pa_simple_write(pa, place, 2, &e);
-			    pa_simple_drain(pa, &e);
-				place += 2;
-				counter -= 2;
+				if (counter < BUFSIZE) pa_simple_write(pa, place, counter, &e);
+				else pa_simple_write(pa, place, BUFSIZE, &e);
+				place = place + BUFSIZE;
+				counter = counter - BUFSIZE;
 			} 
+			    pa_simple_drain(pa, &e);
 #elif defined HAVE_OSS 
 			audio = open("/dev/dsp", O_WRONLY, 0);
 			if((sample->bits == 8))
@@ -94,9 +96,9 @@ void *cwstudio_playthread(void *arg)
 			while ((counter > 0) && (status != CWSTOPPED))
 			{
 			while (status == CWPAUSED);
-					write(audio, place, 2);
-				place += 2;
-				counter -= 2;
+				write(audio, place, 2);
+				place = place + 2;
+				counter = counter - 2;
 			} 
 			if(close(audio) == -1);
 
@@ -131,11 +133,13 @@ int cwstudio_play(cw_sample *sample)
 			if(waveOutPrepareHeader(h, &wh, sizeof(wh)) != MMSYSERR_NOERROR);
 			ResetEvent(d);
 			if(waveOutWrite(h, &wh, sizeof(wh)) != MMSYSERR_NOERROR);
-#elif defined HAVE_OSS
+#else
 #ifdef HAVE_PTHREAD
 			pthread_attr_init(&cwstudio_attr);
 			pthread_attr_setdetachstate(&cwstudio_attr, PTHREAD_CREATE_JOINABLE); 
 			pthread_create(&cwstudio_thread, NULL, &cwstudio_playthread, sample);
+#else
+			cwstudio_playthread(sample);
 #endif
 #endif
 			status = CWPLAYING;
@@ -185,6 +189,7 @@ int cwstudio_stop()
 #elif defined HAVE_PULSE_AUDIO
 	pa_simple_flush(pa, &e);
 #elif defined HAVE_OSS
+	status = CWSTOPPED;
 	pthread_join(cwstudio_thread,NULL);
 #endif
 	status = CWSTOPPED;
