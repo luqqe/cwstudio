@@ -5,8 +5,6 @@ AC_PREREQ([2.60])
 AC_INIT(cwstudio, 0.9.2)
 AC_CONFIG_SRCDIR([src/cwstudio.c])
 m4_include([m4/ax_with_curses.m4])
-m4_include([m4/ax_pthread.m4])
-m4_include([m4/ax_alsa.m4])
 
 # Canonical System
 AC_CANONICAL_SYSTEM
@@ -29,17 +27,10 @@ AC_CHECK_LIB([winmm],[main])
 AC_CHECK_LIB([ossaudio],[main])
 AC_CHECK_LIB([pulse],[main])
 AC_CHECK_LIB([pulse-simple],[main])
-#AC_CHECK_LIB([ncurses],[main])
-#AC_CHECK_LIB([curses],[main])
-#AC_CHECK_LIB([pthread],[main])
+AC_CHECK_LIB([pthread],[main])
 
 # Macros
 AX_WITH_CURSES
-AX_PTHREAD
-#AX_ALSA([],
-#                     [AC_DEFINE([HAVE_ALSA], 1,
-#                        [Define to 1 if you have ALSA.])],
-#                     [ ])
 
 # Checks for header files.
 AC_CHECK_HEADERS([ctype.h getopt.h math.h stdlib.h string.h unistd.h fcntl.h sys/ioctl.h sys/time.h time.h windows.h process.h signal.h])
@@ -47,13 +38,13 @@ AC_CHECK_HEADERS([sys/soundcard.h soundcard.h machine/soundcard.h],
                      [AC_DEFINE([HAVE_OSS], 1,
                         [Define to 1 if you have OSS.])],
                      [])
-#AC_CHECK_HEADERS([alsa/asoundlib.h],
-#                     [AC_DEFINE([HAVE_ALSA], 1,
-#                        [Define to 1 if you have ALSA.])],
-#                     [])
 AC_CHECK_HEADERS([pulse/simple.h pulse/error.h],
                      [AC_DEFINE([HAVE_PULSEAUDIO], 1,
                         [Define to 1 if you have PULSE AUDIO.])],
+                     [])
+AC_CHECK_HEADERS([pthread.h],
+                     [AC_DEFINE([HAVE_PTHREAD], 1,
+                        [Define to 1 if you have pthread.])],
                      [])
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_SIZE_T
