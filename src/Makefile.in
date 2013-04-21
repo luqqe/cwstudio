@@ -59,7 +59,6 @@ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/config.h.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_with_curses.m4 \
-	$(top_srcdir)/m4/ax_pthread.m4 $(top_srcdir)/m4/ax_alsa.m4 \
 	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
@@ -81,8 +80,7 @@ PROGRAMS = $(bin_PROGRAMS)
 am_cwstudio_OBJECTS = cwstudio.$(OBJEXT) play.$(OBJEXT)
 cwstudio_OBJECTS = $(am_cwstudio_OBJECTS)
 am__DEPENDENCIES_1 =
-cwstudio_DEPENDENCIES = libcwgen.a $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+cwstudio_DEPENDENCIES = libcwgen.a $(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp =
 am__depfiles_maybe =
@@ -140,9 +138,6 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PTHREAD_CC = @PTHREAD_CC@
-PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
-PTHREAD_LIBS = @PTHREAD_LIBS@
 RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -156,7 +151,6 @@ ac_ct_CC = @ac_ct_CC@
 am__leading_dot = @am__leading_dot@
 am__tar = @am__tar@
 am__untar = @am__untar@
-ax_pthread_config = @ax_pthread_config@
 bindir = @bindir@
 build = @build@
 build_alias = @build_alias@
