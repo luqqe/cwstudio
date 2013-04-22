@@ -663,6 +663,7 @@ int main(int argc, char **argv)
 	/*~~~~~~~*/
 	int ch;
 	int i, err;
+	FILE *f;
 	/*~~~~~~~*/
 
 	/* Initialize parameters */
@@ -734,9 +735,14 @@ int main(int argc, char **argv)
 			case KEY_F(2):
 			case '2':
 				if(csound.length) {
-					sprintf(filename, "%x.wav", (int) time(NULL));
-					if((i = cw_wavout(filename, &csound)) != CWOK) return(i);
-					sprintf(statustext, "Saved to %s.", filename);
+					i = (int) time(NULL);
+					sprintf(filename, "%x.wav", i);
+					if((err = cw_wavout(filename, &csound)) != CWOK) return(i);
+					sprintf(filename, "%x.txt", i);
+					f = fopen(filename,"w");
+					fputs(text,f);
+					fclose(f);
+					sprintf(statustext, "Saved to %x.wav.", i);
 				}
 				break;
 
@@ -1113,7 +1119,13 @@ int main(int argc, char **argv)
 
 		/* If stdout is redirected somewhere, feed generated WAV file there. */
 		if(isatty(STDOUT_FILENO)) {
-			if((i = cw_wavout(filename, &csound)) != CWOK) return(i);
+			i = (int) time(NULL);
+			sprintf(filename, "%x.wav", i);
+			if((err = cw_wavout(filename, &csound)) != CWOK) return(i);
+			sprintf(filename, "%x.txt", i);
+			f = fopen(filename,"w");
+			fputs(text,f);
+			fclose(f);
 		}
 		else {
 			fprintf(stderr, "* Redirecting sound to stdout\n\n");
