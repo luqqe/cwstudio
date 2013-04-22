@@ -144,7 +144,7 @@ static char			charset[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
 static char			charset_backup[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
 #ifdef HAVE_CURSES
 static int			playmode = CWSTOPPED;
-static char			statustext[256] = "";
+static char			statustext[256] = "Press <F1> or <1> for help.";
 static WINDOW		*win_title, *win_param, *win_text, *win_help;
 #ifdef ALL_MOUSE_EVENTS
 MEVENT				event;
@@ -661,6 +661,10 @@ int main(int argc, char **argv)
 	/* Parse environmental and command line parameters */
 	cwstudio_parseparam(argc, argv);
 
+#ifdef WIN32
+	SetConsoleTitle("CWStudio");
+#endif
+	
 #ifdef HAVE_CURSES
 	if(play)
 	{
