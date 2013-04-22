@@ -1,4 +1,4 @@
-/*$T src/cwstudio.c GC 1.140 04/21/13 20:08:09 */
+/*$T src/cwstudio.c GC 1.140 04/22/13 17:07:17 */
 
 /*$I0
 
@@ -62,7 +62,6 @@
 #else
 #define THREAD_INTERFACE	""
 #endif
-
 #if defined HAVE_NCURSESW_CURSES_H
 #include <ncursesw/curses.h>
 #elif defined HAVE_NCURSESW_H
@@ -78,6 +77,9 @@
 
 /*
  =======================================================================================================================
+    This is getch() replacement for compilation without ncurses, used for control of playback. The aim is to turn off
+    echo in terminal and do not wait for ENTER. In the case of WIN32, the _getch() of conio.h is used. Any other
+    configuration will result in getchar() behavior (echo and waiting for ENTER).
  =======================================================================================================================
  */
 int getch()
@@ -404,6 +406,7 @@ void cwstudio_parseparam(int argc, char **argv)
 
 /*
  =======================================================================================================================
+    Text generation routine, separated into a function.
  =======================================================================================================================
  */
 char *cwstudio_generate_text()
@@ -427,6 +430,9 @@ static int	ncol, nrow;
 
 /*
  =======================================================================================================================
+    This function turns off curses mode, reinitializes it and recreates all windows. It is called in the beginning and
+    (indirectly) after window/terminal resize. Each window is painted twice: one with larger dimensions to draw frames,
+    the another as real window inside. No text is put inside windows besides program title.
  =======================================================================================================================
  */
 void cwstudio_resetwindows()
@@ -500,6 +506,7 @@ void cwstudio_resetwindows()
 
 /*
  =======================================================================================================================
+    Repaint all texts inside windows and update status message at the bottom.
  =======================================================================================================================
  */
 void cwstudio_repaintwindows()
@@ -565,6 +572,7 @@ void cwstudio_repaintwindows()
 
 /*
  =======================================================================================================================
+    This function is called to repaint everything in changed terminal after SIGWINCH signal (terminal resize).
  =======================================================================================================================
  */
 void cwstudio_resizeterm()
@@ -576,6 +584,7 @@ void cwstudio_resizeterm()
 
 /*
  =======================================================================================================================
+    Paint help window and wait for any key.
  =======================================================================================================================
  */
 void cwstudio_help()
@@ -632,6 +641,7 @@ void cwstudio_help()
 
 /*
  =======================================================================================================================
+    Free text memory and regenerate it.
  =======================================================================================================================
  */
 int cwstudio_regeneratetext()
@@ -664,14 +674,17 @@ int main(int argc, char **argv)
 #ifdef WIN32
 	SetConsoleTitle("CWStudio");
 #endif
-	
 #ifdef HAVE_CURSES
 	if(play)
 	{
 #if defined(HAVE_SIGNAL_H) && defined(SIGWINCH)
+		/* Register signal to handle terminal resize */
 		signal(SIGWINCH, cwstudio_resizeterm);
 #endif
 		chars = strlen(charset);
+
+		/*$2- Initialize curses mode ---------------------------------------------------------------------------------*/
+
 		initscr();
 		cwstudio_resetwindows();
 		cwstudio_regeneratetext();
@@ -680,15 +693,17 @@ int main(int argc, char **argv)
 #ifdef ALL_MOUSE_EVENTS
 		mousemask(ALL_MOUSE_EVENTS, NULL);
 #endif
+
+		/*$3- Main loop for keyboard input in curses mode ============================================================*/
+
 		while((ch = wgetch(win_param))) {
 			switch(ch)
 			{
 #ifdef ALL_MOUSE_EVENTS
 
+			/* Mouse suppord compiled conditionally */
 			case KEY_MOUSE:
 				if(getmouse(&event) == OK) {
-
-					/* When the user clicks left mouse button */
 					if(event.bstate & BUTTON1_PRESSED) {
 						if((playmode == CWPLAYING) || (playmode == CWPAUSED))
 							playmode = cwstudio_stop();
@@ -989,6 +1004,8 @@ int main(int argc, char **argv)
 					param.hand = param.hand + 20;
 				break;
 			}
+
+			/*$2- Regenerate text and refresh screen after each keypress ---------------------------------------------*/
 
 			cwstudio_regeneratetext();
 			cwstudio_repaintwindows();

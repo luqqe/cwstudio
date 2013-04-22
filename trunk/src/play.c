@@ -1,12 +1,25 @@
-/*$T src/play.c GC 1.140 04/21/13 14:57:14 */
+/*$T src/play.c GC 1.140 04/22/13 17:13:31 */
 
+/*$I0
 
-/*$6
- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    This file is part of CWStudio.
+
+    Copyright 2008-2013 Lukasz Komsta, SP8QED
+
+    CWStudio is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    CWStudio is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with CWStudio. If not, see <http://www.gnu.org/licenses/>.
+
  */
-
-
 #include "cwstudio.h"
 
 #if HAVE_WINDOWS_H
@@ -53,6 +66,9 @@ int						speed;
 
 /*
  =======================================================================================================================
+    This function feeds audio data to the device in a loop, monitoring volatile "status" variable. If main thread
+    changes the value, the audio is stopped or paused. This does not apply to WinMM/WaveOut, where threading is
+    independent and this function is not compiled in.
  =======================================================================================================================
  */
 void *cwstudio_playthread(void *arg)
@@ -62,6 +78,11 @@ void *cwstudio_playthread(void *arg)
 	/*~~~~~~~~~~~~~~~~*/
 
 	sample = (cw_sample *) arg;
+
+	/*
+	 * Variables used for loop feeding (place is pointer, counter is how many bytes
+	 * left
+	 */
 	counter = (sample->bits / 8) * sample->length - 2;
 	place = (char *) sample->data;
 
@@ -115,6 +136,7 @@ void *cwstudio_playthread(void *arg)
 
 /*
  =======================================================================================================================
+    Start playback.
  =======================================================================================================================
  */
 int cwstudio_play(cw_sample *sample)
@@ -139,6 +161,10 @@ int cwstudio_play(cw_sample *sample)
 		ResetEvent(d);
 		if(waveOutWrite(h, &wh, sizeof(wh)) != MMSYSERR_NOERROR);
 #else
+		/*
+		 * If not WIN32, start new thread with pthread, or (if no pthread available) call
+		 * function directly
+		 */
 #ifdef HAVE_PTHREAD
 		pthread_attr_init(&cwstudio_attr);
 		pthread_attr_setdetachstate(&cwstudio_attr, PTHREAD_CREATE_JOINABLE);
@@ -148,11 +174,6 @@ int cwstudio_play(cw_sample *sample)
 #endif
 #endif
 		status = CWPLAYING;
-
-		/*
-		 * if(WaitForSingleObject(d, INFINITE) != WAIT_OBJECT_0);
-		 * while (playing);
-		 */
 	}
 
 	return(status);
@@ -160,6 +181,7 @@ int cwstudio_play(cw_sample *sample)
 
 /*
  =======================================================================================================================
+    Pause or resume playback.
  =======================================================================================================================
  */
 int cwstudio_pause()
@@ -184,6 +206,7 @@ int cwstudio_pause()
 
 /*
  =======================================================================================================================
+    Stop playback
  =======================================================================================================================
  */
 int cwstudio_stop()
@@ -197,24 +220,11 @@ int cwstudio_stop()
 	pa_simple_flush(pa, &e);
 #elif defined HAVE_OSS
 	status = CWSTOPPED;
+
+	/* Wait for thread to terminate */
 	pthread_join(cwstudio_thread, NULL);
 #endif
 	status = CWSTOPPED;
 
 	return(status);
-}
-
-/*
- =======================================================================================================================
-    Play audio sample, using WMM or OSS
- =======================================================================================================================
- */
-void playsample(cw_sample *sample)
-{
-	cwstudio_play(sample);
-#ifdef HAVE_LIBWINMM
-	if(WaitForSingleObject(d, INFINITE) != WAIT_OBJECT_0);
-#elif HAVE_PTHREAD
-	pthread_join(cwstudio_thread, NULL);
-#endif
 }
