@@ -21,6 +21,9 @@
 /* Define to 1 if <curses.h> is present */
 #undef HAVE_CURSES_H
 
+/* Define to 1 if you have curses mouse support. */
+#undef HAVE_CURSES_MOUSE
+
 /* Define to 1 if library supports certain obsolete features */
 #undef HAVE_CURSES_OBSOLETE
 
@@ -63,6 +66,9 @@
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
+
+/* Define to 1 if you have the `mousemask' function. */
+#undef HAVE_MOUSEMASK
 
 /* Define to 1 if the Ncurses library is present */
 #undef HAVE_NCURSES

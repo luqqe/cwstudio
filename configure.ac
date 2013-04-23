@@ -32,6 +32,15 @@ AC_CHECK_LIB([pthread],[main])
 # Macros
 AX_WITH_CURSES
 
+# Check for mouse support
+ac_save_LIBS="$LIBS"
+LIBS="$LIBS $CURSES_LIB"
+AC_CHECK_FUNCS([mousemask],
+                     [AC_DEFINE([HAVE_CURSES_MOUSE], 1,
+                        [Define to 1 if you have curses mouse support.])],
+				[])
+LIBS="$ac_save_LIBS"
+
 # Checks for header files.
 AC_CHECK_HEADERS([ctype.h getopt.h math.h stdlib.h string.h unistd.h fcntl.h sys/ioctl.h sys/time.h time.h windows.h process.h signal.h termios.h])
 AC_CHECK_HEADERS([sys/soundcard.h soundcard.h machine/soundcard.h],

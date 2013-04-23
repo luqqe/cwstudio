@@ -148,7 +148,7 @@ static char			charset_backup[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
 static int			playmode = CWSTOPPED;
 static char			statustext[256] = "Press <F1> or <1> for help.";
 static WINDOW		*win_title, *win_param, *win_text, *win_help;
-#ifdef ALL_MOUSE_EVENTS
+#ifdef HAVE_CURSES_MOUSE
 MEVENT				event;
 #endif
 #endif
@@ -691,7 +691,7 @@ int main(int argc, char **argv)
 		cwstudio_regeneratetext();
 		cwstudio_repaintwindows();
 
-#ifdef ALL_MOUSE_EVENTS
+#ifdef HAVE_CURSES_MOUSE
 		mousemask(ALL_MOUSE_EVENTS, NULL);
 #endif
 
@@ -700,14 +700,16 @@ int main(int argc, char **argv)
 		while((ch = wgetch(win_param))) {
 			switch(ch)
 			{
-#ifdef ALL_MOUSE_EVENTS
+#ifdef HAVE_CURSES_MOUSE
 
 			/* Mouse suppord compiled conditionally */
 			case KEY_MOUSE:
 				if(getmouse(&event) == OK) {
 					if(event.bstate & BUTTON1_PRESSED) {
-						if((playmode == CWPLAYING) || (playmode == CWPAUSED))
+						if((playmode == CWPLAYING) || (playmode == CWPAUSED)) {
 							playmode = cwstudio_stop();
+							strcpy(statustext, "Playback stopped.");
+						}
 						else {
 							cw_freesample(&asound);
 							cw_freesample(&csound);
@@ -717,12 +719,17 @@ int main(int argc, char **argv)
 							if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
 							if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
 							playmode = cwstudio_play(&csound);
+							if(playmode == CWPLAYING) strcpy(statustext, "Playback started.");
 						}
 					}
 					else if(event.bstate & BUTTON2_PRESSED)
 						param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
 					else if(event.bstate & BUTTON3_PRESSED)
 						playmode = cwstudio_pause();
+						if(playmode == CWPLAYING)
+							strcpy(statustext, "Playback resumed.");
+						else
+							strcpy(statustext, "Playback paused.");
 				}
 				break;
 #endif
