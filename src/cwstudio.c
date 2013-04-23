@@ -74,6 +74,7 @@
 #include <curses.h>
 #elif defined HAVE_TERMIOS_H
 #include <termios.h>
+
 /*
  =======================================================================================================================
     This is getch() replacement for compilation without ncurses, used for control of playback. The aim is to turn off
@@ -103,11 +104,6 @@ int getch()
 #else
 #define getch	getchar
 #endif
-
-#if ((defined ALL_MOUSE_EVENTS) && (defined MEVENT))
-#define HAVE_CURSES_MOUSE
-#endif
-
 
 /*
  =======================================================================================================================
@@ -152,7 +148,7 @@ static char			charset_backup[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
 static int			playmode = CWSTOPPED;
 static char			statustext[256] = "Press <F1> or <1> for help.";
 static WINDOW		*win_title, *win_param, *win_text, *win_help;
-#ifdef HAVE_CURSES_MOUSE
+#ifdef ALL_MOUSE_EVENTS
 MEVENT				event;
 #endif
 #endif
@@ -267,7 +263,6 @@ void cwstudio_parseparam(int argc, char **argv)
 			&&	(samplerate != 192000)
 			) samplerate = 44100;
 			break;
-
 
 		case 'c':
 			chars = atoi(optarg);
@@ -564,7 +559,6 @@ void cwstudio_repaintwindows()
 	if(param.dashlen != 300) wprintw(win_param, "* Dash length: %i%% ", param.dashlen);
 	if(param.spacelen != 100) wprintw(win_param, "* Space length: %i%% ", param.spacelen);
 	if((param.dashlen != 300) || (param.spacelen != 100)) wprintw(win_param, "\n");
-
 	wrefresh(win_param);
 
 	werase(win_text);
@@ -681,7 +675,6 @@ int main(int argc, char **argv)
 #ifdef WIN32
 	SetConsoleTitle("CWStudio");
 #endif
-
 #ifdef HAVE_CURSES
 	if(play)
 	{
@@ -698,7 +691,7 @@ int main(int argc, char **argv)
 		cwstudio_regeneratetext();
 		cwstudio_repaintwindows();
 
-#ifdef HAVE_CURSES_MOUSE
+#ifdef ALL_MOUSE_EVENTS
 		mousemask(ALL_MOUSE_EVENTS, NULL);
 #endif
 
@@ -707,7 +700,7 @@ int main(int argc, char **argv)
 		while((ch = wgetch(win_param))) {
 			switch(ch)
 			{
-#ifdef HAVE_CURSES_MOUSE
+#ifdef ALL_MOUSE_EVENTS
 
 			/* Mouse suppord compiled conditionally */
 			case KEY_MOUSE:
