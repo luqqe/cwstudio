@@ -724,12 +724,13 @@ int main(int argc, char **argv)
 					}
 					else if(event.bstate & BUTTON2_PRESSED)
 						param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
-					else if(event.bstate & BUTTON3_PRESSED)
+					else if(event.bstate & BUTTON3_PRESSED) {
 						playmode = cwstudio_pause();
 						if(playmode == CWPLAYING)
 							strcpy(statustext, "Playback resumed.");
 						else
 							strcpy(statustext, "Playback paused.");
+						}
 				}
 				break;
 #endif
