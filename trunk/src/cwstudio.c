@@ -104,7 +104,7 @@ int getch()
 #define getch	getchar
 #endif
 
-#ifdef ALL_MOUSE_EVENTS
+#if ((defined ALL_MOUSE_EVENTS) && (defined MEVENT))
 #define HAVE_CURSES_MOUSE
 #endif
 
@@ -564,6 +564,7 @@ void cwstudio_repaintwindows()
 	if(param.dashlen != 300) wprintw(win_param, "* Dash length: %i%% ", param.dashlen);
 	if(param.spacelen != 100) wprintw(win_param, "* Space length: %i%% ", param.spacelen);
 	if((param.dashlen != 300) || (param.spacelen != 100)) wprintw(win_param, "\n");
+
 	wrefresh(win_param);
 
 	werase(win_text);
