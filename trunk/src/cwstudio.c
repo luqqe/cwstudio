@@ -75,7 +75,7 @@
 #elif defined HAVE_TERMIOS_H
 #include <termios.h>
 
-#if ((defined ALL_MOUSE_EVENTS) && (defined MEVENT))
+#ifdef ALL_MOUSE_EVENTS
 #define HAVE_CURSES_MOUSE
 #endif
 
