@@ -722,8 +722,9 @@ int main(int argc, char **argv)
 							if(playmode == CWPLAYING) strcpy(statustext, "Playback started.");
 						}
 					}
-					else if(event.bstate & BUTTON2_PRESSED)
+					else if(event.bstate & BUTTON2_PRESSED) {
 						param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
+						}
 					else if(event.bstate & BUTTON3_PRESSED) {
 						playmode = cwstudio_pause();
 						if(playmode == CWPLAYING)
