@@ -75,6 +75,11 @@
 #elif defined HAVE_TERMIOS_H
 #include <termios.h>
 
+#if ((defined ALL_MOUSE_EVENTS) && (defined MEVENT))
+#define HAVE_CURSES_MOUSE
+#endif
+
+
 /*
  =======================================================================================================================
     This is getch() replacement for compilation without ncurses, used for control of playback. The aim is to turn off
@@ -148,7 +153,7 @@ static char			charset_backup[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
 static int			playmode = CWSTOPPED;
 static char			statustext[256] = "Press <F1> or <1> for help.";
 static WINDOW		*win_title, *win_param, *win_text, *win_help;
-#ifdef ALL_MOUSE_EVENTS
+#ifdef HAVE_CURSES_MOUSE
 MEVENT				event;
 #endif
 #endif
@@ -263,6 +268,7 @@ void cwstudio_parseparam(int argc, char **argv)
 			&&	(samplerate != 192000)
 			) samplerate = 44100;
 			break;
+
 
 		case 'c':
 			chars = atoi(optarg);
@@ -691,7 +697,7 @@ int main(int argc, char **argv)
 		cwstudio_regeneratetext();
 		cwstudio_repaintwindows();
 
-#ifdef ALL_MOUSE_EVENTS
+#ifdef HAVE_CURSES_MOUSE
 		mousemask(ALL_MOUSE_EVENTS, NULL);
 #endif
 
@@ -700,7 +706,7 @@ int main(int argc, char **argv)
 		while((ch = wgetch(win_param))) {
 			switch(ch)
 			{
-#ifdef ALL_MOUSE_EVENTS
+#ifdef HAVE_CURSES_MOUSE
 
 			/* Mouse suppord compiled conditionally */
 			case KEY_MOUSE:
