@@ -74,12 +74,6 @@
 #include <curses.h>
 #elif defined HAVE_TERMIOS_H
 #include <termios.h>
-
-#ifdef ALL_MOUSE_EVENTS
-#define HAVE_CURSES_MOUSE
-#endif
-
-
 /*
  =======================================================================================================================
     This is getch() replacement for compilation without ncurses, used for control of playback. The aim is to turn off
@@ -109,6 +103,11 @@ int getch()
 #else
 #define getch	getchar
 #endif
+
+#ifdef ALL_MOUSE_EVENTS
+#define HAVE_CURSES_MOUSE
+#endif
+
 
 /*
  =======================================================================================================================
@@ -681,6 +680,7 @@ int main(int argc, char **argv)
 #ifdef WIN32
 	SetConsoleTitle("CWStudio");
 #endif
+
 #ifdef HAVE_CURSES
 	if(play)
 	{
