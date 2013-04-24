@@ -611,20 +611,20 @@ void cwstudio_help()
 		wbkgd(win_help, COLOR_PAIR(3));
 	}
 
-	wprintw(win_help, "F1 - help, F2 - save to WAV file\n");
-	wprintw(win_help, "F3 - reset parameters\n");
-	wprintw(win_help, "F4, SPACE - regenerate random\n");
-	wprintw(win_help, "F5, ENTER - play\n");
-	wprintw(win_help, "F6 - stop, F7 - pause\n");
-	wprintw(win_help, "F8 - noise mode, F9/F10 - freq\n");
-	wprintw(win_help, "F11 - detune/qsb, F12 - mode\n");
+	wprintw(win_help, "F1/1 - help, F2/2 - save to WAV file\n");
+	wprintw(win_help, "F3/3 - reset parameters\n");
+	wprintw(win_help, "F4/4, SPACE - regenerate random\n");
+	wprintw(win_help, "F5/5, ENTER - play\n");
+	wprintw(win_help, "F6/6 - stop, F7/7 - pause\n");
+	wprintw(win_help, "F8/8 - noise mode, F9/9 - freq\n");
+	wprintw(win_help, "F11/- - detune/qsb, F12/= - mode\n");
 	wprintw(win_help, "UP/DOWN - groups, ? - bits\n");
 	wprintw(win_help, "LEFT/RIGHT - char spaces\n");
 	wprintw(win_help, "Shift-LEFT/RIGHT - word spaces\n");
 	wprintw(win_help, "HOME/END - charset, / - samplerate\n");
 	wprintw(win_help, "PGUP/PGDN - tempo, BACKSPACE - shape\n");
 	wprintw(win_help, "INS/DEL - signals, Q - hand\n");
-	wprintw(win_help, "Ctrl-C - exit, S - sweep\n");
+	wprintw(win_help, "F10/0 - exit, S - sweep\n");
 	wprintw(win_help, "A - AGC, E - even harmonics\n");
 	wprintw(win_help, "H - hum, O - odd harmonics\n");
 	wprintw(win_help, "Shift-HOME - dash length\n");
@@ -697,7 +697,7 @@ int main(int argc, char **argv)
 
 		/*$3- Main loop for keyboard input in curses mode ============================================================*/
 
-		while((ch = wgetch(win_param))) {
+		while(((ch = wgetch(win_param)) != KEY_F(10)) && (ch != '0')) {
 			switch(ch)
 			{
 #ifdef HAVE_CURSES_MOUSE
@@ -716,6 +716,10 @@ int main(int argc, char **argv)
 							cw_initsample(&asound, NULL);
 							asound.samplerate = samplerate;
 							cw_initsample(&csound, &asound);
+							wattron(win_text, COLOR_PAIR(1));
+							wprintw(win_text,"\n\n *** Please wait *** \n");
+							wattron(win_text, COLOR_PAIR(2));
+							wrefresh(win_text);
 							if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
 							if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
 							playmode = cwstudio_play(&csound);
@@ -729,9 +733,12 @@ int main(int argc, char **argv)
 						playmode = cwstudio_pause();
 						if(playmode == CWPLAYING)
 							strcpy(statustext, "Playback resumed.");
-						else
+						else if(playmode == CWPAUSED)
 							strcpy(statustext, "Playback paused.");
+						else if(playmode == CWSTOPPED)
+							strcpy(statustext, "Playback stopped.");
 						}
+
 				}
 				break;
 #endif
@@ -776,6 +783,10 @@ int main(int argc, char **argv)
 					cw_initsample(&asound, NULL);
 					asound.samplerate = samplerate;
 					cw_initsample(&csound, &asound);
+					wattron(win_text, COLOR_PAIR(1));
+					wprintw(win_text,"\n\n *** Please wait *** \n");
+					wattron(win_text, COLOR_PAIR(2));
+					wrefresh(win_text);
 					if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
 					if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
 					playmode = cwstudio_play(&csound);
@@ -794,8 +805,10 @@ int main(int argc, char **argv)
 				playmode = cwstudio_pause();
 				if(playmode == CWPLAYING)
 					strcpy(statustext, "Playback resumed.");
-				else
+				else if(playmode == CWPAUSED)
 					strcpy(statustext, "Playback paused.");
+				else if(playmode == CWSTOPPED)
+					strcpy(statustext, "Playback stopped.");
 				break;
 
 			case KEY_F(8):
@@ -816,14 +829,8 @@ int main(int argc, char **argv)
 
 			case KEY_F(9):
 			case '9':
-				param.freq = param.freq - 100;
-				RANGE(freq, 100, 4000);
-				break;
-
-			case KEY_F(10):
-			case '0':
 				param.freq = param.freq + 100;
-				RANGE(freq, 100, 4000);
+				if (param.freq > 4000) param.freq = 100;
 				break;
 
 			case KEY_F(11):
@@ -1026,11 +1033,18 @@ int main(int argc, char **argv)
 			cwstudio_repaintwindows();
 		}
 
-		/* Free memory */
+		/* End curses */
 		endwin();
+		initscr();
+		refresh();
+		endwin();
+		
+		/* Free memory */
 		cw_freesample(&asound);
 		cw_freesample(&csound);
-
+		cw_free(text);
+		cw_free(morsetext);
+		
 		/* Exit */
 		return(CWOK);
 	}
