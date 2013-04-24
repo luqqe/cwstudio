@@ -1,6 +1,6 @@
 bin_PROGRAMS = cwstudio
-cwstudio_SOURCES = cwstudio.c 
-cwstudio_LDADD = libcwgen.a
+cwstudio_SOURCES = cwstudio.c play.c cwstudio.h
+cwstudio_LDADD = libcwgen.a $(PTHREAD_LIBS) $(CURSES_LIB)
 
 AM_CFLAGS = -Wall -pedantic
 
