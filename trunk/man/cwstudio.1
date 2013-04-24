@@ -1,6 +1,6 @@
-.TH cwstudio 1  "October 29, 2010" "" ""
+.TH cwstudio 1  "April 24, 2013" "" ""
 .SH NAME
-cwstudio \- lightweight and portable CW signals generator
+cwstudio \- lightweight and portable CW signals generator with Curses UI
 .SH SYNOPSIS
 .B cwstudio
 [\-\-play]
@@ -41,9 +41,11 @@ cwstudio \- lightweight and portable CW signals generator
 [\-\-wordset 0-1000]
 [\-\-wspaces 0-100] 
 .SH DESCRIPTION
-Generates 1-5 mixed CW signals of various properties, adds optional noise and saves it to a WAV file. If compiled on proper environment, it can play the result.
+Curses-based CW signal generator. F1 shows help in interactive mode. In batch mode (--noplay), senerates 1-5 mixed CW signals of various properties, adds 
+optional noise and saves it to a WAV file. If compiled on proper environment, it can play the result. Command line parameters are also interpreted in
+interactive mode!
 .PP
-All text output is written to stderr. If stdout is redirected, the created file is written here. If stdin is redirected, the generated text is taken from it.
+In batch mode all text output is written to stderr; if stdout is redirected, the created file is written here. If stdin is redirected, the generated text is taken from it.
 .PP
 Optional CWPARAM environment variable can be set to hold some parameters, for example CWPARAM="--even 10 --odd 10".
 .SH OPTIONS
@@ -151,4 +153,4 @@ Set additional spaces between words/groups/calls. Default is zero.
 .SH EXIT STATUS
 CWStudio returns 0 if everything is OK. In the case of error, return value is different.
 .SH AUTHOR
-Lukasz Komsta, SP8QED, 2008-2011
+Lukasz Komsta, SP8QED, 2008-2013
