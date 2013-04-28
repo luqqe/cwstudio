@@ -539,7 +539,7 @@ void cwstudio_repaintwindows()
 	if(param.detune) wprintw(win_param, "* Detune %i%% ", param.detune);
 	if(param.qsb) wprintw(win_param, "* QSB %i%% ", param.qsb);
 	wprintw(win_param, "\n");
-	wprintw(win_param, "* Tempo is %i wpm ", param.tempo);
+	wprintw(win_param, "* Tempo is %i cpm ", param.tempo);
 	if(param.cspaces) wprintw(win_param, "* Char spacing +%i ", param.cspaces);
 	if(param.wspaces) wprintw(win_param, "* Word spacing +%i ", param.wspaces);
 	wprintw(win_param, "\n");
@@ -595,7 +595,7 @@ void cwstudio_help()
 
 	getmaxyx(stdscr, nrow, ncol);
 
-	win_help = newwin(20, 40, nrow / 2 - 10, ncol / 2 - 20);
+	win_help = newwin(20, 42, nrow / 2 - 10, ncol / 2 - 21);
 	if(has_colors()) {
 		wattron(win_help, COLOR_PAIR(3));
 		wbkgd(win_help, COLOR_PAIR(3));
@@ -605,7 +605,7 @@ void cwstudio_help()
 	wrefresh(win_help);
 	delwin(win_help);
 
-	win_help = newwin(18, 38, nrow / 2 - 9, ncol / 2 - 19);
+	win_help = newwin(18, 40, nrow / 2 - 9, ncol / 2 - 20);
 	if(has_colors()) {
 		wattron(win_help, COLOR_PAIR(3));
 		wbkgd(win_help, COLOR_PAIR(3));
@@ -618,17 +618,17 @@ void cwstudio_help()
 	wprintw(win_help, "F6/6 - stop, F7/7 - pause\n");
 	wprintw(win_help, "F8/8 - noise mode, F9/9 - freq\n");
 	wprintw(win_help, "F11/- - detune/qsb, F12/= - mode\n");
-	wprintw(win_help, "UP/DOWN - groups, ? - bits\n");
-	wprintw(win_help, "LEFT/RIGHT - char spaces\n");
-	wprintw(win_help, "Shift-LEFT/RIGHT - word spaces\n");
-	wprintw(win_help, "HOME/END - charset, / - samplerate\n");
-	wprintw(win_help, "PGUP/PGDN - tempo, BACKSPACE - shape\n");
-	wprintw(win_help, "INS/DEL - signals, Q - hand\n");
+	wprintw(win_help, "UP/DOWN(@!) - groups, ? - bits\n");
+	wprintw(win_help, "LEFT(,)/RIGHT(.) - char spaces\n");
+	wprintw(win_help, "Shift-LEFT(<)/RIGHT(>) - word spaces\n");
+	wprintw(win_help, "HOME/END({}) - charset, / - rate\n");
+	wprintw(win_help, "PGUP/PGDN/([]) - tempo, BKSP(\\) - shape\n");
+	wprintw(win_help, "INS/DEL(:\") - signals, Q - hand\n");
 	wprintw(win_help, "F10/0 - exit, S - sweep\n");
 	wprintw(win_help, "A - AGC, E - even harmonics\n");
 	wprintw(win_help, "H - hum, O - odd harmonics\n");
-	wprintw(win_help, "Shift-HOME - dash length\n");
-	wprintw(win_help, "Shift-END - space length\n");
+	wprintw(win_help, "Shift-HOME(:) - dash length\n");
+	wprintw(win_help, "Shift-END(') - space length\n");
 	wrefresh(win_help);
 	keypad(win_help, TRUE);
 
@@ -853,6 +853,7 @@ int main(int argc, char **argv)
 				break;
 
 			case KEY_BACKSPACE:
+			case '\\':
 				if(param.shape >= 20)
 					param.shape = -20;
 				else
@@ -860,16 +861,19 @@ int main(int argc, char **argv)
 				break;
 
 			case KEY_PPAGE:
+			case ']':
 				param.tempo = param.tempo + 5;
 				RANGE(tempo, 5, 500);
 				break;
 
 			case KEY_NPAGE:
+			case '[':
 				param.tempo = param.tempo - 5;
 				RANGE(tempo, 5, 500);
 				break;
 
 			case KEY_HOME:
+			case '{':
 				strncpy(charset, charset_backup, 256);
 				chars--;
 				BOUND(chars, 2, strlen(charset_backup));
@@ -877,6 +881,7 @@ int main(int argc, char **argv)
 				break;
 
 			case KEY_END:
+			case '}':
 				strncpy(charset, charset_backup, 256);
 				chars++;
 				BOUND(chars, 2, strlen(charset_backup));
@@ -884,6 +889,7 @@ int main(int argc, char **argv)
 				break;
 
 			case KEY_SHOME:
+			case ';':
 				if(param.dashlen >= 800)
 					param.dashlen = 200;
 				else
@@ -891,6 +897,7 @@ int main(int argc, char **argv)
 				break;
 
 			case KEY_SEND:
+			case '\'':
 				if(param.spacelen >= 200)
 					param.spacelen = 50;
 				else
@@ -898,41 +905,50 @@ int main(int argc, char **argv)
 				break;
 
 			case KEY_IC:
+			case '"':
 				param.signals++;
 				RANGE(signals, 1, 5);
 				break;
 
 			case KEY_DC:
+			case ':':
 				param.signals--;
 				RANGE(signals, 1, 5);
 				break;
 
 			case KEY_RIGHT:
+			case '.':
 				param.cspaces++;
 				RANGE(cspaces, 0, 100);
 				break;
 
 			case KEY_LEFT:
+			case ',':
 				param.cspaces--;
 				RANGE(cspaces, 0, 100);
 				break;
 
 			case KEY_SRIGHT:
+			case '>':
 				param.wspaces++;
 				RANGE(wspaces, 0, 100);
 				break;
 
 			case KEY_SLEFT:
+			case '<':
+			
 				param.wspaces--;
 				RANGE(wspaces, 0, 100);
 				break;
 
 			case KEY_UP:
+			case '!':
 				param.number = param.number - 5;
 				RANGE(number, 5, 100);
 				break;
 
 			case KEY_DOWN:
+			case '@':
 				param.number = param.number + 5;
 				RANGE(number, 5, 100);
 				break;
@@ -1103,7 +1119,7 @@ int main(int argc, char **argv)
 			if(param.detune) fprintf(stderr, "* Detune %i%% ", param.detune);
 			if(param.qsb) fprintf(stderr, "* QSB %i%% ", param.qsb);
 			fprintf(stderr, "\n");
-			fprintf(stderr, "* Tempo is %i wpm ", param.tempo);
+			fprintf(stderr, "* Tempo is %i cpm ", param.tempo);
 			if(param.cspaces) fprintf(stderr, "* Char spacing +%i ", param.cspaces);
 			if(param.wspaces) fprintf(stderr, "* Word spacing +%i ", param.wspaces);
 			fprintf(stderr, "\n");
