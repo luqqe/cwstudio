@@ -160,6 +160,9 @@
 /* Define to 1 if you have the <windows.h> header file. */
 #undef HAVE_WINDOWS_H
 
+/* WX */
+#undef HAVE_WX
+
 /* Name of package */
 #undef PACKAGE
 
