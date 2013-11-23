@@ -603,9 +603,13 @@ ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
 LIBOBJS
+COMPILE_CURSES_FALSE
+COMPILE_CURSES_TRUE
 CURSES_LIB
 HAVE_WINDRES_FALSE
 HAVE_WINDRES_TRUE
+COMPILE_WX_FALSE
+COMPILE_WX_TRUE
 WX_VERSION
 WX_LIBS_STATIC
 WX_LIBS
@@ -5580,15 +5584,15 @@ fi
     WX_VERSION=""
 
     min_wx_version=2.8.0
-    if test -z "${WXCONFIG_FLAGS}" ; then
+    if test -z "" ; then
       { $as_echo "$as_me:${as_lineno-$LINENO}: checking for wxWidgets version >= $min_wx_version" >&5
 $as_echo_n "checking for wxWidgets version >= $min_wx_version... " >&6; }
     else
-      { $as_echo "$as_me:${as_lineno-$LINENO}: checking for wxWidgets version >= $min_wx_version (${WXCONFIG_FLAGS})" >&5
-$as_echo_n "checking for wxWidgets version >= $min_wx_version (${WXCONFIG_FLAGS})... " >&6; }
+      { $as_echo "$as_me:${as_lineno-$LINENO}: checking for wxWidgets version >= $min_wx_version ()" >&5
+$as_echo_n "checking for wxWidgets version >= $min_wx_version ()... " >&6; }
     fi
 
-    WX_CONFIG_WITH_ARGS="$WX_CONFIG_PATH $wx_config_args ${WXCONFIG_FLAGS} "
+    WX_CONFIG_WITH_ARGS="$WX_CONFIG_PATH $wx_config_args  "
 
     WX_VERSION=`$WX_CONFIG_WITH_ARGS --version 2>/dev/null`
     wx_config_major_version=`echo $WX_VERSION | \
@@ -5676,7 +5680,7 @@ $as_echo "yes" >&6; }
          WX_CXXFLAGS_ONLY=`echo $WX_CXXFLAGS | sed "s@^$WX_CFLAGS *@@"`
       fi
 
-      HAVE_WX=1
+      wxWin=1
 
     else
 
@@ -5693,7 +5697,7 @@ $as_echo "no (version $WX_VERSION is not new enough)" >&6; }
        WX_CXXFLAGS=""
        WX_LIBS=""
        WX_LIBS_STATIC=""
-       HAVE_WX=0
+       :
 
     fi
   else
@@ -5703,7 +5707,7 @@ $as_echo "no (version $WX_VERSION is not new enough)" >&6; }
     WX_CXXFLAGS=""
     WX_LIBS=""
     WX_LIBS_STATIC=""
-    HAVE_WX=0
+    :
 
   fi
 
@@ -5716,11 +5720,16 @@ $as_echo "no (version $WX_VERSION is not new enough)" >&6; }
 
 
 
+if test "$wxWin" == 1; then
+ if true; then
+  COMPILE_WX_TRUE=
+  COMPILE_WX_FALSE='#'
+else
+  COMPILE_WX_TRUE='#'
+  COMPILE_WX_FALSE=
+fi
 
-cat >>confdefs.h <<_ACEOF
-#define HAVE_WX "$HAVE_WX"
-_ACEOF
-
+fi
 
 #CPPFLAGS="$CPPFLAGS $WX_CPPFLAGS"
 #CXXFLAGS="$CXXFLAGS $WX_CXXFLAGS_ONLY"
@@ -6494,6 +6503,14 @@ fi
 
     LIBS=$ax_saved_LIBS
 
+ if test "x$ax_cv_curses" = "xyes" || test "x$ax_cv_ncurses" = "xyes"; then
+  COMPILE_CURSES_TRUE=
+  COMPILE_CURSES_FALSE='#'
+else
+  COMPILE_CURSES_TRUE='#'
+  COMPILE_CURSES_FALSE=
+fi
+
 
 # Check for mouse support
 ac_save_LIBS="$LIBS"
@@ -6784,8 +6801,16 @@ else
   am__EXEEXT_FALSE=
 fi
 
+if test -z "${COMPILE_WX_TRUE}" && test -z "${COMPILE_WX_FALSE}"; then
+  as_fn_error $? "conditional \"COMPILE_WX\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
 if test -z "${HAVE_WINDRES_TRUE}" && test -z "${HAVE_WINDRES_FALSE}"; then
   as_fn_error $? "conditional \"HAVE_WINDRES\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${COMPILE_CURSES_TRUE}" && test -z "${COMPILE_CURSES_FALSE}"; then
+  as_fn_error $? "conditional \"COMPILE_CURSES\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 

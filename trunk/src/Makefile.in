@@ -36,12 +36,14 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-bin_PROGRAMS = cwcli$(EXEEXT) cwcurses$(EXEEXT) cwwx$(EXEEXT)
+bin_PROGRAMS = cwcli$(EXEEXT) $(am__EXEEXT_1) $(am__EXEEXT_2)
+@COMPILE_CURSES_TRUE@am__append_1 = cwcurses
+@COMPILE_CURSES_TRUE@@HAVE_WINDRES_TRUE@am__append_2 = cwcurses-res.rc
+@COMPILE_WX_TRUE@am__append_3 = cwwx
+@COMPILE_WX_TRUE@@HAVE_WINDRES_TRUE@am__append_4 = cwwx-res.rc
 #libcwgen_a_LDFLAGS		  = -shared
 #libcwgen_a_LIBADD        = -lm -lwinmm
-@HAVE_WINDRES_TRUE@am__append_1 = cwcurses-res.rc
-@HAVE_WINDRES_TRUE@am__append_2 = cwcli-res.rc
-@HAVE_WINDRES_TRUE@am__append_3 = cwwx-res.rc
+@HAVE_WINDRES_TRUE@am__append_5 = cwcli-res.rc
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/config.h.in
@@ -63,6 +65,8 @@ am_libcwgen_a_OBJECTS = fft.$(OBJEXT) morse.$(OBJEXT) noise.$(OBJEXT) \
 	random.$(OBJEXT) sound.$(OBJEXT) wav.$(OBJEXT) words.$(OBJEXT) \
 	calls.$(OBJEXT) init.$(OBJEXT)
 libcwgen_a_OBJECTS = $(am_libcwgen_a_OBJECTS)
+@COMPILE_CURSES_TRUE@am__EXEEXT_1 = cwcurses$(EXEEXT)
+@COMPILE_WX_TRUE@am__EXEEXT_2 = cwwx$(EXEEXT)
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am__cwcli_SOURCES_DIST = cwstudio.c cwcli.c play.c cwstudio.h \
@@ -75,16 +79,21 @@ am__DEPENDENCIES_1 =
 cwcli_DEPENDENCIES = libcwgen.a $(am__DEPENDENCIES_1)
 am__cwcurses_SOURCES_DIST = cwstudio.c cwcurses.c play.c cwstudio.h \
 	cwcurses-res.rc
-@HAVE_WINDRES_TRUE@am__objects_2 = cwcurses-res.$(OBJEXT)
-am_cwcurses_OBJECTS = cwstudio.$(OBJEXT) cwcurses.$(OBJEXT) \
-	play.$(OBJEXT) $(am__objects_2)
+@COMPILE_CURSES_TRUE@@HAVE_WINDRES_TRUE@am__objects_2 = cwcurses-res.$(OBJEXT)
+@COMPILE_CURSES_TRUE@am_cwcurses_OBJECTS = cwstudio.$(OBJEXT) \
+@COMPILE_CURSES_TRUE@	cwcurses.$(OBJEXT) play.$(OBJEXT) \
+@COMPILE_CURSES_TRUE@	$(am__objects_2)
 cwcurses_OBJECTS = $(am_cwcurses_OBJECTS)
-cwcurses_DEPENDENCIES = libcwgen.a $(am__DEPENDENCIES_1)
+@COMPILE_CURSES_TRUE@cwcurses_DEPENDENCIES = libcwgen.a \
+@COMPILE_CURSES_TRUE@	$(am__DEPENDENCIES_1)
 am__cwwx_SOURCES_DIST = cwwx.cc cwwx-res.rc
-@HAVE_WINDRES_TRUE@am__objects_3 = cwwx-res.$(OBJEXT)
-am_cwwx_OBJECTS = cwwx-cwwx.$(OBJEXT) $(am__objects_3)
+@COMPILE_WX_TRUE@@HAVE_WINDRES_TRUE@am__objects_3 =  \
+@COMPILE_WX_TRUE@@HAVE_WINDRES_TRUE@	cwwx-res.$(OBJEXT)
+@COMPILE_WX_TRUE@am_cwwx_OBJECTS = cwwx-cwwx.$(OBJEXT) \
+@COMPILE_WX_TRUE@	$(am__objects_3)
 cwwx_OBJECTS = $(am_cwwx_OBJECTS)
-cwwx_DEPENDENCIES = play.o libcwgen.a $(am__DEPENDENCIES_1)
+@COMPILE_WX_TRUE@cwwx_DEPENDENCIES = play.o libcwgen.a \
+@COMPILE_WX_TRUE@	$(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp =
 am__depfiles_maybe =
@@ -213,14 +222,14 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-cwcurses_SOURCES = cwstudio.c cwcurses.c play.c cwstudio.h \
-	$(am__append_1)
-cwcurses_LDADD = libcwgen.a $(PTHREAD_LIBS) $(CURSES_LIB)
-cwcli_SOURCES = cwstudio.c cwcli.c play.c cwstudio.h $(am__append_2)
+@COMPILE_CURSES_TRUE@cwcurses_SOURCES = cwstudio.c cwcurses.c play.c \
+@COMPILE_CURSES_TRUE@	cwstudio.h $(am__append_2)
+@COMPILE_CURSES_TRUE@cwcurses_LDADD = libcwgen.a $(PTHREAD_LIBS) $(CURSES_LIB)
+@COMPILE_WX_TRUE@cwwx_SOURCES = cwwx.cc $(am__append_4)
+@COMPILE_WX_TRUE@cwwx_CPPFLAGS = $(WX_CPPFLAGS)
+@COMPILE_WX_TRUE@cwwx_LDADD = play.o libcwgen.a $(WX_LIBS)
+cwcli_SOURCES = cwstudio.c cwcli.c play.c cwstudio.h $(am__append_5)
 cwcli_LDADD = libcwgen.a $(PTHREAD_LIBS) $(CURSES_LIB)
-cwwx_SOURCES = cwwx.cc $(am__append_3)
-cwwx_CPPFLAGS = $(WX_CPPFLAGS)
-cwwx_LDADD = play.o libcwgen.a $(WX_LIBS)
 AM_CFLAGS = -Wall -pedantic
 noinst_LIBRARIES = libcwgen.a
 libcwgen_a_SOURCES = fft.c morse.c noise.c random.c sound.c wav.c words.c calls.c init.c cwgen.h
