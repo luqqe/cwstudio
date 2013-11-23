@@ -111,8 +111,7 @@ IMPLEMENT_APP(CWStudio)
 bool CWStudio::OnInit()
 {
 	
-	CWWindow *frame = new CWWindow( wxString("CWStudio ") + wxString(VERSION) + wxString(" (") + wxString(CANONICAL_HOST) + wxString(")"),
-	wxPoint(50,50), wxSize(450,340) );
+	CWWindow *frame = new CWWindow( wxString(wxT("CWStudio")), wxPoint(50,50), wxSize(450,340) );
 	
 	
 		
@@ -126,24 +125,24 @@ CWWindow::CWWindow(const wxString& title, const wxPoint& pos, const wxSize& size
 : wxFrame((wxFrame *)NULL, -1, title, pos, size)
 {
 	wxMenu *menuFile = new wxMenu;
-	menuFile->Append( ID_About, "&About..." );
+	menuFile->Append( ID_About, wxT("&About...") );
 	menuFile->AppendSeparator();
-	menuFile->Append( ID_Quit, "E&xit" );
+	menuFile->Append( ID_Quit, wxT("E&xit") );
 	
 	wxMenuBar *menuBar = new wxMenuBar;
-	menuBar->Append( menuFile, "&File" );
+	menuBar->Append( menuFile, wxT("&File") );
 
 	wxPanel *panel = new wxPanel(this, wxID_ANY);
 
 
-	wxButton *button  = new wxButton(panel,ID_Play,"My wxButton",wxPoint(10,10),wxSize(100,20),0);
-	wxTextCtrl *textcontrol = new wxTextCtrl(panel,wxID_ANY,"",wxPoint(10,40),wxSize(200,200),wxTE_MULTILINE);
+	wxButton *button  = new wxButton(panel,ID_Play,wxT("My wxButton"),wxPoint(10,10),wxSize(100,20),0);
+	wxTextCtrl *textcontrol = new wxTextCtrl(panel,wxID_ANY,wxT(""),wxPoint(10,40),wxSize(200,200),wxTE_MULTILINE);
 	
 	SetMenuBar( menuBar );
 	//SetIcon(wxIcon(1));
 
 	CreateStatusBar();
-	SetStatusText( "Welcome to wxWindows!" );
+	SetStatusText( wxT("Welcome to wxWindows!") );
 	CWSound *sound = new CWSound();
 	
 }
@@ -157,8 +156,8 @@ void CWWindow::OnQuit(wxCommandEvent& WXUNUSED(event))
 void CWWindow::OnAbout(wxCommandEvent& WXUNUSED(event))
 {
 	
-	wxMessageBox("CWStudio",
-	"CWStudio", wxOK | wxICON_INFORMATION, this);
+	wxMessageBox(wxT("CWStudio"),
+	wxT("CWStudio"), wxOK | wxICON_INFORMATION, this);
 	
 }
 
