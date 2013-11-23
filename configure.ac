@@ -31,8 +31,10 @@ AC_CHECK_LIB([pulse-simple],[main])
 AC_CHECK_LIB([pthread],[main])
 
 AM_OPTIONS_WXCONFIG
-AM_PATH_WXCONFIG([2.8.0],[HAVE_WX=1],[HAVE_WX=0],,${WXCONFIG_FLAGS})
-AC_DEFINE_UNQUOTED([HAVE_WX], "$HAVE_WX", [WX])
+AM_PATH_WXCONFIG([2.8.0], wxWin=1)
+if test "$wxWin" == 1; then
+AM_CONDITIONAL([COMPILE_WX],true)
+fi
 
 #CPPFLAGS="$CPPFLAGS $WX_CPPFLAGS"
 #CXXFLAGS="$CXXFLAGS $WX_CXXFLAGS_ONLY"
@@ -43,6 +45,7 @@ AM_CONDITIONAL(HAVE_WINDRES, which windres > /dev/null)
 
 # Macros
 AX_WITH_CURSES
+AM_CONDITIONAL(COMPILE_CURSES, test "x$ax_cv_curses" = "xyes" || test "x$ax_cv_ncurses" = "xyes")
 
 # Check for mouse support
 ac_save_LIBS="$LIBS"
