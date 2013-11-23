@@ -606,8 +606,6 @@ LIBOBJS
 COMPILE_CURSES_FALSE
 COMPILE_CURSES_TRUE
 CURSES_LIB
-HAVE_WINDRES_FALSE
-HAVE_WINDRES_TRUE
 COMPILE_WX_FALSE
 COMPILE_WX_TRUE
 WX_VERSION
@@ -619,6 +617,10 @@ WX_CXXFLAGS
 WX_CFLAGS
 WX_CPPFLAGS
 WX_CONFIG_PATH
+HAVE_WXCONFIG
+HAVE_WINDRES_FALSE
+HAVE_WINDRES_TRUE
+HAVE_WINDRES
 RANLIB
 LN_S
 ac_ct_CXX
@@ -5235,6 +5237,54 @@ else
 fi
 
 
+# Windres
+# Extract the first word of "windres", so it can be a program name with args.
+set dummy windres; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_prog_HAVE_WINDRES+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$HAVE_WINDRES"; then
+  ac_cv_prog_HAVE_WINDRES="$HAVE_WINDRES" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_HAVE_WINDRES=""yes""
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  test -z "$ac_cv_prog_HAVE_WINDRES" && ac_cv_prog_HAVE_WINDRES=""no""
+fi
+fi
+HAVE_WINDRES=$ac_cv_prog_HAVE_WINDRES
+if test -n "$HAVE_WINDRES"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $HAVE_WINDRES" >&5
+$as_echo "$HAVE_WINDRES" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+ if test "$HAVE_WINDRES" == "yes"; then
+  HAVE_WINDRES_TRUE=
+  HAVE_WINDRES_FALSE='#'
+else
+  HAVE_WINDRES_TRUE='#'
+  HAVE_WINDRES_FALSE=
+fi
+
+
 # Checks for libraries.
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for sinf in -lm" >&5
 $as_echo_n "checking for sinf in -lm... " >&6; }
@@ -5477,6 +5527,46 @@ _ACEOF
 fi
 
 
+# wxWidgets
+# Extract the first word of "wx-config", so it can be a program name with args.
+set dummy wx-config; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_prog_HAVE_WXCONFIG+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$HAVE_WXCONFIG"; then
+  ac_cv_prog_HAVE_WXCONFIG="$HAVE_WXCONFIG" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_HAVE_WXCONFIG=""yes""
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  test -z "$ac_cv_prog_HAVE_WXCONFIG" && ac_cv_prog_HAVE_WXCONFIG=""no""
+fi
+fi
+HAVE_WXCONFIG=$ac_cv_prog_HAVE_WXCONFIG
+if test -n "$HAVE_WXCONFIG"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $HAVE_WXCONFIG" >&5
+$as_echo "$HAVE_WXCONFIG" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+if test "$HAVE_WXCONFIG" == "yes"; then
 
 
 # Check whether --with-wxdir was given.
@@ -5680,7 +5770,7 @@ $as_echo "yes" >&6; }
          WX_CXXFLAGS_ONLY=`echo $WX_CXXFLAGS | sed "s@^$WX_CFLAGS *@@"`
       fi
 
-      wxWin=1
+      WX_RIGHT_VERSION=1
 
     else
 
@@ -5720,8 +5810,8 @@ $as_echo "no (version $WX_VERSION is not new enough)" >&6; }
 
 
 
-if test "$wxWin" == 1; then
- if true; then
+fi
+ if test "$WX_RIGHT_VERSION" == 1; then
   COMPILE_WX_TRUE=
   COMPILE_WX_FALSE='#'
 else
@@ -5729,20 +5819,11 @@ else
   COMPILE_WX_FALSE=
 fi
 
-fi
 
 #CPPFLAGS="$CPPFLAGS $WX_CPPFLAGS"
 #CXXFLAGS="$CXXFLAGS $WX_CXXFLAGS_ONLY"
 #CFLAGS="$CFLAGS $WX_CFLAGS_ONLY"
 #LIBS="$LIBS $WX_LIBS"
-
- if which windres > /dev/null; then
-  HAVE_WINDRES_TRUE=
-  HAVE_WINDRES_FALSE='#'
-else
-  HAVE_WINDRES_TRUE='#'
-  HAVE_WINDRES_FALSE=
-fi
 
 
 # Macros
@@ -6801,12 +6882,12 @@ else
   am__EXEEXT_FALSE=
 fi
 
-if test -z "${COMPILE_WX_TRUE}" && test -z "${COMPILE_WX_FALSE}"; then
-  as_fn_error $? "conditional \"COMPILE_WX\" was never defined.
-Usually this means the macro was only invoked conditionally." "$LINENO" 5
-fi
 if test -z "${HAVE_WINDRES_TRUE}" && test -z "${HAVE_WINDRES_FALSE}"; then
   as_fn_error $? "conditional \"HAVE_WINDRES\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${COMPILE_WX_TRUE}" && test -z "${COMPILE_WX_FALSE}"; then
+  as_fn_error $? "conditional \"COMPILE_WX\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${COMPILE_CURSES_TRUE}" && test -z "${COMPILE_CURSES_FALSE}"; then
