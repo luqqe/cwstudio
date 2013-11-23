@@ -22,6 +22,10 @@ AC_PROG_CXX
 AC_PROG_LN_S
 AC_PROG_RANLIB
 
+# Windres
+AC_CHECK_PROG(HAVE_WINDRES, windres, "yes", "no")
+AM_CONDITIONAL(HAVE_WINDRES, [test "$HAVE_WINDRES" == "yes"])
+
 # Checks for libraries.
 AC_CHECK_LIB([m],[sinf])
 AC_CHECK_LIB([winmm],[main])
@@ -30,18 +34,19 @@ AC_CHECK_LIB([pulse],[main])
 AC_CHECK_LIB([pulse-simple],[main])
 AC_CHECK_LIB([pthread],[main])
 
-AM_OPTIONS_WXCONFIG
-AM_PATH_WXCONFIG([2.8.0], wxWin=1)
-if test "$wxWin" == 1; then
-AM_CONDITIONAL([COMPILE_WX],true)
+# wxWidgets
+AC_CHECK_PROG(HAVE_WXCONFIG, wx-config, "yes", "no")
+if test "$HAVE_WXCONFIG" == "yes"; then
+	AM_OPTIONS_WXCONFIG
+	AM_PATH_WXCONFIG([2.8.0], WX_RIGHT_VERSION=1)
 fi
+AM_CONDITIONAL([COMPILE_WX],[test "$WX_RIGHT_VERSION" == 1])
 
 #CPPFLAGS="$CPPFLAGS $WX_CPPFLAGS"
 #CXXFLAGS="$CXXFLAGS $WX_CXXFLAGS_ONLY"
 #CFLAGS="$CFLAGS $WX_CFLAGS_ONLY"
 #LIBS="$LIBS $WX_LIBS"
 
-AM_CONDITIONAL(HAVE_WINDRES, which windres > /dev/null)
 
 # Macros
 AX_WITH_CURSES
