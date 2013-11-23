@@ -3,7 +3,7 @@
 
 AC_PREREQ([2.60])
 AC_INIT(cwstudio, 0.9.2)
-AC_CONFIG_SRCDIR([src/cwstudio.c])
+AC_CONFIG_SRCDIR([src/cwcli.c])
 m4_include([m4/ax_with_curses.m4])
 
 # Canonical System
@@ -18,6 +18,7 @@ AM_CONFIG_HEADER([src/config.h])
 
 # Checks for programs.
 AC_PROG_CC
+AC_PROG_CXX
 AC_PROG_LN_S
 AC_PROG_RANLIB
 
@@ -28,6 +29,17 @@ AC_CHECK_LIB([ossaudio],[main])
 AC_CHECK_LIB([pulse],[main])
 AC_CHECK_LIB([pulse-simple],[main])
 AC_CHECK_LIB([pthread],[main])
+
+AM_OPTIONS_WXCONFIG
+AM_PATH_WXCONFIG([2.8.0],[HAVE_WX=1],[HAVE_WX=0],,${WXCONFIG_FLAGS})
+AC_DEFINE_UNQUOTED([HAVE_WX], "$HAVE_WX", [WX])
+
+#CPPFLAGS="$CPPFLAGS $WX_CPPFLAGS"
+#CXXFLAGS="$CXXFLAGS $WX_CXXFLAGS_ONLY"
+#CFLAGS="$CFLAGS $WX_CFLAGS_ONLY"
+#LIBS="$LIBS $WX_LIBS"
+
+AM_CONDITIONAL(HAVE_WINDRES, which windres > /dev/null)
 
 # Macros
 AX_WITH_CURSES

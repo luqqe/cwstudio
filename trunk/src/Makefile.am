@@ -1,11 +1,14 @@
-bin_PROGRAMS = cwstudio cwstudiowx
+bin_PROGRAMS = cwcli cwcurses cwwx
 
-cwstudio_SOURCES = cwstudio.c play.c cwstudio.h
-cwstudio_LDADD = libcwgen.a $(PTHREAD_LIBS) $(CURSES_LIB)
+cwcurses_SOURCES = cwstudio.c cwcurses.c play.c cwstudio.h
+cwcurses_LDADD = libcwgen.a $(PTHREAD_LIBS) $(CURSES_LIB)
 
-cwstudiowx_SOURCES = cwstudiowx.cc
-cwstudiowx_CPPFLAGS = $(WX_CPPFLAGS)
-cwstudiowx_LDADD = play.o libcwgen.a $(WX_LIBS)
+cwcli_SOURCES = cwstudio.c cwcli.c play.c cwstudio.h
+cwcli_LDADD = libcwgen.a $(PTHREAD_LIBS) $(CURSES_LIB)
+
+cwwx_SOURCES = cwwx.cc
+cwwx_CPPFLAGS = $(WX_CPPFLAGS)
+cwwx_LDADD = play.o libcwgen.a $(WX_LIBS)
 
 AM_CFLAGS = -Wall -pedantic
 
@@ -14,8 +17,9 @@ libcwgen_a_SOURCES        = fft.c morse.c noise.c random.c sound.c wav.c words.c
 #libcwgen_a_LIBADD        = -lm -lwinmm
 
 if HAVE_WINDRES
-cwstudio_SOURCES += cwstudio-res.rc
-cwstudiowx_SOURCES += cwstudiowx-res.rc
+cwcurses_SOURCES += cwcurses-res.rc
+cwcli_SOURCES += cwcli-res.rc
+cwwx_SOURCES += cwwx-res.rc
 endif
 
 .rc.o:
