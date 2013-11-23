@@ -130,15 +130,16 @@ void cwstudio_writeconfig()
 	FILE *f;
 	char filename[255];
 	sprintf(filename,"%s.cfg",CANONICAL_HOST);
-	f = fopen(filename,"w");
-	fwrite(&mode,sizeof(int),1,f);
-	fwrite(&wordset,sizeof(int),1,f);
-	fwrite(&chars,sizeof(int),1,f);
-	fwrite(&bits,sizeof(int),1,f);
-	fwrite(&samplerate,sizeof(int),1,f);
-	fwrite(&param,sizeof(cw_param),1,f);
-	fprintf(f,"%s",charset);
-	fclose(f);
+	if ((f = fopen(filename,"w")) != NULL) {
+		fwrite(&mode,sizeof(int),1,f);
+		fwrite(&wordset,sizeof(int),1,f);
+		fwrite(&chars,sizeof(int),1,f);
+		fwrite(&bits,sizeof(int),1,f);
+		fwrite(&samplerate,sizeof(int),1,f);
+		fwrite(&param,sizeof(cw_param),1,f);
+		fprintf(f,"%s",charset);
+		fclose(f);
+	}
 }
 
 void cwstudio_readconfig()
@@ -146,15 +147,16 @@ void cwstudio_readconfig()
 	FILE *f;
 	char filename[255];
 	sprintf(filename,"%s.cfg",CANONICAL_HOST);
-	f = fopen(filename,"r");
-	fread(&mode,sizeof(int),1,f);
-	fread(&wordset,sizeof(int),1,f);
-	fread(&chars,sizeof(int),1,f);
-	fread(&bits,sizeof(int),1,f);
-	fread(&samplerate,sizeof(int),1,f);
-	fread(&param,sizeof(cw_param),1,f);
-	fgets(charset,256,f);
-	fclose(f);
+	if ((f = fopen(filename,"r")) != NULL) {
+		fread(&mode,sizeof(int),1,f);
+		fread(&wordset,sizeof(int),1,f);
+		fread(&chars,sizeof(int),1,f);
+		fread(&bits,sizeof(int),1,f);
+		fread(&samplerate,sizeof(int),1,f);
+		fread(&param,sizeof(cw_param),1,f);
+		fgets(charset,256,f);
+		fclose(f);
+	}
 }
 
 
