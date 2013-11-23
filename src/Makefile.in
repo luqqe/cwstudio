@@ -36,10 +36,11 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-bin_PROGRAMS = cwstudio$(EXEEXT) cwstudiowx$(EXEEXT)
+bin_PROGRAMS = cwcli$(EXEEXT) cwcurses$(EXEEXT) cwwx$(EXEEXT)
 #libcwgen_a_LIBADD        = -lm -lwinmm
-@HAVE_WINDRES_TRUE@am__append_1 = cwstudio-res.rc
-@HAVE_WINDRES_TRUE@am__append_2 = cwstudiowx-res.rc
+@HAVE_WINDRES_TRUE@am__append_1 = cwcurses-res.rc
+@HAVE_WINDRES_TRUE@am__append_2 = cwcli-res.rc
+@HAVE_WINDRES_TRUE@am__append_3 = cwwx-res.rc
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/config.h.in
@@ -63,20 +64,26 @@ am_libcwgen_a_OBJECTS = fft.$(OBJEXT) morse.$(OBJEXT) noise.$(OBJEXT) \
 libcwgen_a_OBJECTS = $(am_libcwgen_a_OBJECTS)
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am__cwstudio_SOURCES_DIST = cwstudio.c play.c cwstudio.h \
-	cwstudio-res.rc
-@HAVE_WINDRES_TRUE@am__objects_1 = cwstudio-res.$(OBJEXT)
-am_cwstudio_OBJECTS = cwstudio.$(OBJEXT) play.$(OBJEXT) \
+am__cwcli_SOURCES_DIST = cwstudio.c cwcli.c play.c cwstudio.h \
+	cwcli-res.rc
+@HAVE_WINDRES_TRUE@am__objects_1 = cwcli-res.$(OBJEXT)
+am_cwcli_OBJECTS = cwstudio.$(OBJEXT) cwcli.$(OBJEXT) play.$(OBJEXT) \
 	$(am__objects_1)
-cwstudio_OBJECTS = $(am_cwstudio_OBJECTS)
+cwcli_OBJECTS = $(am_cwcli_OBJECTS)
 am__DEPENDENCIES_1 =
-cwstudio_DEPENDENCIES = libcwgen.a $(am__DEPENDENCIES_1)
-am__cwstudiowx_SOURCES_DIST = cwstudiowx.cc cwstudiowx-res.rc
-@HAVE_WINDRES_TRUE@am__objects_2 = cwstudiowx-res.$(OBJEXT)
-am_cwstudiowx_OBJECTS = cwstudiowx-cwstudiowx.$(OBJEXT) \
-	$(am__objects_2)
-cwstudiowx_OBJECTS = $(am_cwstudiowx_OBJECTS)
-cwstudiowx_DEPENDENCIES = play.o libcwgen.a $(am__DEPENDENCIES_1)
+cwcli_DEPENDENCIES = libcwgen.a $(am__DEPENDENCIES_1)
+am__cwcurses_SOURCES_DIST = cwstudio.c cwcurses.c play.c cwstudio.h \
+	cwcurses-res.rc
+@HAVE_WINDRES_TRUE@am__objects_2 = cwcurses-res.$(OBJEXT)
+am_cwcurses_OBJECTS = cwstudio.$(OBJEXT) cwcurses.$(OBJEXT) \
+	play.$(OBJEXT) $(am__objects_2)
+cwcurses_OBJECTS = $(am_cwcurses_OBJECTS)
+cwcurses_DEPENDENCIES = libcwgen.a $(am__DEPENDENCIES_1)
+am__cwwx_SOURCES_DIST = cwwx.cc cwwx-res.rc
+@HAVE_WINDRES_TRUE@am__objects_3 = cwwx-res.$(OBJEXT)
+am_cwwx_OBJECTS = cwwx-cwwx.$(OBJEXT) $(am__objects_3)
+cwwx_OBJECTS = $(am_cwwx_OBJECTS)
+cwwx_DEPENDENCIES = play.o libcwgen.a $(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp =
 am__depfiles_maybe =
@@ -89,10 +96,10 @@ CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 CXXLD = $(CXX)
 CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
-SOURCES = $(libcwgen_a_SOURCES) $(cwstudio_SOURCES) \
-	$(cwstudiowx_SOURCES)
-DIST_SOURCES = $(libcwgen_a_SOURCES) $(am__cwstudio_SOURCES_DIST) \
-	$(am__cwstudiowx_SOURCES_DIST)
+SOURCES = $(libcwgen_a_SOURCES) $(cwcli_SOURCES) $(cwcurses_SOURCES) \
+	$(cwwx_SOURCES)
+DIST_SOURCES = $(libcwgen_a_SOURCES) $(am__cwcli_SOURCES_DIST) \
+	$(am__cwcurses_SOURCES_DIST) $(am__cwwx_SOURCES_DIST)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -205,11 +212,14 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-cwstudio_SOURCES = cwstudio.c play.c cwstudio.h $(am__append_1)
-cwstudio_LDADD = libcwgen.a $(PTHREAD_LIBS) $(CURSES_LIB)
-cwstudiowx_SOURCES = cwstudiowx.cc $(am__append_2)
-cwstudiowx_CPPFLAGS = $(WX_CPPFLAGS)
-cwstudiowx_LDADD = play.o libcwgen.a $(WX_LIBS)
+cwcurses_SOURCES = cwstudio.c cwcurses.c play.c cwstudio.h \
+	$(am__append_1)
+cwcurses_LDADD = libcwgen.a $(PTHREAD_LIBS) $(CURSES_LIB)
+cwcli_SOURCES = cwstudio.c cwcli.c play.c cwstudio.h $(am__append_2)
+cwcli_LDADD = libcwgen.a $(PTHREAD_LIBS) $(CURSES_LIB)
+cwwx_SOURCES = cwwx.cc $(am__append_3)
+cwwx_CPPFLAGS = $(WX_CPPFLAGS)
+cwwx_LDADD = play.o libcwgen.a $(WX_LIBS)
 AM_CFLAGS = -Wall -pedantic
 noinst_LIBRARIES = libcwgen.a
 libcwgen_a_SOURCES = fft.c morse.c noise.c random.c sound.c wav.c words.c calls.c init.c cwgen.h
@@ -309,12 +319,15 @@ uninstall-binPROGRAMS:
 
 clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
-cwstudio$(EXEEXT): $(cwstudio_OBJECTS) $(cwstudio_DEPENDENCIES) 
-	@rm -f cwstudio$(EXEEXT)
-	$(LINK) $(cwstudio_OBJECTS) $(cwstudio_LDADD) $(LIBS)
-cwstudiowx$(EXEEXT): $(cwstudiowx_OBJECTS) $(cwstudiowx_DEPENDENCIES) 
-	@rm -f cwstudiowx$(EXEEXT)
-	$(CXXLINK) $(cwstudiowx_OBJECTS) $(cwstudiowx_LDADD) $(LIBS)
+cwcli$(EXEEXT): $(cwcli_OBJECTS) $(cwcli_DEPENDENCIES) 
+	@rm -f cwcli$(EXEEXT)
+	$(LINK) $(cwcli_OBJECTS) $(cwcli_LDADD) $(LIBS)
+cwcurses$(EXEEXT): $(cwcurses_OBJECTS) $(cwcurses_DEPENDENCIES) 
+	@rm -f cwcurses$(EXEEXT)
+	$(LINK) $(cwcurses_OBJECTS) $(cwcurses_LDADD) $(LIBS)
+cwwx$(EXEEXT): $(cwwx_OBJECTS) $(cwwx_DEPENDENCIES) 
+	@rm -f cwwx$(EXEEXT)
+	$(CXXLINK) $(cwwx_OBJECTS) $(cwwx_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -334,11 +347,11 @@ distclean-compile:
 .cc.obj:
 	$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
-cwstudiowx-cwstudiowx.o: cwstudiowx.cc
-	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cwstudiowx_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o cwstudiowx-cwstudiowx.o `test -f 'cwstudiowx.cc' || echo '$(srcdir)/'`cwstudiowx.cc
+cwwx-cwwx.o: cwwx.cc
+	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cwwx_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o cwwx-cwwx.o `test -f 'cwwx.cc' || echo '$(srcdir)/'`cwwx.cc
 
-cwstudiowx-cwstudiowx.obj: cwstudiowx.cc
-	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cwstudiowx_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o cwstudiowx-cwstudiowx.obj `if test -f 'cwstudiowx.cc'; then $(CYGPATH_W) 'cwstudiowx.cc'; else $(CYGPATH_W) '$(srcdir)/cwstudiowx.cc'; fi`
+cwwx-cwwx.obj: cwwx.cc
+	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cwwx_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o cwwx-cwwx.obj `if test -f 'cwwx.cc'; then $(CYGPATH_W) 'cwwx.cc'; else $(CYGPATH_W) '$(srcdir)/cwwx.cc'; fi`
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \

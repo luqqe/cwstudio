@@ -136,7 +136,7 @@ CWWindow::CWWindow(const wxString& title, const wxPoint& pos, const wxSize& size
 	wxPanel *panel = new wxPanel(this, wxID_ANY);
 
 
-	wxButton *button  = new wxButton(panel,ID_Button,"My wxButton",wxPoint(10,10),wxSize(100,20),0);
+	wxButton *button  = new wxButton(panel,ID_Play,"My wxButton",wxPoint(10,10),wxSize(100,20),0);
 	wxTextCtrl *textcontrol = new wxTextCtrl(panel,wxID_ANY,"",wxPoint(10,40),wxSize(200,200),wxTE_MULTILINE);
 	
 	SetMenuBar( menuBar );
@@ -166,9 +166,9 @@ void CWWindow::Generate(wxCommandEvent& WXUNUSED(event))
 {
 
 	
-	sound->SetText("VVV = CQ DE SP8QED");
-	sound->Update();
-	sound->Play();
+	//sound->SetText("VVV = CQ DE SP8QED");
+	//sound->Update();
+	//sound->Play();
 	//delete sound;
 
 	
