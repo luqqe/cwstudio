@@ -152,7 +152,7 @@ int cwstudio_play(cw_sample *sample)
 		wf.nAvgBytesPerSec = wf.nSamplesPerSec * wf.nBlockAlign;
 		wf.cbSize = 0;
 		d = CreateEvent(0, FALSE, FALSE, 0);
-		if(waveOutOpen(&h, 0, &wf, (DWORD) d, 0, CALLBACK_EVENT) != MMSYSERR_NOERROR);
+		if(waveOutOpen(&h, 0, &wf, (DWORD_PTR) d, 0, CALLBACK_EVENT) != MMSYSERR_NOERROR);
 		wh.lpData = sample->data;
 		wh.dwBufferLength = (sample->bits / 8) * sample->length - 2;
 		wh.dwFlags = 0;
