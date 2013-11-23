@@ -37,6 +37,7 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 bin_PROGRAMS = cwcli$(EXEEXT) cwcurses$(EXEEXT) cwwx$(EXEEXT)
+#libcwgen_a_LDFLAGS		  = -shared
 #libcwgen_a_LIBADD        = -lm -lwinmm
 @HAVE_WINDRES_TRUE@am__append_1 = cwcurses-res.rc
 @HAVE_WINDRES_TRUE@am__append_2 = cwcli-res.rc
