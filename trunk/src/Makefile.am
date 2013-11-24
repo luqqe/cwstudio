@@ -25,6 +25,7 @@ cwcli_LDADD = libcwgen.a $(PTHREAD_LIBS) $(CURSES_LIB)
 
 
 AM_CFLAGS = -Wall -pedantic
+#AM_CXXFLAGS =  -Wall -pedantic
 
 noinst_LIBRARIES        = libcwgen.a
 libcwgen_a_SOURCES        = fft.c morse.c noise.c random.c sound.c wav.c words.c calls.c init.c cwgen.h

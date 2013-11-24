@@ -39,6 +39,7 @@ AC_CHECK_PROG(HAVE_WXCONFIG, wx-config, "yes", "no")
 if test "$HAVE_WXCONFIG" == "yes"; then
 	AM_OPTIONS_WXCONFIG
 	AM_PATH_WXCONFIG([2.8.0], WX_RIGHT_VERSION=1)
+	WX_LIBS=`wx-config --libs all`
 fi
 AM_CONDITIONAL([COMPILE_WX],[test "$WX_RIGHT_VERSION" == 1])
 

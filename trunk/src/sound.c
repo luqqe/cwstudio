@@ -336,7 +336,7 @@ int cw_convert(cw_sample *input, cw_sample *output, unsigned int bits)
     Generate one morse signal with given parameters, coding given text.
  =======================================================================================================================
  */
-int cw_signal(cw_sample *sound, cw_param param, char *text)
+int cw_signal(cw_sample *sound, cw_param param, const char *text)
 {
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	cw_sample	atone, asilence;
@@ -458,7 +458,7 @@ int cw_signal(cw_sample *sound, cw_param param, char *text)
     Generate a complex morse signal, consisting of several morse signals and optional noise.
  =======================================================================================================================
  */
-int cw_signals(cw_sample *signals, cw_param param, char *text)
+int cw_signals(cw_sample *signals, cw_param param, const char *text)
 {
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	const floating	fmult[5] = { 1, 0.333, 1.666, 0.5, 1.5 };	/* frequency multipliers */
