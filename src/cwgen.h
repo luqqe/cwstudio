@@ -130,8 +130,8 @@ extern floating			*cw_rand_norm(long int length, unsigned int seed);
 extern char				*cw_encode(const char *text);
 
 /* Sound */
-extern int				cw_signals(cw_sample *signals, cw_param param, char *text);
-extern int				cw_signal(cw_sample *sound, cw_param param, char *text);
+extern int				cw_signals(cw_sample *signals, cw_param param, const char *text);
+extern int				cw_signal(cw_sample *sound, cw_param param, const char *text);
 extern int				cw_convert(cw_sample *input, cw_sample *output, unsigned int bits);
 extern int				cw_tone(cw_sample *atone, cw_param param, long int duration, int freq);
 extern int				cw_silence(cw_sample *asilence, long int duration);
