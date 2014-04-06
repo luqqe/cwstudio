@@ -12,69 +12,14 @@ extern "C" {
 
 using namespace std;
 
-class CWSound
-{
-private:
+static char			*text = NULL, *morsetext = NULL;
+static cw_sample	asound, csound;
+static cw_param		param;
+static int			mode = 0, wordset = 100, chars;
+static unsigned int bits = 16;
+static unsigned int samplerate = 44100;
+static int			playmode = CWSTOPPED;
 
-	cw_sample   asound, csound;
-	cw_param    param;
-	string		cwtext;
-	int			changed;
-	
-public:
-
-	CWSound() 
-	{
-		cw_initparam(&param);
-		cw_initsample(&asound, NULL);
-		cw_initsample(&csound, &asound);
-		//cwtext = new string;
-		changed = 1;
-	}
-
-	~CWSound()
-	{
-		cw_freesample(&asound);
-		cw_freesample(&csound);
-		//delete cwtext; //cw_free(cwtext);
-	}
-
-	void SetText(const char* text)
-	{
-		char *tmp;
-		//if (cwtext != NULL) cw_free(cwtext);
-		tmp = cw_encode(text);
-		cwtext = string(tmp);
-		cw_free(tmp);
-	}
-	
-	void Update()
-	{
-		cw_signals(&asound, param, cwtext.c_str());
-		cw_convert(&asound, &csound, 16);
-		changed = 0;
-	}
-	
-	void WaveOut(const char* filename)
-	{
-		cw_wavout(filename, &csound);
-	}
-	
-	void Play()
-	{
-		cwstudio_play(&csound);
-	}
-	
-	void Pause()
-	{
-		cwstudio_pause();
-	}
-	void Stop()
-	{
-		cwstudio_stop();
-	}
-
-};
 
 class CWStudio: public wxApp
 {
@@ -95,11 +40,13 @@ public:
 	void Play(wxCommandEvent& event);
 	void Stop(wxCommandEvent& event);
 	void Pause(wxCommandEvent& event);
+	void Tempo(wxCommandEvent& event);
 	DECLARE_EVENT_TABLE()
 
-private:
-	CWSound *sound;
 	wxTextCtrl *textctrl;
+	wxSlider *slidertempo;
+
+private:
 };
 
 enum
@@ -109,8 +56,9 @@ enum
 	ID_Play,
 	ID_Pause,
 	ID_Stop,
-	ID_Regenerate,
+	ID_Generate,
 	ID_Update,
+	ID_Tempo,
 	
 };
 
@@ -120,6 +68,8 @@ EVT_MENU(ID_About, CWWindow::OnAbout)
 EVT_BUTTON(ID_Play, CWWindow::Play)
 EVT_BUTTON(ID_Stop, CWWindow::Stop)
 EVT_BUTTON(ID_Pause, CWWindow::Pause)
+EVT_BUTTON(ID_Generate, CWWindow::Generate)
+EVT_SLIDER(ID_Tempo, CWWindow::Tempo)
 END_EVENT_TABLE()
 
 IMPLEMENT_APP(CWStudio)
@@ -128,12 +78,9 @@ bool CWStudio::OnInit()
 {
 	
 	CWWindow *frame = new CWWindow( wxString(wxT("CWStudio")), wxPoint(50,50), wxSize(900,650) );
-	
-	
-	
-	
 	frame->Show(TRUE);
 	SetTopWindow(frame);
+	cw_initparam(&param);
 	return TRUE;
 } 
 
@@ -151,19 +98,23 @@ CWWindow::CWWindow(const wxString& title, const wxPoint& pos, const wxSize& size
 	wxBoxSizer *mainsizer = new wxBoxSizer(wxVERTICAL);
 	wxBoxSizer *buttonsizer = new wxBoxSizer(wxHORIZONTAL);
 	
-	wxTextCtrl *textctrl = new wxTextCtrl(this,wxID_ANY,wxT("VVV = CQ DE CWSTUDIO"),wxDefaultPosition,wxDefaultSize,wxTE_MULTILINE);
+	textctrl = new wxTextCtrl(this,wxID_ANY,wxT("VVV = CQ DE CWSTUDIO"),wxDefaultPosition,wxDefaultSize,wxTE_MULTILINE);
+	
+	slidertempo = new wxSlider(this,ID_Tempo,60,40,300);
 	
 	mainsizer->Add(buttonsizer, 0, 0, 0);
-	mainsizer->Add( new wxSlider(this,wxID_ANY,60,40,300),0,wxEXPAND,0);
+	mainsizer->Add(slidertempo,0,wxEXPAND,0);
 	mainsizer->Add(textctrl, 1, wxEXPAND, 0);
 	
 	wxButton *playbutton = new wxButton(this, ID_Play, "Play");
 	wxButton *stopbutton = new wxButton(this, ID_Stop, "Stop");
 	wxButton *pausebutton = new wxButton(this, ID_Pause, "Pause");
+	wxButton *generatebutton = new wxButton(this, ID_Generate, "Generate");
 	
 	buttonsizer->Add(playbutton,1,wxEXPAND,0);
 	buttonsizer->Add(stopbutton,1,wxEXPAND,0);
 	buttonsizer->Add(pausebutton,1,wxEXPAND,0);
+	buttonsizer->Add(generatebutton,1,wxEXPAND,0);
 	//buttonsizer->SetSizeHints(this);
 	
 	SetSizer(mainsizer);
@@ -171,7 +122,7 @@ CWWindow::CWWindow(const wxString& title, const wxPoint& pos, const wxSize& size
 	//SetIcon(wxIcon(1));
 	CreateStatusBar();
 	SetStatusText( wxT("Ready.") );
-	CWSound *sound = new CWSound();
+	//CWSound *sound = new CWSound();
 	
 }
 
@@ -191,33 +142,63 @@ void CWWindow::OnAbout(wxCommandEvent& WXUNUSED(event))
 
 void CWWindow::Generate(wxCommandEvent& WXUNUSED(event))
 {
-
+	char *t;
+	t = cw_rand_groups(25, 5, "abstgjn", 0);
+	textctrl->SetValue(t);
+	cw_free(t);
 	
-	//sound->SetText("VVV = CQ DE SP8QED");
-	//sound->Update();
-	//sound->Play();
-	//delete sound;
-
+ 
 	
 }
 
 void CWWindow::Play(wxCommandEvent& WXUNUSED(event))
 {
-	SetStatusText( wxT("Setting text...") );
-	sound->SetText("AAA");
-	SetStatusText( wxT("Updating...") );
-	sound->Update();
-	SetStatusText( wxT("Playing...") );
-	sound->Play();
+	if(playmode == CWSTOPPED) {
+					SetStatusText( wxT("Playing.") );
+					cw_free(text);
+					cw_freesample(&asound);
+					cw_freesample(&csound);
+					cw_initsample(&asound, NULL);
+					asound.samplerate = samplerate;
+					cw_initsample(&csound, &asound);
+					
+					std::cout << textctrl->GetValue();
+					
+					text = (char*)malloc((textctrl->GetValue()).Len()*sizeof(char)+1);
+					strcpy(text, (const char*)(textctrl->GetValue()).mb_str(wxConvUTF8));
+										
+					morsetext = cw_encode(text);
+					
+					cw_signals(&asound, param, morsetext);
+					cw_convert(&asound, &csound, bits);
+					playmode = cwstudio_play(&csound);
+				}
+				
 }
 
 void CWWindow::Stop(wxCommandEvent& WXUNUSED(event))
 {
 	SetStatusText( wxT("Stopped.") );
-	sound->Stop();
+	playmode = cwstudio_stop();
+
+	
+	//sound->Stop();
 }
 
 void CWWindow::Pause(wxCommandEvent& WXUNUSED(event))
 {
-	sound->Pause();
+
+				playmode = cwstudio_pause();
+				if(playmode == CWPLAYING)
+					SetStatusText( wxT("Resumed.") );
+				else if(playmode == CWPAUSED)
+					SetStatusText( wxT("Paused.") );
+				else if(playmode == CWSTOPPED)
+					SetStatusText( wxT("Stopped.") );
+}
+
+void CWWindow::Tempo(wxCommandEvent& WXUNUSED(event))
+{
+	param.tempo = slidertempo->GetValue();
+
 }
