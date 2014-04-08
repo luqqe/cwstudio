@@ -5810,7 +5810,7 @@ $as_echo "no (version $WX_VERSION is not new enough)" >&6; }
 
 
 
-	WX_LIBS=`wx-config --libs all`
+#WX_LIBS=`wx-config --libs all`
 fi
  if test "$WX_RIGHT_VERSION" == 1; then
   COMPILE_WX_TRUE=
