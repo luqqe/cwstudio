@@ -224,6 +224,7 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	captions[22] = wxT(" Window");
 	captions[23] = wxT(" Wordset");
 	captions[24] = wxT(" Wspaces");
+	
 	wxString charsets[21];
 	charsets[0] = wxT("abstgjnokqfmzixdrhewlypvcu8219376450?!/=");
 	charsets[1] = wxT("abstgjnokqfmzixdrhewlypvcu8219376450?!");
@@ -246,6 +247,34 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	charsets[18] = wxT("abstg");
 	charsets[19] = wxT("abst");
 	charsets[20] = wxT("abs");
+	
+	wxString tooltips[25];
+	tooltips[0] = wxT("Simulate AGC response of receiver by varying noise volume along RMS of the signal. Default is 100.");
+	tooltips[1] = wxT("Simulate click by lowering sustain part of tone at given level (in dB) below attack phase. Default is 1 dB.");
+	tooltips[2] = wxT("Set additional spaces (one space has a length of a dot) between chars. Default is 0.");
+	tooltips[3] = wxT("Length of dash, in percentage of dot. Default is 300 (3:1).");
+	tooltips[4] = wxT("Simulate frequency drift of the signal. Default is 0.");
+	tooltips[5] = wxT("Enhance the signal by given percent of even harmonics. Default is 0.");
+	tooltips[6] = wxT("Use given frequency in Hz.");
+	tooltips[7] = wxT("Generate given number of groups/words/calls. Default is 20.");
+	tooltips[8] = wxT("Simulate hand transmitting by introduce random errors in dash/dot lengths. (0-100)");
+	tooltips[9] = wxT("Set high cutoff frequency (Hz) of generated noise. Default is 2400.");
+	tooltips[10] = wxT("Add given percentage of 50 Hz mains hum. Default is 0.");
+	tooltips[11] = wxT("Set low cutoff frequency (Hz) of generated noise. Default is 300.");
+	tooltips[12] = wxT("Add given percentage of noise. Default is 100.");
+	tooltips[13] = wxT("Enhance the signal by given percent of odd harmonics. Default is 0.");
+	tooltips[14] = wxT("Add given amount of signal QSB. Default is 0. (0-100)");
+	tooltips[15] = wxT("Set explicitly the seed of random generator.");
+	tooltips[16] = wxT("Set the shape of random generated numbers. Positive value increases the fraction of higher numbers (last letters, words, calls). Negative values prefer first ones. Zero means flat uniform distribution. Can be used to increase the number of newly learned letters/words. In practice, values -10 to 10 are well working.");
+	tooltips[17] = wxT("Generate given number of mixed signals, each of hardcoded frequency ratio, tempo ratio and amplitude ratio. Every signal plays the same text in a loop. Default is 3.");
+	tooltips[18] = wxT("Space length (between dots and dashes) in percentage of dot. Default is 100 (1:1).");
+	tooltips[19] = wxT("Simulate sweep (chirp or filter ringing according to parameters) by starting each tone from given frequency (can be negative, which results in zero crossing). Frequency is then changed exponentially to this given in 'freq' with a rate given by 'sweepness'. Default is 0.");
+	tooltips[20] = wxT("The rate of exponential frequency change from 'sweep' to 'freq'. Default is 0 (no sweep).");
+	tooltips[21] = wxT("Tempo of generated main signal in cpm (chars per minute) according to PARIS group.");
+	tooltips[22] = wxT("Raised cosine window width (used to avoid clicks in each tone). Default is 100 samples.");
+	tooltips[23] = wxT("Take only first given number of most common English words.");
+	tooltips[24] = wxT("Set additional spaces between words/groups/calls. Default is zero.");
+	
 	
 #if defined(__WXMSW__)
 	SetIcon(wxICON(id));
@@ -301,6 +330,7 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 					defs[5 * j + i],
 					wxT("wxSpinCtrl")
 				);
+			spins[5 * j + i]->SetToolTip(tooltips[5 * j + i]);
 			//spins[5 * j + i]->Bind(wxEVT_COMMAND_SPINCTRL_UPDATED, &CWWindow::Update, this);
 			txts[5 * j + i] = new wxStaticText
 				(
