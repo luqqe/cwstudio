@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.60])
-AC_INIT(cwstudio, 0.9.3pre)
+AC_INIT(cwstudio, 0.9.3)
 AC_CONFIG_SRCDIR([src/cwcli.c])
 m4_include([m4/ax_with_curses.m4])
 

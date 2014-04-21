@@ -4,7 +4,7 @@
 
     This file is part of CWStudio.
 
-    Copyright 2008-2013 Lukasz Komsta, SP8QED
+    Copyright 2008-2014 Lukasz Komsta, SP8QED
 
     CWStudio is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -129,7 +129,7 @@ void cwstudio_writeconfig()
 {
 	FILE *f;
 	char filename[255];
-	sprintf(filename,"%s.cfg",CANONICAL_HOST);
+	sprintf(filename,"%s",CANONICAL_HOST);
 	if ((f = fopen(filename,"w")) != NULL) {
 		fwrite(&mode,sizeof(int),1,f);
 		fwrite(&wordset,sizeof(int),1,f);
@@ -146,7 +146,7 @@ void cwstudio_readconfig()
 {
 	FILE *f;
 	char filename[255];
-	sprintf(filename,"%s.cfg",CANONICAL_HOST);
+	sprintf(filename,"%s",CANONICAL_HOST);
 	if ((f = fopen(filename,"r")) != NULL) {
 		fread(&mode,sizeof(int),1,f);
 		fread(&wordset,sizeof(int),1,f);
