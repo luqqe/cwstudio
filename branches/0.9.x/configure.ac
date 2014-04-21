@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.60])
-AC_INIT(cwstudio, 0.9.2)
-AC_CONFIG_SRCDIR([src/cwstudio.c])
+AC_INIT(cwstudio, 0.9.3)
+AC_CONFIG_SRCDIR([src/cwcli.c])
 m4_include([m4/ax_with_curses.m4])
 
 # Canonical System
@@ -18,8 +18,13 @@ AM_CONFIG_HEADER([src/config.h])
 
 # Checks for programs.
 AC_PROG_CC
+AC_PROG_CXX
 AC_PROG_LN_S
 AC_PROG_RANLIB
+
+# Windres
+AC_CHECK_PROG(HAVE_WINDRES, windres, "yes", "no")
+AM_CONDITIONAL(HAVE_WINDRES, [test "$HAVE_WINDRES" == "yes"])
 
 # Checks for libraries.
 AC_CHECK_LIB([m],[sinf])
@@ -29,8 +34,24 @@ AC_CHECK_LIB([pulse],[main])
 AC_CHECK_LIB([pulse-simple],[main])
 AC_CHECK_LIB([pthread],[main])
 
+# wxWidgets
+AC_CHECK_PROG(HAVE_WXCONFIG, wx-config, "yes", "no")
+if test "$HAVE_WXCONFIG" == "yes"; then
+	AM_OPTIONS_WXCONFIG
+	AM_PATH_WXCONFIG([2.8.0], WX_RIGHT_VERSION=1)
+#WX_LIBS=`wx-config --libs all`
+fi
+AM_CONDITIONAL([COMPILE_WX],[test "$WX_RIGHT_VERSION" == 1])
+
+#CPPFLAGS="$CPPFLAGS $WX_CPPFLAGS"
+#CXXFLAGS="$CXXFLAGS $WX_CXXFLAGS_ONLY"
+#CFLAGS="$CFLAGS $WX_CFLAGS_ONLY"
+#LIBS="$LIBS $WX_LIBS"
+
+
 # Macros
 AX_WITH_CURSES
+AM_CONDITIONAL(COMPILE_CURSES, test "x$ax_cv_curses" = "xyes" || test "x$ax_cv_ncurses" = "xyes")
 
 # Check for mouse support
 ac_save_LIBS="$LIBS"
