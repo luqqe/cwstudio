@@ -1,0 +1,33 @@
+See manpage and http://cwstudio.sf.net/
+
+Retro User Interface Help:
+
+	* F1/1 - help
+	* F2/2 - save to WAV file
+	* F3/3 - reset parameters
+	* F4/4, SPACE - regenerate random
+	* F5/5, ENTER - play
+	* F6/6 - stop
+	* F7/7 - pause
+	* F8/8 - noise mode
+	* F9/9 - freq
+	* F10/0 - exit
+	* F11/- - detune/qsb
+	* F12/= - mode (chars/words/callsigns)
+	* UP/DOWN - groups
+	* ? - bits
+	* LEFT/RIGHT - char spaces
+	* Shift-LEFT/RIGHT - word spaces
+	* HOME/END - charset
+	* / - samplerate
+	* PGUP/PGDN - tempo
+	* BACKSPACE - shape
+	* INS/DEL - signals
+	* Q - hand
+	* S - sweep
+	* A - AGC
+	* E - even harmonics
+	* H - hum
+	* O - odd harmonics
+	* Shift-HOME - dash length
+	* Shift-END - space length

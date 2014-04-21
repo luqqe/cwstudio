@@ -1,0 +1,7 @@
+2013-04-24: 0.9.2
+
+	* Retro User Interface was created with curses library. Software became interactive.
+	* --play runs in interactive, --noplay in batch mode.
+	* PulseAudio support was added.
+
+	
