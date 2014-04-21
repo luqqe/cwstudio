@@ -30,15 +30,28 @@
 
 
 #ifdef HAVE_LIBWINMM
-#define SOUND_INTERFACE "/waveout"
+#define SOUND_INTERFACE "-waveout"
 #elif defined HAVE_PULSEAUDIO
-#define SOUND_INTERFACE "/pulseaudio"
+#define SOUND_INTERFACE "-pulseaudio"
 #elif defined HAVE_OSS
-#define SOUND_INTERFACE "/oss"
+#define SOUND_INTERFACE "-oss"
 #else
 #define SOUND_INTERFACE ""
 #endif
 
+#ifdef __WXMSW__
+#define WXGUI "-msw"
+#elif defined __WXGTK__
+#define WXGUI "-gtk"
+#elif defined __WXMOTIF__
+#define WXGUI "-motif"
+#elif defined __WXOSX__
+#define WXGUI "-osx"
+#elif defined __WXX11__
+#define WXGUI "-x11"
+#else
+#define WXGUI ""
+#endif
 
 
 extern "C"
@@ -204,7 +217,7 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 		100,
 		100,
 		4000,
-		100,
+		1000,
 		100,
 		10000,
 		100,
@@ -412,7 +425,7 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	 */
 	CreateStatusBar();
 	SetStatusText(wxT("(C) 2008-2014 Lukasz Komsta SP8QED. http://cwstudio.sf.net/"));
-	SetTitle(wxString(wxT("CWStudio ")) + wxString(wxT(VERSION)) + wxString(wxT(" (")) + wxString(wxT(CANONICAL_HOST)) + wxString(wxT(SOUND_INTERFACE)) + wxString(wxT(")")));
+	SetTitle(wxString(wxT("CWStudio ")) + wxString(wxT(VERSION)) + wxString(wxT(" (")) + wxString(wxT(CANONICAL_HOST)) + wxString(wxT(WXGUI)) + wxString(wxT(SOUND_INTERFACE)) + wxString(wxT(")")));
 	param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
 	spins[15]->SetValue(param.seed);
 	Centre();
