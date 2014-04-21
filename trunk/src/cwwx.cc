@@ -30,25 +30,25 @@
 
 
 #ifdef HAVE_LIBWINMM
-#define SOUND_INTERFACE "-waveout"
+#define SOUND_INTERFACE "/waveout"
 #elif defined HAVE_PULSEAUDIO
-#define SOUND_INTERFACE "-pulseaudio"
+#define SOUND_INTERFACE "/pulseaudio"
 #elif defined HAVE_OSS
-#define SOUND_INTERFACE "-oss"
+#define SOUND_INTERFACE "/oss"
 #else
 #define SOUND_INTERFACE ""
 #endif
 
 #ifdef __WXMSW__
-#define WXGUI "-msw"
+#define WXGUI "/msw"
 #elif defined __WXGTK__
-#define WXGUI "-gtk"
+#define WXGUI "/gtk"
 #elif defined __WXMOTIF__
-#define WXGUI "-motif"
+#define WXGUI "/motif"
 #elif defined __WXOSX__
-#define WXGUI "-osx"
+#define WXGUI "/osx"
 #elif defined __WXX11__
-#define WXGUI "-x11"
+#define WXGUI "/x11"
 #else
 #define WXGUI ""
 #endif
