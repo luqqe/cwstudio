@@ -1,4 +1,5 @@
-/*$T indentinput.cpp GC 1.140 04/08/14 19:27:37 */
+/*$T cwwx.c GC 1.150 2014-04-27 21:24:25 */
+
 /*$I0
 
     This file is part of CWStudio.
@@ -19,7 +20,6 @@
     along with CWStudio. If not, see <http://www.gnu.org/licenses/>.
 
  */
-
 #include <wx/wx.h>
 #include <wx/icon.h>
 #include <wx/sizer.h>
@@ -27,7 +27,6 @@
 #include <wx/spinctrl.h>
 #include "config.h"
 #include <string>
-
 
 #ifdef HAVE_LIBWINMM
 #define SOUND_INTERFACE "/waveout"
@@ -40,28 +39,23 @@
 #else
 #define SOUND_INTERFACE ""
 #endif
-
 #ifdef __WXMSW__
-#define WXGUI "/msw"
+#define WXGUI	"/msw"
 #elif defined __WXGTK__
-#define WXGUI "/gtk"
+#define WXGUI	"/gtk"
 #elif defined __WXMOTIF__
-#define WXGUI "/motif"
+#define WXGUI	"/motif"
 #elif defined __WXOSX__
-#define WXGUI "/osx"
+#define WXGUI	"/osx"
 #elif defined __WXX11__
-#define WXGUI "/x11"
+#define WXGUI	"/x11"
 #else
-#define WXGUI ""
+#define WXGUI	""
 #endif
-
-
 extern "C"
 {
 #include "cwstudio.h"
-}
-using namespace		std;
-
+} using namespace		std;
 static char			*text = NULL, *morsetext = NULL;
 static cw_sample	asound, csound;
 static cw_param		param;
@@ -90,28 +84,27 @@ public:
 	void	OnQuit(wxCloseEvent &event);
 	void	OnAbout(wxCommandEvent &event);
 	void	GenerateGroups(wxCommandEvent &event);
-	void	GenerateCalls(wxCommandEvent & event);
-	void	GenerateWords(wxCommandEvent & event);
-	void	Play(wxCommandEvent & event);
+	void	GenerateCalls(wxCommandEvent &event);
+	void	GenerateWords(wxCommandEvent &event);
+	void	Play(wxCommandEvent &event);
 	void	Stop(wxCommandEvent &event);
 	void	Pause(wxCommandEvent &event);
 	void	Update(wxSpinEvent &event);
 	void	WAV(wxCommandEvent &event);
-	void	Load(wxCommandEvent & event);
-	void	Save(wxCommandEvent & event);
-	void	Reset(wxCommandEvent & event);
-	
+	void	Load(wxCommandEvent &event);
+	void	Save(wxCommandEvent &event);
+	void	Reset(wxCommandEvent &event);
+
 	DECLARE_EVENT_TABLE()
-	
 	wxTextCtrl		*textctrl;
 	wxSlider		*sliderwords;
 
 	wxSpinCtrl		*spins[30];
 	wxStaticText	*txts[30];
 	wxBoxSizer		*spinsizers[10];
-	wxComboBox * boxcharset;
-	
-	char charset[256];
+	wxComboBox		*boxcharset;
+
+	char			charset[256];
 
 /*
  -----------------------------------------------------------------------------------------------------------------------
@@ -121,19 +114,39 @@ public:
 private:
 };
 
-class Generator : public wxThread 
+class Generator :
+	public wxThread
 {
-	    public:
-			Generator()
-					: wxThread(wxTHREAD_JOINABLE)
-			{ ; }
+/* */
+public:
+
+	/* */
+	Generator() :
+	wxThread(wxTHREAD_JOINABLE)
+	{ ;
+	}
+
 //void Generator();
-	    protected:
-			virtual ExitCode Entry();
+protected:
+	virtual ExitCode	Entry();
 };
 
-
-enum { ID_Quit = 1, ID_About, ID_Play, ID_Pause, ID_Stop, ID_Groups, ID_Words, ID_Calls, ID_Update, ID_WAV, ID_Load, ID_Save, ID_Reset };
+enum
+{
+	ID_Quit		= 1,
+	ID_About,
+	ID_Play,
+	ID_Pause,
+	ID_Stop,
+	ID_Groups,
+	ID_Words,
+	ID_Calls,
+	ID_Update,
+	ID_WAV,
+	ID_Load,
+	ID_Save,
+	ID_Reset
+};
 
 BEGIN_EVENT_TABLE(CWWindow, wxFrame)
 EVT_CLOSE(CWWindow::OnQuit)
@@ -150,6 +163,7 @@ EVT_BUTTON(ID_Reset, CWWindow::Reset)
 EVT_SPINCTRL(ID_Update, CWWindow::Update)
 END_EVENT_TABLE()
 IMPLEMENT_APP(CWStudio)
+
 /*
  =======================================================================================================================
  OnInit event 
@@ -159,8 +173,8 @@ bool CWStudio::OnInit()
 {
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	CWWindow	*frame = new CWWindow(wxString(wxT("CWStudio")), wxPoint(50, 50), wxSize(1000, 650));
-	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
+	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	frame->Show(TRUE);
 	SetTopWindow(frame);
 	cw_initparam(&param);
@@ -175,10 +189,10 @@ bool CWStudio::OnInit()
 CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size) :
 	wxFrame((wxFrame *) NULL, -1, title, pos, size)
 {
-	FILE * f;
-	char filename[255];
-	
-	wxString captions[30];
+	FILE		*f;
+	char		filename[255];
+
+	wxString	captions[30];
 
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	const int	defs[26] =
@@ -238,8 +252,8 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 		1000,
 		100
 	};
-	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
+	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	captions[0] = wxT(" AGC");
 	captions[1] = wxT(" Click");
 	captions[2] = wxT(" Cspaces");
@@ -265,8 +279,8 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	captions[22] = wxT(" Window");
 	captions[23] = wxT(" Wordset");
 	captions[24] = wxT(" Wspaces");
-	
-	wxString charsets[21];
+
+	wxString	charsets[21];
 	charsets[0] = wxT("abstgjnokqfmzixdrhewlypvcu8219376450?!/=");
 	charsets[1] = wxT("abstgjnokqfmzixdrhewlypvcu8219376450?!");
 	charsets[2] = wxT("abstgjnokqfmzixdrhewlypvcu8219376450");
@@ -288,8 +302,8 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	charsets[18] = wxT("abstg");
 	charsets[19] = wxT("abst");
 	charsets[20] = wxT("abs");
-	
-	wxString tooltips[25];
+
+	wxString	tooltips[25];
 	tooltips[0] = wxT("Simulate AGC response of receiver by varying noise volume along RMS of the signal. Default is 100.");
 	tooltips[1] = wxT("Simulate click by lowering sustain part of tone at given level (in dB) below attack phase. Default is 1 dB.");
 	tooltips[2] = wxT("Set additional spaces (one space has a length of a dot) between chars. Default is 0.");
@@ -315,13 +329,12 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	tooltips[22] = wxT("Raised cosine window width (used to avoid clicks in each tone). Default is 100 samples.");
 	tooltips[23] = wxT("Take only first given number of most common English words.");
 	tooltips[24] = wxT("Set additional spaces between words/groups/calls. Default is zero.");
-	
-	
+
 #if defined(__WXMSW__)
 	SetIcon(wxICON(id));
 #endif
-	wxPanel * panel = new wxPanel(this, wxID_ANY);
-	
+
+	wxPanel		*panel = new wxPanel(this, wxID_ANY);
 
 	/*
 	 * wxMenu *menuFile = new wxMenu;
@@ -332,38 +345,34 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	 * wxMenuBar *menuBar = new wxMenuBar;
 	 * *menuBar->Append( menuFile, wxT("&File") );
 	 */
-	wxBoxSizer *mainsizer = new wxBoxSizer(wxVERTICAL);
+	wxBoxSizer	*mainsizer = new wxBoxSizer(wxVERTICAL);
 	wxBoxSizer	*buttonsizer = new wxBoxSizer(wxHORIZONTAL);
 	wxBoxSizer	*lowbuttonsizer = new wxBoxSizer(wxHORIZONTAL);
-	
-	
+
 	for(int i = 0; i < 5; i++) spinsizers[i] = new wxBoxSizer(wxHORIZONTAL);
 	textctrl = new wxTextCtrl(panel, wxID_ANY, wxT("VVV ="), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
 	textctrl->SetFont(wxFont(14, wxSWISS, wxNORMAL, wxNORMAL, false, wxT("Courier New")));
-	
 
 	mainsizer->Add(lowbuttonsizer, 0, wxEXPAND, 0);
 	for(int i = 0; i < 5; i++) mainsizer->Add(spinsizers[i], 0, 0, 0);
 	mainsizer->Add(buttonsizer, 0, wxEXPAND, 0);
-	
+
 	mainsizer->Add(textctrl, 1, wxEXPAND, 0);
 	panel->SetSizer(mainsizer);
 
-	wxButton * playbutton = new wxButton(panel, ID_Play, wxT("Play"));
+	wxButton	*playbutton = new wxButton(panel, ID_Play, wxT("Play"));
 	wxButton	*stopbutton = new wxButton(panel, ID_Stop, wxT("Stop"));
 	wxButton	*pausebutton = new wxButton(panel, ID_Pause, wxT("Pause"));
 	wxButton	*wavbutton = new wxButton(panel, ID_WAV, wxT("Save WAV"));
 	wxButton	*groupsbutton = new wxButton(panel, ID_Groups, wxT("Groups"));
-	wxButton *callsbutton = new wxButton(panel, ID_Calls, wxT("Calls"));
-	wxButton *wordsbutton = new wxButton(panel, ID_Words, wxT("Words"));
-	wxButton *loadbutton = new wxButton(panel, ID_Load, wxT("Load Settings"));
-	wxButton *savebutton = new wxButton(panel, ID_Save, wxT("Save Settings"));
-	wxButton *resetbutton = new wxButton(panel, ID_Reset, wxT("Reset Settings"));
-	
-	for(int j = 0; j < 5; j++)
-	{
-		for(int i = 0; i < 5; i++)
-		{
+	wxButton	*callsbutton = new wxButton(panel, ID_Calls, wxT("Calls"));
+	wxButton	*wordsbutton = new wxButton(panel, ID_Words, wxT("Words"));
+	wxButton	*loadbutton = new wxButton(panel, ID_Load, wxT("Load Settings"));
+	wxButton	*savebutton = new wxButton(panel, ID_Save, wxT("Save Settings"));
+	wxButton	*resetbutton = new wxButton(panel, ID_Reset, wxT("Reset Settings"));
+
+	for(int j = 0; j < 5; j++) {
+		for(int i = 0; i < 5; i++) {
 			spins[5 * j + i] = new wxSpinCtrl
 				(
 					panel,
@@ -378,6 +387,7 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 					wxT("wxSpinCtrl")
 				);
 			spins[5 * j + i]->SetToolTip(tooltips[5 * j + i]);
+
 			//spins[5 * j + i]->Bind(wxEVT_COMMAND_SPINCTRL_UPDATED, &CWWindow::Update, this);
 			txts[5 * j + i] = new wxStaticText
 				(
@@ -407,7 +417,7 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 			wxDefaultValidator,
 			wxT("x")
 		);
-		
+
 	buttonsizer->Add(playbutton, 1, wxEXPAND, 0);
 	buttonsizer->Add(stopbutton, 1, wxEXPAND, 0);
 	buttonsizer->Add(pausebutton, 1, wxEXPAND, 0);
@@ -420,7 +430,6 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	lowbuttonsizer->Add(loadbutton, 1, wxEXPAND, 0);
 	lowbuttonsizer->Add(savebutton, 1, wxEXPAND, 0);
 	lowbuttonsizer->Add(resetbutton, 1, wxEXPAND, 0);
-	
 
 	/*
 	 * SetMenuBar(menuBar);
@@ -432,8 +441,7 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	spins[15]->SetValue(param.seed);
 	Centre();
 	sprintf(filename, "wx-%s", CANONICAL_HOST);
-	if((f = fopen(filename, "r")) != NULL)
-	{
+	if((f = fopen(filename, "r")) != NULL) {
 		fread(&mode, sizeof(int), 1, f);
 		fread(&wordset, sizeof(int), 1, f);
 		fread(&chars, sizeof(int), 1, f);
@@ -480,12 +488,11 @@ void CWWindow::OnQuit(wxCloseEvent &event)
 {
 	/*~~~~~~~*/
 	FILE	*f;
-	/*~~~~~~~*/
 
-	char filename[255];
+	/*~~~~~~~*/
+	char	filename[255];
 	sprintf(filename, "wx-%s", CANONICAL_HOST);
-	if((f = fopen(filename, "w")) != NULL)
-	{
+	if((f = fopen(filename, "w")) != NULL) {
 		fwrite(&mode, sizeof(int), 1, f);
 		fwrite(&wordset, sizeof(int), 1, f);
 		fwrite(&chars, sizeof(int), 1, f);
@@ -494,32 +501,28 @@ void CWWindow::OnQuit(wxCloseEvent &event)
 		fwrite(&param, sizeof(cw_param), 1, f);
 		fprintf(f, "%s", (const char *) boxcharset->GetValue().mb_str(wxConvUTF8));
 		fclose(f);
-		
 	}
 
 	Destroy();
-	
 
 	/*
 	 * Close(TRUE);
 	 */
 }
 
-
 /*
  =======================================================================================================================
  Generate random groups
  =======================================================================================================================
  */
-void CWWindow:: GenerateGroups(wxCommandEvent &WXUNUSED(event))
+void CWWindow::GenerateGroups(wxCommandEvent &WXUNUSED(event))
 {
-	char *t;
+	char	*t;
 	t = cw_rand_groups(param.number, param.shape, (const char *) boxcharset->GetValue().mb_str(wxConvUTF8), param.seed);
 	textctrl->SetValue(wxString::FromAscii(t));
 	cw_free(t);
 	param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
 	spins[15]->SetValue(param.seed);
-	
 }
 
 /*
@@ -527,16 +530,14 @@ void CWWindow:: GenerateGroups(wxCommandEvent &WXUNUSED(event))
  Generate random callsigns
  =======================================================================================================================
  */
-
- void CWWindow::GenerateCalls(wxCommandEvent & WXUNUSED(event))
+void CWWindow::GenerateCalls(wxCommandEvent &WXUNUSED(event))
 {
-	char *t;
+	char	*t;
 	t = cw_rand_calls(param.number, param.shape, param.seed);
 	textctrl->SetValue(wxString::FromAscii(t));
 	cw_free(t);
 	param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
 	spins[15]->SetValue(param.seed);
-	
 }
 
 /*
@@ -544,16 +545,14 @@ void CWWindow:: GenerateGroups(wxCommandEvent &WXUNUSED(event))
  Generate random words
  =======================================================================================================================
  */
-
-void CWWindow::GenerateWords(wxCommandEvent & WXUNUSED(event))
+void CWWindow::GenerateWords(wxCommandEvent &WXUNUSED(event))
 {
-	char *t;
+	char	*t;
 	t = cw_rand_words(param.number, param.shape, wordset, param.seed);
 	textctrl->SetValue(wxString::FromAscii(t));
 	cw_free(t);
 	param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
 	spins[15]->SetValue(param.seed);
-	
 }
 
 /*
@@ -561,19 +560,17 @@ void CWWindow::GenerateWords(wxCommandEvent & WXUNUSED(event))
  Play audio
  =======================================================================================================================
  */
-
-void CWWindow::Play(wxCommandEvent & WXUNUSED(event))
+void CWWindow::Play(wxCommandEvent &WXUNUSED(event))
 {
 	if(playmode == CWPLAYING) playmode = cwstudio_stop();
-        if(playmode == CWSTOPPED)
-	{
+	if(playmode == CWSTOPPED) {
 		SetStatusText(wxT("Generating."));
 
 		cw_free(text);
 		text = (char *) malloc((textctrl->GetValue()).Len() * sizeof(char) + 1);
 		strcpy(text, (const char *) (textctrl->GetValue()).mb_str(wxConvUTF8));
 
-/*
+		/*
 		cw_freesample(&asound);
 		cw_freesample(&csound);
 		cw_initsample(&asound, NULL);
@@ -583,15 +580,14 @@ void CWWindow::Play(wxCommandEvent & WXUNUSED(event))
 		cw_signals(&asound, param, morsetext);
 		cw_convert(&asound, &csound, bits);
 */
-
-		Generator* gen = new Generator(); 
-	    gen->Create(); 
-	    gen->Run();
+		Generator	*gen = new Generator();
+		gen->Create();
+		gen->Run();
 		gen->Wait();
 
 		playmode = cwstudio_play(&csound);
 		SetStatusText(wxT("Playing."));
-				
+
 		delete gen;
 	}
 }
@@ -605,7 +601,6 @@ void CWWindow::Stop(wxCommandEvent &WXUNUSED(event))
 {
 	SetStatusText(wxT("Stopped."));
 	playmode = cwstudio_stop();
-
 }
 
 /*
@@ -665,13 +660,20 @@ void CWWindow::Update(wxSpinEvent &WXUNUSED(event))
  */
 void CWWindow::WAV(wxCommandEvent &WXUNUSED(event))
 {
-	  wxFileDialog *savedialog = new wxFileDialog(this, wxT("Save WAV file"), wxT(""), wxT(""), wxT("WAV files (*.wav)|*.wav"), wxFD_SAVE|wxFD_OVERWRITE_PROMPT);
+	wxFileDialog	*savedialog = new wxFileDialog
+		(
+			this,
+			wxT("Save WAV file"),
+			wxT(""),
+			wxT(""),
+			wxT("WAV files (*.wav)|*.wav"),
+			wxFD_SAVE | wxFD_OVERWRITE_PROMPT
+		);
 
-  if (savedialog->ShowModal() == wxID_OK){
-      wxString filename = savedialog->GetPath();
-      cw_wavout(filename.mb_str(wxConvUTF8), &csound);
-
-  }
+	if(savedialog->ShowModal() == wxID_OK) {
+		wxString	filename = savedialog->GetPath();
+		cw_wavout(filename.mb_str(wxConvUTF8), &csound);
+	}
 }
 
 /*
@@ -682,25 +684,114 @@ void CWWindow::WAV(wxCommandEvent &WXUNUSED(event))
 void CWWindow::Load(wxCommandEvent &WXUNUSED(event))
 {
 	/*~~~~~~~*/
-	FILE	*f;
+	FILE			*f;
+
 	/*~~~~~~~*/
+	wxFileDialog	*savedialog = new wxFileDialog
+		(
+			this,
+			wxT("Load Settings"),
+			wxT(""),
+			wxT(""),
+			wxT("Config files (*.cfg)|*.cfg"),
+			wxFD_OPEN
+		);
 
+	if(savedialog->ShowModal() == wxID_OK) {
+		wxString	filename = savedialog->GetPath();
+		if((f = fopen(filename.mb_str(wxConvUTF8), "r")) != NULL) {
+			fread(&mode, sizeof(int), 1, f);
+			fread(&wordset, sizeof(int), 1, f);
+			fread(&chars, sizeof(int), 1, f);
+			fread(&bits, sizeof(int), 1, f);
+			fread(&samplerate, sizeof(int), 1, f);
+			fread(&param, sizeof(cw_param), 1, f);
+			fgets(charset, 256, f);
+			boxcharset->SetValue(wxString::FromUTF8(charset));
+			fclose(f);
+			spins[0]->SetValue(param.agc);
+			spins[1]->SetValue(param.click);
+			spins[2]->SetValue(param.cspaces);
+			spins[3]->SetValue(param.dashlen);
+			spins[4]->SetValue(param.detune);
+			spins[5]->SetValue(param.even);
+			spins[6]->SetValue(param.freq);
+			spins[7]->SetValue(param.number);
+			spins[8]->SetValue(param.hand);
+			spins[9]->SetValue(param.highcut);
+			spins[10]->SetValue(param.hum);
+			spins[11]->SetValue(param.lowcut);
+			spins[12]->SetValue(param.noise);
+			spins[13]->SetValue(param.odd);
+			spins[14]->SetValue(param.qsb);
+			spins[15]->SetValue(param.seed);
+			spins[16]->SetValue(param.shape);
+			spins[17]->SetValue(param.signals);
+			spins[18]->SetValue(param.spacelen);
+			spins[19]->SetValue(param.sweep);
+			spins[20]->SetValue(param.sweepness);
+			spins[21]->SetValue(param.tempo);
+			spins[22]->SetValue(param.window);
+			spins[23]->SetValue(wordset);
+			spins[24]->SetValue(param.wspaces);
+		}
+	}
+}
 
-	  wxFileDialog *savedialog = new wxFileDialog(this, wxT("Load Settings"), wxT(""), wxT(""), wxT("Config files (*.cfg)|*.cfg"), wxFD_OPEN);
+/*
+ =======================================================================================================================
+ Save Settings
+ =======================================================================================================================
+ */
+void CWWindow::Save(wxCommandEvent &WXUNUSED(event))
+{
+	/*~~~~~~~*/
+	FILE			*f;
 
-  if (savedialog->ShowModal() == wxID_OK){
-      wxString filename = savedialog->GetPath();
-      if((f = fopen(filename.mb_str(wxConvUTF8), "r")) != NULL)
-	{
-		fread(&mode, sizeof(int), 1, f);
-		fread(&wordset, sizeof(int), 1, f);
-		fread(&chars, sizeof(int), 1, f);
-		fread(&bits, sizeof(int), 1, f);
-		fread(&samplerate, sizeof(int), 1, f);
-		fread(&param, sizeof(cw_param), 1, f);
-		fgets(charset, 256, f);
-		boxcharset->SetValue(wxString::FromUTF8(charset));
-		fclose(f);
+	/*~~~~~~~*/
+	wxFileDialog	*savedialog = new wxFileDialog
+		(
+			this,
+			wxT("Save Settings"),
+			wxT(""),
+			wxT(""),
+			wxT("Config files (*.cfg)|*.cfg"),
+			wxFD_SAVE | wxFD_OVERWRITE_PROMPT
+		);
+
+	if(savedialog->ShowModal() == wxID_OK) {
+		wxString	filename = savedialog->GetPath();
+		if((f = fopen(filename.mb_str(wxConvUTF8), "w")) != NULL) {
+			fwrite(&mode, sizeof(int), 1, f);
+			fwrite(&wordset, sizeof(int), 1, f);
+			fwrite(&chars, sizeof(int), 1, f);
+			fwrite(&bits, sizeof(int), 1, f);
+			fwrite(&samplerate, sizeof(int), 1, f);
+			fwrite(&param, sizeof(cw_param), 1, f);
+			fprintf(f, "%s", (const char *) boxcharset->GetValue().mb_str(wxConvUTF8));
+			fclose(f);
+		}
+	}
+}
+
+/*
+ =======================================================================================================================
+ Reset Settings to default values
+ =======================================================================================================================
+ */
+void CWWindow::Reset(wxCommandEvent &WXUNUSED(event))
+{
+	wxMessageDialog *dialog = new wxMessageDialog
+		(
+			NULL,
+			wxT("Are you sure to reset settings?"),
+			wxT("Question"),
+			wxYES_NO | wxNO_DEFAULT | wxICON_QUESTION
+		);
+
+	if(dialog->ShowModal() == wxID_YES) {
+		cw_initparam(&param);
+
 		spins[0]->SetValue(param.agc);
 		spins[1]->SetValue(param.click);
 		spins[2]->SetValue(param.cspaces);
@@ -727,91 +818,18 @@ void CWWindow::Load(wxCommandEvent &WXUNUSED(event))
 		spins[23]->SetValue(wordset);
 		spins[24]->SetValue(param.wspaces);
 	}
-
-  }
 }
 
-/*
- =======================================================================================================================
- Save Settings
- =======================================================================================================================
- */
-void CWWindow::Save(wxCommandEvent &WXUNUSED(event))
+/* Thread for creating audio data - entry point */
+
+void *Generator::Entry()
 {
-	/*~~~~~~~*/
-	FILE	*f;
-	/*~~~~~~~*/
-
-	  wxFileDialog *savedialog = new wxFileDialog(this, wxT("Save Settings"), wxT(""), wxT(""), wxT("Config files (*.cfg)|*.cfg"), wxFD_SAVE|wxFD_OVERWRITE_PROMPT);
-
-  if (savedialog->ShowModal() == wxID_OK){
-      wxString filename = savedialog->GetPath();
-      if((f = fopen(filename.mb_str(wxConvUTF8), "w")) != NULL)
-	{
-		fwrite(&mode, sizeof(int), 1, f);
-		fwrite(&wordset, sizeof(int), 1, f);
-		fwrite(&chars, sizeof(int), 1, f);
-		fwrite(&bits, sizeof(int), 1, f);
-		fwrite(&samplerate, sizeof(int), 1, f);
-		fwrite(&param, sizeof(cw_param), 1, f);
-		fprintf(f, "%s", (const char *) boxcharset->GetValue().mb_str(wxConvUTF8));
-		fclose(f);
-		
-	}
-  }
-}
-
-/*
- =======================================================================================================================
- Reset Settings to default values
- =======================================================================================================================
- */
-void CWWindow::Reset(wxCommandEvent &WXUNUSED(event))
-{
-	  wxMessageDialog *dialog = new wxMessageDialog(NULL, wxT("Are you sure to reset settings?"), wxT("Question"), wxYES_NO | wxNO_DEFAULT | wxICON_QUESTION);
-	  
-	if (dialog->ShowModal() == wxID_YES){
-	
-	cw_initparam(&param);
-	
-	spins[0]->SetValue(param.agc);
-		spins[1]->SetValue(param.click);
-		spins[2]->SetValue(param.cspaces);
-		spins[3]->SetValue(param.dashlen);
-		spins[4]->SetValue(param.detune);
-		spins[5]->SetValue(param.even);
-		spins[6]->SetValue(param.freq);
-		spins[7]->SetValue(param.number);
-		spins[8]->SetValue(param.hand);
-		spins[9]->SetValue(param.highcut);
-		spins[10]->SetValue(param.hum);
-		spins[11]->SetValue(param.lowcut);
-		spins[12]->SetValue(param.noise);
-		spins[13]->SetValue(param.odd);
-		spins[14]->SetValue(param.qsb);
-		spins[15]->SetValue(param.seed);
-		spins[16]->SetValue(param.shape);
-		spins[17]->SetValue(param.signals);
-		spins[18]->SetValue(param.spacelen);
-		spins[19]->SetValue(param.sweep);
-		spins[20]->SetValue(param.sweepness);
-		spins[21]->SetValue(param.tempo);
-		spins[22]->SetValue(param.window);
-		spins[23]->SetValue(wordset);
-		spins[24]->SetValue(param.wspaces);
-		
-	}
-	
-}
-
-void* Generator::Entry()
-{
-		cw_freesample(&asound);
-		cw_freesample(&csound);
-		cw_initsample(&asound, NULL);
-		asound.samplerate = samplerate;
-		cw_initsample(&csound, &asound);
-		morsetext = cw_encode(text);
-		cw_signals(&asound, param, morsetext);
-		cw_convert(&asound, &csound, bits);
+	cw_freesample(&asound);
+	cw_freesample(&csound);
+	cw_initsample(&asound, NULL);
+	asound.samplerate = samplerate;
+	cw_initsample(&csound, &asound);
+	morsetext = cw_encode(text);
+	cw_signals(&asound, param, morsetext);
+	cw_convert(&asound, &csound, bits);
 }
