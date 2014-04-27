@@ -1,10 +1,10 @@
-/*$T src/play.c GC 1.140 04/22/13 17:13:31 */
+/*$T play.c GC 1.150 2014-04-27 20:40:47 */
 
 /*$I0
 
     This file is part of CWStudio.
 
-    Copyright 2008-2013 Lukasz Komsta, SP8QED
+    Copyright 2008-2014 Lukasz Komsta, SP8QED
 
     CWStudio is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -42,52 +42,52 @@
 #ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif
-volatile static int		status = CWSTOPPED;
-unsigned long int		counter;
-char					*place;
+volatile static int			status = CWSTOPPED;
+unsigned long int			counter;
+char						*place;
 
 #ifdef HAVE_PTHREAD
 #include <pthread.h>
-pthread_t				cwstudio_thread;
-pthread_attr_t			cwstudio_attr;
+pthread_t					cwstudio_thread;
+pthread_attr_t				cwstudio_attr;
 #endif
 #ifdef HAVE_LIBWINMM
-HWAVEOUT				h;
-WAVEFORMATEX			wf;
-WAVEHDR					wh;
-HANDLE					d;
+HWAVEOUT					h;
+WAVEFORMATEX				wf;
+WAVEHDR						wh;
+HANDLE						d;
 #elif HAVE_PULSEAUDIO
-static pa_sample_spec	pas;
-pa_simple				*pa = NULL;
-int						e;
+static pa_sample_spec		pas;
+pa_simple					*pa = NULL;
+int							e;
 #elif defined HAVE_OSS
-int						audio;
-int						format, stereo;
-int						speed;
+int							audio;
+int							format, stereo;
+int							speed;
 #elif defined HAVE_COREAUDIO
 #define BUFSIZE 10240
-volatile static long int offset = 0, offsetmax = 0;
-AudioQueueRef queue;
-  
-void callback (void *data, AudioQueueRef queue, AudioQueueBufferRef buf_ref)
-{
-  OSStatus ossstatus;
-  AudioQueueBuffer *buf = buf_ref;
-  int nsamp = buf->mAudioDataByteSize;
-  short *samp = buf->mAudioData;
+volatile static long int	offset = 0, offsetmax = 0;
+AudioQueueRef				queue;
 
-  if (offsetmax>offset) {
-  memcpy(samp,((char *)data)+offset,nsamp);
-  offset += nsamp;
-  ossstatus = AudioQueueEnqueueBuffer (queue, buf_ref, 0, NULL);
-  }
-  else
-  {
-        cwstudio_stop();
-  }
+/* */
+
+void callback(void *data, AudioQueueRef queue, AudioQueueBufferRef buf_ref)
+{
+	OSStatus			ossstatus;
+	AudioQueueBuffer	*buf = buf_ref;
+	int					nsamp = buf->mAudioDataByteSize;
+	short				*samp = buf->mAudioData;
+
+	if(offsetmax > offset) {
+		memcpy(samp, ((char *) data) + offset, nsamp);
+		offset += nsamp;
+		ossstatus = AudioQueueEnqueueBuffer(queue, buf_ref, 0, NULL);
+	}
+	else {
+		cwstudio_stop();
+	}
 }
 #endif
-
 #ifndef HAVE_LIBWINMM
 
 /*
@@ -101,8 +101,8 @@ void *cwstudio_playthread(void *arg)
 {
 	/*~~~~~~~~~~~~~~~~*/
 	cw_sample	*sample;
-	/*~~~~~~~~~~~~~~~~*/
 
+	/*~~~~~~~~~~~~~~~~*/
 	sample = (cw_sample *) arg;
 
 	/*
@@ -187,27 +187,34 @@ int cwstudio_play(cw_sample *sample)
 		ResetEvent(d);
 		if(waveOutWrite(h, &wh, sizeof(wh)) != MMSYSERR_NOERROR);
 #elif defined HAVE_COREAUDIO
-
-  OSStatus ossstatus;
-  AudioStreamBasicDescription fmt = { 0 };
-  AudioQueueBufferRef buf_ref;
-  AudioQueueBuffer *buf;
-  fmt.mSampleRate = sample->samplerate;
-  fmt.mFormatID = kAudioFormatLinearPCM;
-  fmt.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
-  fmt.mFramesPerPacket = 1;
-  fmt.mChannelsPerFrame = 1; 
-  fmt.mBytesPerPacket = fmt.mBytesPerFrame = 2; 
-  fmt.mBitsPerChannel = sample->bits;
-  ossstatus = AudioQueueNewOutput(&fmt, callback, sample->data, CFRunLoopGetCurrent(),
-                  kCFRunLoopCommonModes, 0, &queue);
-  ossstatus = AudioQueueAllocateBuffer (queue, BUFSIZE, &buf_ref);
-  buf = buf_ref;
-  buf->mAudioDataByteSize = BUFSIZE;
-  offsetmax = (sample->bits / 8) * sample->length - 2;
-  callback (sample->data, queue, buf_ref);
-  ossstatus = AudioQueueSetParameter (queue, kAudioQueueParam_Volume, 1.0);
-  ossstatus = AudioQueueStart (queue, NULL);
+		OSStatus					ossstatus;
+		AudioStreamBasicDescription fmt = { 0 };
+		AudioQueueBufferRef			buf_ref;
+		AudioQueueBuffer			*buf;
+		fmt.mSampleRate = sample->samplerate;
+		fmt.mFormatID = kAudioFormatLinearPCM;
+		fmt.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
+		fmt.mFramesPerPacket = 1;
+		fmt.mChannelsPerFrame = 1;
+		fmt.mBytesPerPacket = fmt.mBytesPerFrame = 2;
+		fmt.mBitsPerChannel = sample->bits;
+		ossstatus = AudioQueueNewOutput
+			(
+				&fmt,
+				callback,
+				sample->data,
+				CFRunLoopGetCurrent(),
+				kCFRunLoopCommonModes,
+				0,
+				&queue
+			);
+		ossstatus = AudioQueueAllocateBuffer(queue, BUFSIZE, &buf_ref);
+		buf = buf_ref;
+		buf->mAudioDataByteSize = BUFSIZE;
+		offsetmax = (sample->bits / 8) * sample->length - 2;
+		callback(sample->data, queue, buf_ref);
+		ossstatus = AudioQueueSetParameter(queue, kAudioQueueParam_Volume, 1.0);
+		ossstatus = AudioQueueStart(queue, NULL);
 #else
 		/*
 		 * If not WIN32, start new thread with pthread, or (if no pthread available) call
@@ -239,7 +246,7 @@ int cwstudio_pause()
 #ifdef HAVE_LIBWINMM
 		waveOutPause(h);
 #elif HAVE_COREAUDIO
-                AudioQueuePause(queue);
+		AudioQueuePause(queue);
 #endif
 		status = CWPAUSED;
 	}
@@ -248,7 +255,7 @@ int cwstudio_pause()
 #ifdef HAVE_LIBWINMM
 		waveOutRestart(h);
 #elif HAVE_COREAUDIO
-                AudioQueueStart(queue, NULL);
+		AudioQueueStart(queue, NULL);
 #endif
 		status = CWPLAYING;
 	}
@@ -269,9 +276,9 @@ int cwstudio_stop()
 	if(waveOutClose(h) != MMSYSERR_NOERROR);
 	CloseHandle(d);
 #elif defined HAVE_COREAUDIO
-        AudioQueueStop(queue,1);
-        offset = 0;
-        AudioQueueReset(queue);
+	AudioQueueStop(queue, 1);
+	offset = 0;
+	AudioQueueReset(queue);
 #elif defined HAVE_PULSE_AUDIO
 	pa_simple_flush(pa, &e);
 #elif defined HAVE_OSS
