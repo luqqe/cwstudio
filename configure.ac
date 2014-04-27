@@ -72,6 +72,13 @@ AC_CHECK_HEADERS([pulse/simple.h pulse/error.h],
                      [AC_DEFINE([HAVE_PULSEAUDIO], 1,
                         [Define to 1 if you have PULSE AUDIO.])],
                      [])
+AC_CHECK_HEADERS([AudioToolbox/AudioToolbox.h],
+                     [AC_DEFINE([HAVE_COREAUDIO], 1,
+                        [Define to 1 if you have COREAUDIO.])],
+                     [])
+if test "$HAVE_WXCONFIG" == "yes"; then
+                     LIBS="$LIBS -framework AudioToolbox -framework CoreFoundation"
+fi
 AC_CHECK_HEADERS([pthread.h],
                      [AC_DEFINE([HAVE_PTHREAD], 1,
                         [Define to 1 if you have pthread.])],

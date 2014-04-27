@@ -52,6 +52,8 @@
 #define SOUND_INTERFACE "/pulseaudio"
 #elif defined HAVE_OSS
 #define SOUND_INTERFACE "/oss"
+#elif defined HAVE_COREAUDIO
+#define SOUND_INTERFACE "/coreaudio"
 #else
 #define SOUND_INTERFACE ""
 #endif
@@ -218,7 +220,7 @@ void cwstudio_resetwindows()
 	box(win_title, 0, 0);
 	mvwprintw(win_title, 1, 1, "CWStudio %s (%ix%i)", VERSION, ncol, nrow);
 	mvwprintw(win_title, 2, 1, "(%s%s%s)", CANONICAL_HOST, SOUND_INTERFACE, THREAD_INTERFACE);
-	mvwprintw(win_title, 3, 1, "(C) 2009-2013 Lukasz Komsta, SP8QED");
+	mvwprintw(win_title, 3, 1, "(C) 2009-2014 Lukasz Komsta, SP8QED");
 	wrefresh(win_title);
 
 	win_param = newwin(nrow - 5, SPLIT, 5, 0);
@@ -530,7 +532,7 @@ int main(int argc, char **argv)
 			case ' ':
 				param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
 				break;
-
+#if defined(HAVE_OSS) || defined(HAVE_PULSEAUDIO) || defined(HAVE_LIBWINMM) || defined(HAVE_COREAUDIO)
 			case KEY_F(5):
 			case '5':
 				if(playmode == CWSTOPPED) {
@@ -566,7 +568,7 @@ int main(int argc, char **argv)
 				else if(playmode == CWSTOPPED)
 					strcpy(statustext, "Playback stopped.");
 				break;
-
+#endif
 			case KEY_F(8):
 			case '8':
 				if(param.noise == 100)

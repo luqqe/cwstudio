@@ -35,6 +35,8 @@
 #define SOUND_INTERFACE "/pulseaudio"
 #elif defined HAVE_OSS
 #define SOUND_INTERFACE "/oss"
+#elif defined HAVE_COREAUDIO
+#define SOUND_INTERFACE "/coreaudio"
 #else
 #define SOUND_INTERFACE ""
 #endif
@@ -562,7 +564,8 @@ void CWWindow::GenerateWords(wxCommandEvent & WXUNUSED(event))
 
 void CWWindow::Play(wxCommandEvent & WXUNUSED(event))
 {
-	if(playmode == CWSTOPPED)
+	if(playmode == CWPLAYING) playmode = cwstudio_stop();
+        if(playmode == CWSTOPPED)
 	{
 		SetStatusText(wxT("Generating."));
 

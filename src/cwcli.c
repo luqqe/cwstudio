@@ -4,7 +4,7 @@
 
     This file is part of CWStudio.
 
-    Copyright 2008-2013 Lukasz Komsta, SP8QED
+    Copyright 2008-2014 Lukasz Komsta, SP8QED
 
     CWStudio is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -52,6 +52,8 @@
 #define SOUND_INTERFACE "/pulseaudio"
 #elif defined HAVE_OSS
 #define SOUND_INTERFACE "/oss"
+#elif defined HAVE_COREAUDIO
+#define SOUND_INTERFACE "/coreaudio"
 #else
 #define SOUND_INTERFACE ""
 #endif
@@ -450,7 +452,7 @@ int main(int argc, char **argv)
 			fprintf
 			(
 				stderr,
-				"CWStudio %s (%s%s%s)\nCopyright 2009-2013 Lukasz Komsta, SP8QED\n",
+				"CWStudio %s (%s%s%s)\nCopyright 2009-2014 Lukasz Komsta, SP8QED\n",
 				VERSION,
 				CANONICAL_HOST,
 				SOUND_INTERFACE,
@@ -537,7 +539,7 @@ int main(int argc, char **argv)
 
 		fflush(stderr);
 
-#if defined(HAVE_OSS) || defined(HAVE_PULSEAUDIO) || defined(HAVE_LIBWINMM)
+#if defined(HAVE_OSS) || defined(HAVE_PULSEAUDIO) || defined(HAVE_LIBWINMM) || defined(HAVE_COREAUDIO)
 		/* Play if needed */
 		if(play) {
 			printf("<5> - PLAY, <6> - STOP, <7> - PAUSE, Ctrl-C - EXIT\n");
