@@ -76,7 +76,7 @@ AC_CHECK_HEADERS([AudioToolbox/AudioToolbox.h],
                      [AC_DEFINE([HAVE_COREAUDIO], 1,
                         [Define to 1 if you have COREAUDIO.])],
                      [])
-if test "$HAVE_WXCONFIG" == "yes"; then
+if test "$HAVE_COREAUDIO" == "yes"; then
                      LIBS="$LIBS -framework AudioToolbox -framework CoreFoundation"
 fi
 AC_CHECK_HEADERS([pthread.h],
