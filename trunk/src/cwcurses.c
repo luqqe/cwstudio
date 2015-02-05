@@ -121,7 +121,7 @@ static char			charset_backup[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
 static int			playmode = CWSTOPPED;
 static char			statustext[256] = "Press <F1> or <1> for help.";
 static WINDOW		*win_title, *win_param, *win_text, *win_help;
-#ifdef HAVE_CURSES_MOUSE
+#ifdef HAVE_MOUSEMASK
 MEVENT				event;
 #endif
 #endif
@@ -449,7 +449,7 @@ int main(int argc, char **argv)
 		cwstudio_regeneratetext();
 		cwstudio_repaintwindows();
 
-#ifdef HAVE_CURSES_MOUSE
+#ifdef HAVE_MOUSEMASK
 		mousemask(ALL_MOUSE_EVENTS, NULL);
 #endif
 
@@ -458,11 +458,15 @@ int main(int argc, char **argv)
 		while(((ch = wgetch(win_param)) != KEY_F(10)) && (ch != '0')) {
 			switch(ch)
 			{
-#ifdef HAVE_CURSES_MOUSE
+#ifdef HAVE_MOUSEMASK
 
 			/* Mouse suppord compiled conditionally */
 			case KEY_MOUSE:
+#ifdef HAVE_NC_GETMOUSE
+				if(nc_getmouse(&event) == OK) {
+#else
 				if(getmouse(&event) == OK) {
+#endif
 					if(event.bstate & BUTTON1_PRESSED) {
 						if((playmode == CWPLAYING) || (playmode == CWPAUSED)) {
 							playmode = cwstudio_stop();
