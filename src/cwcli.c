@@ -24,6 +24,8 @@
 
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
+#else
+#include "getopt_long_only.c"
 #endif
 #ifdef HAVE_CTYPE_H
 #include <ctype.h>
@@ -419,7 +421,9 @@ char *cwstudio_generate_text()
 int main(int argc, char **argv)
 {
 	/*~~~~~~~*/
+#if defined(HAVE_OSS) || defined(HAVE_PULSEAUDIO) || defined(HAVE_LIBWINMM) || defined(HAVE_COREAUDIO)
 	int ch;
+#endif
 	int i, err;
 	FILE *f;
 	/*~~~~~~~*/
