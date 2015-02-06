@@ -814,7 +814,7 @@ void CWWindow::MP3(wxCommandEvent &WXUNUSED(event))
 
 			dwDone += dwRead * sizeof(SHORT);
 
-			SetStatusText(wxString::Format(wxT("%i."), length));
+			SetStatusText(wxString::Format(wxT("%i samples to encode..."), length));
 
 			length -= dwSamples;
 			pWAVBuffer += dwSamples;
