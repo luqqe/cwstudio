@@ -1,10 +1,10 @@
-/*$T cwwx.c GC 1.150 2014-04-27 21:24:25 */
+/*$T cwwx.c GC 1.150 2015-02-06 14:12:15 */
 
 /*$I0
 
     This file is part of CWStudio.
 
-    Copyright 2008-2014 Lukasz Komsta, SP8QED
+    Copyright 2008-2015 Lukasz Komsta, SP8QED
 
     CWStudio is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,6 +28,12 @@
 #include "config.h"
 #include <string>
 
+#ifdef HAVE_WINDOWS_H
+extern "C"
+{
+#include "BladeMP3EncDLL.h"
+}
+#endif
 #ifdef HAVE_LIBWINMM
 #define SOUND_INTERFACE "/waveout"
 #elif defined HAVE_PULSEAUDIO
@@ -64,6 +70,9 @@ static unsigned int bits = 16;
 static unsigned int samplerate = 44100;
 static int			playmode = CWSTOPPED;
 
+#ifdef HAVE_WINDOWS_H
+HINSTANCE			hDLL = NULL;
+#endif
 class CWStudio :
 	public wxApp
 {
@@ -91,6 +100,7 @@ public:
 	void	Pause(wxCommandEvent &event);
 	void	Update(wxSpinEvent &event);
 	void	WAV(wxCommandEvent &event);
+	void	MP3(wxCommandEvent &event);
 	void	Load(wxCommandEvent &event);
 	void	Save(wxCommandEvent &event);
 	void	Reset(wxCommandEvent &event);
@@ -143,6 +153,7 @@ enum
 	ID_Calls,
 	ID_Update,
 	ID_WAV,
+	ID_MP3,
 	ID_Load,
 	ID_Save,
 	ID_Reset
@@ -153,6 +164,7 @@ EVT_CLOSE(CWWindow::OnQuit)
 EVT_BUTTON(ID_Play, CWWindow::Play)
 EVT_BUTTON(ID_Stop, CWWindow::Stop)
 EVT_BUTTON(ID_WAV, CWWindow::WAV)
+EVT_BUTTON(ID_MP3, CWWindow::MP3)
 EVT_BUTTON(ID_Pause, CWWindow::Pause)
 EVT_BUTTON(ID_Groups, CWWindow::GenerateGroups)
 EVT_BUTTON(ID_Calls, CWWindow::GenerateCalls)
@@ -178,6 +190,9 @@ bool CWStudio::OnInit()
 	frame->Show(TRUE);
 	SetTopWindow(frame);
 	cw_initparam(&param);
+#ifdef HAVE_WINDOWS_H
+	hDLL = LoadLibrary(_T("lame_enc.dll"));
+#endif
 	return TRUE;
 }
 
@@ -364,6 +379,9 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	wxButton	*stopbutton = new wxButton(panel, ID_Stop, wxT("Stop"));
 	wxButton	*pausebutton = new wxButton(panel, ID_Pause, wxT("Pause"));
 	wxButton	*wavbutton = new wxButton(panel, ID_WAV, wxT("Save WAV"));
+#ifdef HAVE_WINDOWS_H
+	wxButton	*mp3button = new wxButton(panel, ID_MP3, wxT("Save MP3"));
+#endif
 	wxButton	*groupsbutton = new wxButton(panel, ID_Groups, wxT("Groups"));
 	wxButton	*callsbutton = new wxButton(panel, ID_Calls, wxT("Calls"));
 	wxButton	*wordsbutton = new wxButton(panel, ID_Words, wxT("Words"));
@@ -371,8 +389,10 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	wxButton	*savebutton = new wxButton(panel, ID_Save, wxT("Save Settings"));
 	wxButton	*resetbutton = new wxButton(panel, ID_Reset, wxT("Reset Settings"));
 
-	for(int j = 0; j < 5; j++) {
-		for(int i = 0; i < 5; i++) {
+	for(int j = 0; j < 5; j++)
+	{
+		for(int i = 0; i < 5; i++)
+		{
 			spins[5 * j + i] = new wxSpinCtrl
 				(
 					panel,
@@ -427,6 +447,9 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	buttonsizer->Add(boxcharset, 1, wxEXPAND, 0);
 
 	lowbuttonsizer->Add(wavbutton, 1, wxEXPAND, 0);
+#ifdef HAVE_WINDOWS_H
+	lowbuttonsizer->Add(mp3button, 1, wxEXPAND, 0);
+#endif
 	lowbuttonsizer->Add(loadbutton, 1, wxEXPAND, 0);
 	lowbuttonsizer->Add(savebutton, 1, wxEXPAND, 0);
 	lowbuttonsizer->Add(resetbutton, 1, wxEXPAND, 0);
@@ -441,7 +464,8 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	spins[15]->SetValue(param.seed);
 	Centre();
 	sprintf(filename, "wx-%s", CANONICAL_HOST);
-	if((f = fopen(filename, "r")) != NULL) {
+	if((f = fopen(filename, "r")) != NULL)
+	{
 		fread(&mode, sizeof(int), 1, f);
 		fread(&wordset, sizeof(int), 1, f);
 		fread(&chars, sizeof(int), 1, f);
@@ -492,7 +516,8 @@ void CWWindow::OnQuit(wxCloseEvent &event)
 	/*~~~~~~~*/
 	char	filename[255];
 	sprintf(filename, "wx-%s", CANONICAL_HOST);
-	if((f = fopen(filename, "w")) != NULL) {
+	if((f = fopen(filename, "w")) != NULL)
+	{
 		fwrite(&mode, sizeof(int), 1, f);
 		fwrite(&wordset, sizeof(int), 1, f);
 		fwrite(&chars, sizeof(int), 1, f);
@@ -503,6 +528,9 @@ void CWWindow::OnQuit(wxCloseEvent &event)
 		fclose(f);
 	}
 
+#ifdef HAVE_WINDOWS_H
+	FreeLibrary(hDLL);
+#endif
 	Destroy();
 
 	/*
@@ -563,7 +591,8 @@ void CWWindow::GenerateWords(wxCommandEvent &WXUNUSED(event))
 void CWWindow::Play(wxCommandEvent &WXUNUSED(event))
 {
 	if(playmode == CWPLAYING) playmode = cwstudio_stop();
-	if(playmode == CWSTOPPED) {
+	if(playmode == CWSTOPPED)
+	{
 		SetStatusText(wxT("Generating."));
 
 		cw_free(text);
@@ -670,10 +699,163 @@ void CWWindow::WAV(wxCommandEvent &WXUNUSED(event))
 			wxFD_SAVE | wxFD_OVERWRITE_PROMPT
 		);
 
-	if(savedialog->ShowModal() == wxID_OK) {
+	if(savedialog->ShowModal() == wxID_OK)
+	{
 		wxString	filename = savedialog->GetPath();
 		cw_wavout(filename.mb_str(wxConvUTF8), &csound);
 	}
+}
+
+/*
+
+ =======================================================================================================================
+ Save to MP3 file. Based on lame_enc.dll example by A. L. Faber
+ =======================================================================================================================
+ */
+void CWWindow::MP3(wxCommandEvent &WXUNUSED(event))
+{
+#ifdef HAVE_WINDOWS_H
+	BEINITSTREAM		beInitStream = NULL;
+	BEENCODECHUNK		beEncodeChunk = NULL;
+	BEDEINITSTREAM		beDeinitStream = NULL;
+	BECLOSESTREAM		beCloseStream = NULL;
+	BEVERSION			beVersion = NULL;
+	BEWRITEVBRHEADER	beWriteVBRHeader = NULL;
+	BE_ERR				err = 0;
+	BE_CONFIG			beConfig = { 0, };
+	FILE				*pFileOut = NULL;
+	DWORD				dwSamples = 0;
+	DWORD				dwMP3Buffer = 0;
+	HBE_STREAM			hbeStream = 0;
+	PBYTE				pMP3Buffer = NULL;
+	PSHORT				pWAVBuffer = NULL;
+
+	if(hDLL == NULL)
+	{
+		wxMessageBox(_T("Please download lame_enc.dll!"), _T("MP3 Export"), wxOK | wxICON_ERROR);
+		return;
+	}
+
+	beInitStream = (BEINITSTREAM) GetProcAddress(hDLL, TEXT_BEINITSTREAM);
+	beEncodeChunk = (BEENCODECHUNK) GetProcAddress(hDLL, TEXT_BEENCODECHUNK);
+	beDeinitStream = (BEDEINITSTREAM) GetProcAddress(hDLL, TEXT_BEDEINITSTREAM);
+	beCloseStream = (BECLOSESTREAM) GetProcAddress(hDLL, TEXT_BECLOSESTREAM);
+	beVersion = (BEVERSION) GetProcAddress(hDLL, TEXT_BEVERSION);
+	beWriteVBRHeader = (BEWRITEVBRHEADER) GetProcAddress(hDLL, TEXT_BEWRITEVBRHEADER);
+	if(!beInitStream || !beEncodeChunk || !beDeinitStream || !beCloseStream || !beVersion || !beWriteVBRHeader)
+	{
+		wxMessageBox(_T("Unable to load lame_enc.dll functions!"), _T("MP3 Export"), wxOK | wxICON_ERROR);
+		return;
+	}
+
+	wxFileDialog	*savedialog = new wxFileDialog
+		(
+			this,
+			wxT("Save MP3 file"),
+			wxT(""),
+			wxT(""),
+			wxT("MP3 files (*.mp3)|*.mp3"),
+			wxFD_SAVE | wxFD_OVERWRITE_PROMPT
+		);
+
+	if(savedialog->ShowModal() == wxID_OK)
+	{
+		wxString	filename = savedialog->GetPath();
+		pFileOut = fopen(filename.mb_str(wxConvUTF8), "wb+");
+		memset(&beConfig, 0, sizeof(beConfig));
+
+		beConfig.dwConfig = BE_CONFIG_LAME;
+		beConfig.format.LHV1.dwStructVersion = 1;
+		beConfig.format.LHV1.dwStructSize = sizeof(beConfig);
+		beConfig.format.LHV1.dwSampleRate = csound.samplerate;
+		beConfig.format.LHV1.dwReSampleRate = 0;
+		beConfig.format.LHV1.nMode = BE_MP3_MODE_MONO;
+		beConfig.format.LHV1.dwBitrate = 128;
+		beConfig.format.LHV1.dwMaxBitrate = 320;
+		beConfig.format.LHV1.nPreset = LQP_NOPRESET;
+		beConfig.format.LHV1.dwMpegVersion = MPEG1;
+		beConfig.format.LHV1.dwPsyModel = 0;
+		beConfig.format.LHV1.dwEmphasis = 0;
+		beConfig.format.LHV1.bOriginal = TRUE;
+		beConfig.format.LHV1.bCRC = TRUE;
+		beConfig.format.LHV1.bCopyright = TRUE;
+		beConfig.format.LHV1.bPrivate = TRUE;
+		beConfig.format.LHV1.bWriteVBRHeader = FALSE;
+		beConfig.format.LHV1.bEnableVBR = FALSE;
+		beConfig.format.LHV1.nVBRQuality = 5;
+		beConfig.format.LHV1.bNoRes = TRUE;
+
+		err = beInitStream(&beConfig, &dwSamples, &dwMP3Buffer, &hbeStream);
+		pMP3Buffer = new BYTE[dwMP3Buffer];
+
+		DWORD	dwRead = 0;
+		DWORD	dwWrite = 0;
+		DWORD	dwDone = 0;
+		pWAVBuffer = (PSHORT) csound.data;
+
+		long int	length = csound.length;
+
+		while(length >= dwSamples)
+		{
+			err = beEncodeChunk(hbeStream, dwSamples, pWAVBuffer, pMP3Buffer, &dwWrite);
+
+			if(err != BE_ERR_SUCCESSFUL)
+			{
+				beCloseStream(hbeStream);
+				wxMessageBox(_T("beEncodeChunk() failed!"), _T("MP3 Export"), wxOK | wxICON_ERROR);
+				return;
+			}
+
+			if(fwrite(pMP3Buffer, 1, dwWrite, pFileOut) != dwWrite)
+			{
+				wxMessageBox(_T("Output file write error!"), _T("MP3 Export"), wxOK | wxICON_ERROR);
+				return;
+			}
+
+			dwDone += dwRead * sizeof(SHORT);
+
+			SetStatusText(wxString::Format(wxT("%i."), length));
+
+			length -= dwSamples;
+			pWAVBuffer += dwSamples;
+		}
+
+		if(length > 0)
+		{
+			err = beEncodeChunk(hbeStream, length, pWAVBuffer, pMP3Buffer, &dwWrite);
+			if(fwrite(pMP3Buffer, 1, dwWrite, pFileOut) != dwWrite)
+			{
+				wxMessageBox(_T("Output file write error!"), _T("MP3 Export"), wxOK | wxICON_ERROR);
+				return;
+			}
+		}
+
+		err = beDeinitStream(hbeStream, pMP3Buffer, &dwWrite);
+		if(err != BE_ERR_SUCCESSFUL)
+		{
+			beCloseStream(hbeStream);
+			wxMessageBox(wxString::Format(wxT("Error %lu!!!"), err), _T("MP3 Export"), wxOK | wxICON_ERROR);
+			return;
+		}
+
+		if(dwWrite)
+		{
+			if(fwrite(pMP3Buffer, 1, dwWrite, pFileOut) != dwWrite)
+			{
+				wxMessageBox(_T("Output file write error!"), _T("MP3 Export"), wxOK | wxICON_ERROR);
+				return;
+			}
+
+			SetStatusText(wxT("MP3 file written."));
+		}
+
+		beCloseStream(hbeStream);
+		delete[] pMP3Buffer;
+		fclose(pFileOut);
+
+		//beWriteVBRHeader(filename.mb_str(wxConvUTF8));
+	}
+#endif
 }
 
 /*
@@ -697,9 +879,11 @@ void CWWindow::Load(wxCommandEvent &WXUNUSED(event))
 			wxFD_OPEN
 		);
 
-	if(savedialog->ShowModal() == wxID_OK) {
+	if(savedialog->ShowModal() == wxID_OK)
+	{
 		wxString	filename = savedialog->GetPath();
-		if((f = fopen(filename.mb_str(wxConvUTF8), "r")) != NULL) {
+		if((f = fopen(filename.mb_str(wxConvUTF8), "r")) != NULL)
+		{
 			fread(&mode, sizeof(int), 1, f);
 			fread(&wordset, sizeof(int), 1, f);
 			fread(&chars, sizeof(int), 1, f);
@@ -759,9 +943,11 @@ void CWWindow::Save(wxCommandEvent &WXUNUSED(event))
 			wxFD_SAVE | wxFD_OVERWRITE_PROMPT
 		);
 
-	if(savedialog->ShowModal() == wxID_OK) {
+	if(savedialog->ShowModal() == wxID_OK)
+	{
 		wxString	filename = savedialog->GetPath();
-		if((f = fopen(filename.mb_str(wxConvUTF8), "w")) != NULL) {
+		if((f = fopen(filename.mb_str(wxConvUTF8), "w")) != NULL)
+		{
 			fwrite(&mode, sizeof(int), 1, f);
 			fwrite(&wordset, sizeof(int), 1, f);
 			fwrite(&chars, sizeof(int), 1, f);
@@ -789,7 +975,8 @@ void CWWindow::Reset(wxCommandEvent &WXUNUSED(event))
 			wxYES_NO | wxNO_DEFAULT | wxICON_QUESTION
 		);
 
-	if(dialog->ShowModal() == wxID_YES) {
+	if(dialog->ShowModal() == wxID_YES)
+	{
 		cw_initparam(&param);
 
 		spins[0]->SetValue(param.agc);
@@ -821,7 +1008,6 @@ void CWWindow::Reset(wxCommandEvent &WXUNUSED(event))
 }
 
 /* Thread for creating audio data - entry point */
-
 void *Generator::Entry()
 {
 	cw_freesample(&asound);
