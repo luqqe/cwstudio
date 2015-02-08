@@ -880,6 +880,8 @@ int main(int argc, char **argv)
 				||	!beVersion
 				||	!beWriteVBRHeader
 				) sprintf(statustext, "lame_enc.dll error.");
+				else if((bits != 16) || (samplerate != 44100))
+				sprintf(statustext, "Unsupported samplerate/bits.");
 				else if(csound.length)
 				{
 					i = (int) time(NULL);
