@@ -846,8 +846,9 @@ void CWWindow::MP3(wxCommandEvent &WXUNUSED(event))
 				return;
 			}
 
-			SetStatusText(wxT("MP3 file written."));
 		}
+
+		SetStatusText(wxT("MP3 file written."));
 
 		beCloseStream(hbeStream);
 		delete[] pMP3Buffer;
