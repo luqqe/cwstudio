@@ -456,7 +456,7 @@ int main(int argc, char **argv)
 			fprintf
 			(
 				stderr,
-				"CWStudio %s (%s%s%s)\nCopyright 2009-2014 Lukasz Komsta, SP8QED\n",
+				"CWStudio %s (%s%s%s)\nCopyright 2009-2015 Lukasz Komsta, SP8QED\n",
 				VERSION,
 				CANONICAL_HOST,
 				SOUND_INTERFACE,
