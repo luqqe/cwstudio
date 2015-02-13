@@ -238,7 +238,6 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 GREP = @GREP@
-HAVE_WINDRES = @HAVE_WINDRES@
 HAVE_WXCONFIG = @HAVE_WXCONFIG@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
@@ -266,6 +265,7 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
+WINDRES = @WINDRES@
 WX_CFLAGS = @WX_CFLAGS@
 WX_CFLAGS_ONLY = @WX_CFLAGS_ONLY@
 WX_CONFIG_PATH = @WX_CONFIG_PATH@
@@ -276,9 +276,6 @@ WX_LIBS = @WX_LIBS@
 WX_LIBS_STATIC = @WX_LIBS_STATIC@
 WX_RESCOMP = @WX_RESCOMP@
 WX_VERSION = @WX_VERSION@
-WX_VERSION_MAJOR = @WX_VERSION_MAJOR@
-WX_VERSION_MICRO = @WX_VERSION_MICRO@
-WX_VERSION_MINOR = @WX_VERSION_MINOR@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -340,8 +337,8 @@ top_srcdir = @top_srcdir@
 @COMPILE_WX_TRUE@cwwx_LDADD = play.o libcwgen.a $(WX_LIBS)
 cwcli_SOURCES = cwstudio.c cwcli.c play.c cwstudio.h $(am__append_5)
 cwcli_LDADD = libcwgen.a $(PTHREAD_LIBS) $(CURSES_LIB)
-AM_CFLAGS = -Wall -pedantic
-#AM_CXXFLAGS =  -Wall -pedantic
+AM_CFLAGS = -Wall -pedantic -static-libgcc
+AM_CXXFLAGS = -static-libgcc
 noinst_LIBRARIES = libcwgen.a
 libcwgen_a_SOURCES = fft.c morse.c noise.c random.c sound.c wav.c words.c calls.c init.c cwgen.h
 all: config.h
@@ -358,9 +355,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign --ignore-deps src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu --ignore-deps src/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign --ignore-deps src/Makefile
+	  $(AUTOMAKE) --gnu --ignore-deps src/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -686,7 +683,7 @@ uninstall-am: uninstall-binPROGRAMS
 
 
 .rc.o:
-	windres $^ -o $@
+	$(WINDRES) $^ -o $@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
