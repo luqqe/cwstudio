@@ -1,3 +1,9 @@
+2015-04-13 : RELEASE 0.9.4
+
+	* MP3 support through external encoder compatible with lame_enc.dll in cwcurses and cwwx
+	* sound generation only after changes of text or parameters
+	* support for systems without getopt_long_only
+
 2014-04-21 : RELEASE 0.9.3
 
 	* splitted to three binaries: cwcli (command line), cwcurses (TUI) and cwwx (GUI)
