@@ -166,7 +166,6 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 GREP = @GREP@
-HAVE_WINDRES = @HAVE_WINDRES@
 HAVE_WXCONFIG = @HAVE_WXCONFIG@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
@@ -194,6 +193,7 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
+WINDRES = @WINDRES@
 WX_CFLAGS = @WX_CFLAGS@
 WX_CFLAGS_ONLY = @WX_CFLAGS_ONLY@
 WX_CONFIG_PATH = @WX_CONFIG_PATH@
@@ -204,9 +204,6 @@ WX_LIBS = @WX_LIBS@
 WX_LIBS_STATIC = @WX_LIBS_STATIC@
 WX_RESCOMP = @WX_RESCOMP@
 WX_VERSION = @WX_VERSION@
-WX_VERSION_MAJOR = @WX_VERSION_MAJOR@
-WX_VERSION_MICRO = @WX_VERSION_MICRO@
-WX_VERSION_MINOR = @WX_VERSION_MINOR@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -273,9 +270,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign --ignore-deps man/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu --ignore-deps man/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign --ignore-deps man/Makefile
+	  $(AUTOMAKE) --gnu --ignore-deps man/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \

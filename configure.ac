@@ -23,8 +23,11 @@ AC_PROG_LN_S
 AC_PROG_RANLIB
 
 # Windres
-AC_CHECK_PROG(HAVE_WINDRES, windres, "yes", "no")
-AM_CONDITIONAL(HAVE_WINDRES, [test "$HAVE_WINDRES" == "yes"])
+#AC_CHECK_PROG(HAVE_WINDRES, windres, "yes", "no")
+#AM_CONDITIONAL(HAVE_WINDRES, [test "$HAVE_WINDRES" == "yes"])
+AC_CHECK_TOOL([WINDRES], [windres], [no])
+AC_ARG_VAR([WINDRES], [path to windres utility])
+AM_CONDITIONAL([HAVE_WINDRES], [test "$WINDRES" != "no"])
 
 # Checks for libraries.
 AC_CHECK_LIB([m],[sinf])

@@ -24,8 +24,8 @@ cwcli_SOURCES = cwstudio.c cwcli.c play.c cwstudio.h
 cwcli_LDADD = libcwgen.a $(PTHREAD_LIBS) $(CURSES_LIB)
 
 
-AM_CFLAGS = -Wall -pedantic
-#AM_CXXFLAGS =  -Wall -pedantic
+AM_CFLAGS = -Wall -pedantic -static-libgcc
+AM_CXXFLAGS =  -static-libgcc
 
 noinst_LIBRARIES        = libcwgen.a
 libcwgen_a_SOURCES        = fft.c morse.c noise.c random.c sound.c wav.c words.c calls.c init.c cwgen.h
@@ -37,4 +37,4 @@ cwcli_SOURCES += cwcli-res.rc
 endif
 
 .rc.o:
-	windres $^ -o $@
+	$(WINDRES) $^ -o $@

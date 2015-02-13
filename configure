@@ -628,9 +628,6 @@ COMPILE_CURSES_TRUE
 CURSES_LIB
 COMPILE_WX_FALSE
 COMPILE_WX_TRUE
-WX_VERSION_MICRO
-WX_VERSION_MINOR
-WX_VERSION_MAJOR
 WX_RESCOMP
 WX_VERSION
 WX_LIBS_STATIC
@@ -644,7 +641,7 @@ WX_CONFIG_PATH
 HAVE_WXCONFIG
 HAVE_WINDRES_FALSE
 HAVE_WINDRES_TRUE
-HAVE_WINDRES
+WINDRES
 RANLIB
 LN_S
 ac_ct_CXX
@@ -760,6 +757,7 @@ CPP
 CXX
 CXXFLAGS
 CCC
+WINDRES
 CURSES_LIB'
 
 
@@ -1405,6 +1403,7 @@ Some influential environment variables:
   CPP         C preprocessor
   CXX         C++ compiler command
   CXXFLAGS    C++ compiler flags
+  WINDRES     path to windres utility
   CURSES_LIB  linker library for Curses, e.g. -lcurses
 
 Use these variables to override the choices made by `configure' or to help
@@ -5329,15 +5328,18 @@ fi
 
 
 # Windres
-# Extract the first word of "windres", so it can be a program name with args.
-set dummy windres; ac_word=$2
+#AC_CHECK_PROG(HAVE_WINDRES, windres, "yes", "no")
+#AM_CONDITIONAL(HAVE_WINDRES, [test "$HAVE_WINDRES" == "yes"])
+if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}windres", so it can be a program name with args.
+set dummy ${ac_tool_prefix}windres; ac_word=$2
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
 $as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_HAVE_WINDRES+:} false; then :
+if ${ac_cv_prog_WINDRES+:} false; then :
   $as_echo_n "(cached) " >&6
 else
-  if test -n "$HAVE_WINDRES"; then
-  ac_cv_prog_HAVE_WINDRES="$HAVE_WINDRES" # Let the user override the test.
+  if test -n "$WINDRES"; then
+  ac_cv_prog_WINDRES="$WINDRES" # Let the user override the test.
 else
 as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
 for as_dir in $PATH
@@ -5346,7 +5348,7 @@ do
   test -z "$as_dir" && as_dir=.
     for ac_exec_ext in '' $ac_executable_extensions; do
   if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_HAVE_WINDRES=""yes""
+    ac_cv_prog_WINDRES="${ac_tool_prefix}windres"
     $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
     break 2
   fi
@@ -5354,20 +5356,74 @@ done
   done
 IFS=$as_save_IFS
 
-  test -z "$ac_cv_prog_HAVE_WINDRES" && ac_cv_prog_HAVE_WINDRES=""no""
 fi
 fi
-HAVE_WINDRES=$ac_cv_prog_HAVE_WINDRES
-if test -n "$HAVE_WINDRES"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $HAVE_WINDRES" >&5
-$as_echo "$HAVE_WINDRES" >&6; }
+WINDRES=$ac_cv_prog_WINDRES
+if test -n "$WINDRES"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $WINDRES" >&5
+$as_echo "$WINDRES" >&6; }
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
 
 
- if test "$HAVE_WINDRES" == "yes"; then
+fi
+if test -z "$ac_cv_prog_WINDRES"; then
+  ac_ct_WINDRES=$WINDRES
+  # Extract the first word of "windres", so it can be a program name with args.
+set dummy windres; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_prog_ac_ct_WINDRES+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$ac_ct_WINDRES"; then
+  ac_cv_prog_ac_ct_WINDRES="$ac_ct_WINDRES" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_prog_ac_ct_WINDRES="windres"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+ac_ct_WINDRES=$ac_cv_prog_ac_ct_WINDRES
+if test -n "$ac_ct_WINDRES"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_ct_WINDRES" >&5
+$as_echo "$ac_ct_WINDRES" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+  if test "x$ac_ct_WINDRES" = x; then
+    WINDRES="no"
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
+$as_echo "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
+ac_tool_warned=yes ;;
+esac
+    WINDRES=$ac_ct_WINDRES
+  fi
+else
+  WINDRES="$ac_cv_prog_WINDRES"
+fi
+
+
+ if test "$WINDRES" != "no"; then
   HAVE_WINDRES_TRUE=
   HAVE_WINDRES_FALSE='#'
 else
@@ -5690,7 +5746,6 @@ fi
 
 
 
-
     if test x${WX_CONFIG_NAME+set} != xset ; then
      WX_CONFIG_NAME=wx-config
   fi
@@ -5774,7 +5829,7 @@ $as_echo_n "checking for wxWidgets version >= $min_wx_version... " >&6; }
 $as_echo_n "checking for wxWidgets version >= $min_wx_version ()... " >&6; }
     fi
 
-            WX_CONFIG_WITH_ARGS="$WX_CONFIG_PATH $wx_config_args "
+    WX_CONFIG_WITH_ARGS="$WX_CONFIG_PATH $wx_config_args  "
 
     WX_VERSION=`$WX_CONFIG_WITH_ARGS --version 2>/dev/null`
     wx_config_major_version=`echo $WX_VERSION | \
@@ -5813,13 +5868,14 @@ $as_echo_n "checking for wxWidgets version >= $min_wx_version ()... " >&6; }
 
 
     if test -n "$wx_ver_ok"; then
+
       { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes (version $WX_VERSION)" >&5
 $as_echo "yes (version $WX_VERSION)" >&6; }
-      WX_LIBS=`$WX_CONFIG_WITH_ARGS --libs `
+      WX_LIBS=`$WX_CONFIG_WITH_ARGS --libs`
 
                               { $as_echo "$as_me:${as_lineno-$LINENO}: checking for wxWidgets static library" >&5
 $as_echo_n "checking for wxWidgets static library... " >&6; }
-      WX_LIBS_STATIC=`$WX_CONFIG_WITH_ARGS --static --libs  2>/dev/null`
+      WX_LIBS_STATIC=`$WX_CONFIG_WITH_ARGS --static --libs 2>/dev/null`
       if test "x$WX_LIBS_STATIC" = "x"; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
@@ -5862,16 +5918,16 @@ $as_echo "yes" >&6; }
       fi
 
       if test "x$wx_has_cppflags" = x ; then
-                  WX_CFLAGS=`$WX_CONFIG_WITH_ARGS --cflags `
+                  WX_CFLAGS=`$WX_CONFIG_WITH_ARGS --cflags`
          WX_CPPFLAGS=$WX_CFLAGS
          WX_CXXFLAGS=$WX_CFLAGS
 
          WX_CFLAGS_ONLY=$WX_CFLAGS
          WX_CXXFLAGS_ONLY=$WX_CFLAGS
       else
-                  WX_CPPFLAGS=`$WX_CONFIG_WITH_ARGS --cppflags `
-         WX_CXXFLAGS=`$WX_CONFIG_WITH_ARGS --cxxflags `
-         WX_CFLAGS=`$WX_CONFIG_WITH_ARGS --cflags `
+                  WX_CPPFLAGS=`$WX_CONFIG_WITH_ARGS --cppflags`
+         WX_CXXFLAGS=`$WX_CONFIG_WITH_ARGS --cxxflags`
+         WX_CFLAGS=`$WX_CONFIG_WITH_ARGS --cflags`
 
          WX_CFLAGS_ONLY=`echo $WX_CFLAGS | sed "s@^$WX_CPPFLAGS *@@"`
          WX_CXXFLAGS_ONLY=`echo $WX_CXXFLAGS | sed "s@^$WX_CFLAGS *@@"`
@@ -5895,32 +5951,7 @@ $as_echo "no (version $WX_VERSION is not new enough)" >&6; }
        WX_LIBS=""
        WX_LIBS_STATIC=""
        WX_RESCOMP=""
-
-       if test ! -z ""; then
-
-          wx_error_message="
-    The configuration you asked for $PACKAGE_NAME requires a wxWidgets
-    build with the following settings:
-
-    but such build is not available.
-
-    To see the wxWidgets builds available on this system, please use
-    'wx-config --list' command. To use the default build, returned by
-    'wx-config --selected-config', use the options with their 'auto'
-    default values."
-
-       fi
-
-       wx_error_message="
-    The requested wxWidgets build couldn't be found.
-    $wx_error_message
-
-    If you still get this error, then check that 'wx-config' is
-    in path, the directory where wxWidgets libraries are installed
-    (returned by 'wx-config --libs' command) is in LD_LIBRARY_PATH
-    or equivalent variable and wxWidgets version is 2.8.0 or above."
-
-       as_fn_error $? "$wx_error_message" "$LINENO" 5
+       :
 
     fi
   else
@@ -5941,14 +5972,6 @@ $as_echo "no (version $WX_VERSION is not new enough)" >&6; }
 
 
 
-
-
-
-
-
-      WX_VERSION_MAJOR="$wx_config_major_version"
-  WX_VERSION_MINOR="$wx_config_minor_version"
-  WX_VERSION_MICRO="$wx_config_micro_version"
 
 
 
