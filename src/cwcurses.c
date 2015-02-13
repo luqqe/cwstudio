@@ -113,6 +113,7 @@ static char			*text = NULL, *morsetext = NULL;
 static cw_sample	asound, csound;
 static cw_param		param;
 static int			mode = 0, wordset = 100, chars;
+static int	shouldgenerate = 1;
 static unsigned int bits = 16;
 static unsigned int samplerate = 44100;
 static char			filename[256] = "output.wav";
@@ -162,6 +163,7 @@ void cwstudio_readconfig()
 		fread(&param, sizeof(cw_param), 1, f);
 		fgets(charset, 256, f);
 		fclose(f);
+		shouldgenerate = 1;
 	}
 }
 
@@ -520,6 +522,8 @@ int main(int argc, char **argv)
 					}
 					else
 					{
+						if (shouldgenerate)
+						{
 						cw_freesample(&asound);
 						cw_freesample(&csound);
 						cw_initsample(&asound, NULL);
@@ -531,6 +535,7 @@ int main(int argc, char **argv)
 						wrefresh(win_text);
 						if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
 						if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
+						}
 						playmode = cwstudio_play(&csound);
 						if(playmode == CWPLAYING) strcpy(statustext, "Playback started.");
 					}
@@ -538,6 +543,8 @@ int main(int argc, char **argv)
 				else if(event.bstate & BUTTON2_PRESSED)
 				{
 					param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
+					shouldgenerate = 1;
+
 				}
 				else if(event.bstate & BUTTON3_PRESSED)
 				{
@@ -560,36 +567,7 @@ int main(int argc, char **argv)
 
 		case KEY_F(2):
 		case '2':
-			if(csound.length)
-			{
-				i = (int) time(NULL);
-				sprintf(filename, "%x.wav", i);
-				if((err = cw_wavout(filename, &csound)) != CWOK) return(i);
-				sprintf(filename, "%x.txt", i);
-				f = fopen(filename, "w");
-				fputs(text, f);
-				fclose(f);
-				sprintf(statustext, "Saved to %x.wav.", i);
-			}
-			break;
-
-		case KEY_F(3):
-		case '3':
-			i = param.seed;
-			cw_initparam(&param);
-			param.seed = i;
-			break;
-
-		case KEY_F(4):
-		case '4':
-		case ' ':
-			param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
-			break;
-#if defined(HAVE_OSS) || defined(HAVE_PULSEAUDIO) || defined(HAVE_LIBWINMM) || defined(HAVE_COREAUDIO)
-
-		case KEY_F(5):
-		case '5':
-			if(playmode == CWSTOPPED)
+			if(shouldgenerate)
 			{
 				cw_freesample(&asound);
 				cw_freesample(&csound);
@@ -602,6 +580,53 @@ int main(int argc, char **argv)
 				wrefresh(win_text);
 				if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
 				if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
+				shouldgenerate = 0;
+				}
+			i = (int) time(NULL);
+			sprintf(filename, "%x.wav", i);
+			if((err = cw_wavout(filename, &csound)) != CWOK) return(i);
+			sprintf(filename, "%x.txt", i);
+			f = fopen(filename, "w");
+			fputs(text, f);
+			fclose(f);
+			sprintf(statustext, "Saved to %x.wav.", i);
+			break;
+
+		case KEY_F(3):
+		case '3':
+			i = param.seed;
+			cw_initparam(&param);
+			param.seed = i;
+			shouldgenerate = 1;
+			break;
+
+		case KEY_F(4):
+		case '4':
+		case ' ':
+			param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
+			shouldgenerate = 1;
+			break;
+#if defined(HAVE_OSS) || defined(HAVE_PULSEAUDIO) || defined(HAVE_LIBWINMM) || defined(HAVE_COREAUDIO)
+
+		case KEY_F(5):
+		case '5':
+			if(playmode == CWSTOPPED)
+			{
+				if(shouldgenerate)
+				{
+				cw_freesample(&asound);
+				cw_freesample(&csound);
+				cw_initsample(&asound, NULL);
+				asound.samplerate = samplerate;
+				cw_initsample(&csound, &asound);
+				wattron(win_text, COLOR_PAIR(1));
+				wprintw(win_text, "\n\n *** Please wait *** \n");
+				wattron(win_text, COLOR_PAIR(2));
+				wrefresh(win_text);
+				if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
+				if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
+				shouldgenerate = 0;
+				}
 				playmode = cwstudio_play(&csound);
 				if(playmode == CWPLAYING) strcpy(statustext, "Playback started.");
 			}
@@ -641,12 +666,14 @@ int main(int argc, char **argv)
 				param.lowcut = 300;
 				param.highcut = 2400;
 			}
+			shouldgenerate = 1;
 			break;
 
 		case KEY_F(9):
 		case '9':
 			param.freq = param.freq + 100;
 			if(param.freq > 4000) param.freq = 100;
+			shouldgenerate = 1;
 			break;
 
 		case KEY_F(11):
@@ -660,12 +687,14 @@ int main(int argc, char **argv)
 				param.detune = 0;
 			else
 				param.detune = param.detune + 25;
+			shouldgenerate = 1;
 			break;
 
 		case KEY_F(12):
 		case '=':
 			mode++;
 			if(mode >= 3) mode = 0;
+			shouldgenerate = 1;
 			break;
 
 		case KEY_BACKSPACE:
@@ -674,18 +703,21 @@ int main(int argc, char **argv)
 				param.shape = -20;
 			else
 				param.shape = param.shape + 5;
+			shouldgenerate = 1;
 			break;
 
 		case KEY_PPAGE:
 		case ']':
 			param.tempo = param.tempo + 5;
 			RANGE(tempo, 5, 500);
+			shouldgenerate = 1;
 			break;
 
 		case KEY_NPAGE:
 		case '[':
 			param.tempo = param.tempo - 5;
 			RANGE(tempo, 5, 500);
+			shouldgenerate = 1;
 			break;
 
 		case KEY_HOME:
@@ -694,6 +726,7 @@ int main(int argc, char **argv)
 			chars--;
 			BOUND(chars, 2, strlen(charset_backup));
 			charset[chars] = '\0';
+			shouldgenerate = 1;
 			break;
 
 		case KEY_END:
@@ -702,6 +735,7 @@ int main(int argc, char **argv)
 			chars++;
 			BOUND(chars, 2, strlen(charset_backup));
 			charset[chars] = '\0';
+			shouldgenerate = 1;
 			break;
 
 		case KEY_SHOME:
@@ -710,6 +744,7 @@ int main(int argc, char **argv)
 				param.dashlen = 200;
 			else
 				param.dashlen = param.dashlen + 50;
+			shouldgenerate = 1;
 			break;
 
 		case KEY_SEND:
@@ -718,54 +753,63 @@ int main(int argc, char **argv)
 				param.spacelen = 50;
 			else
 				param.spacelen = param.spacelen + 25;
+			shouldgenerate = 1;
 			break;
 
 		case KEY_IC:
 		case '"':
 			param.signals++;
 			RANGE(signals, 1, 5);
+			shouldgenerate = 1;
 			break;
 
 		case KEY_DC:
 		case ':':
 			param.signals--;
 			RANGE(signals, 1, 5);
+			shouldgenerate = 1;
 			break;
 
 		case KEY_RIGHT:
 		case '.':
 			param.cspaces++;
 			RANGE(cspaces, 0, 100);
+			shouldgenerate = 1;
 			break;
 
 		case KEY_LEFT:
 		case ',':
 			param.cspaces--;
 			RANGE(cspaces, 0, 100);
+			shouldgenerate = 1;
 			break;
 
 		case KEY_SRIGHT:
 		case '>':
 			param.wspaces++;
 			RANGE(wspaces, 0, 100);
+			shouldgenerate = 1;
 			break;
 
 		case KEY_SLEFT:
 		case '<':
 			param.wspaces--;
 			RANGE(wspaces, 0, 100);
+			shouldgenerate = 1;
 			break;
 
 		case KEY_UP:
 		case '!':
 			param.number = param.number - 5;
 			RANGE(number, 5, 100);
+			shouldgenerate = 1;
 			break;
 
 		case KEY_DOWN:
 		case '@':
 			param.number = param.number + 5;
 			RANGE(number, 5, 100);
+			shouldgenerate = 1;
 			break;
 
 		case '/':
@@ -787,6 +831,7 @@ int main(int argc, char **argv)
 				samplerate = 192000;
 			else if(samplerate == 192000)
 				samplerate = 8000;
+			shouldgenerate = 1;
 			break;
 
 		case '?':
@@ -794,6 +839,7 @@ int main(int argc, char **argv)
 				bits = 8;
 			else
 				bits = 16;
+			shouldgenerate = 1;
 			break;
 
 		case 'A':
@@ -802,6 +848,7 @@ int main(int argc, char **argv)
 				param.agc = 0;
 			else
 				param.agc = param.agc + 25;
+			shouldgenerate = 1;
 			break;
 
 		case 'C':
@@ -810,6 +857,7 @@ int main(int argc, char **argv)
 				param.click = 1;
 			else
 				param.click = param.click + 2;
+			shouldgenerate = 1;
 			break;
 
 		case 'E':
@@ -818,6 +866,7 @@ int main(int argc, char **argv)
 				param.even = 0;
 			else
 				param.even++;
+			shouldgenerate = 1;
 			break;
 
 		case 'H':
@@ -826,6 +875,7 @@ int main(int argc, char **argv)
 				param.hum = 0;
 			else
 				param.hum = param.hum + 25;
+			shouldgenerate = 1;
 			break;
 
 		case 'O':
@@ -834,6 +884,7 @@ int main(int argc, char **argv)
 				param.odd = 0;
 			else
 				param.odd++;
+			shouldgenerate = 1;
 			break;
 
 		case 's':
@@ -847,6 +898,7 @@ int main(int argc, char **argv)
 				param.sweep = -3000;
 			else
 				param.sweep = param.sweep + 1000;
+			shouldgenerate = 1;
 			break;
 
 		case 'Q':
@@ -855,6 +907,7 @@ int main(int argc, char **argv)
 				param.hand = 0;
 			else
 				param.hand = param.hand + 20;
+			shouldgenerate = 1;
 			break;
 #ifdef HAVE_WINDOWS_H
 
@@ -882,8 +935,24 @@ int main(int argc, char **argv)
 				) sprintf(statustext, "lame_enc.dll error.");
 				else if((bits != 16) || (samplerate != 44100))
 				sprintf(statustext, "Unsupported samplerate/bits.");
-				else if(csound.length)
+				else 
 				{
+					if(shouldgenerate)
+					{
+					cw_freesample(&asound);
+					cw_freesample(&csound);
+					cw_initsample(&asound, NULL);
+					asound.samplerate = samplerate;
+					cw_initsample(&csound, &asound);
+					wattron(win_text, COLOR_PAIR(1));
+					wprintw(win_text, "\n\n *** Please wait *** \n");
+					wattron(win_text, COLOR_PAIR(2));
+					wrefresh(win_text);
+					if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
+					if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
+					shouldgenerate = 0;
+					}
+
 					i = (int) time(NULL);
 					sprintf(filename, "%x.mp3", i);
 					pFileOut = fopen(filename, "wb+");
