@@ -104,7 +104,9 @@ public:
 	void	Load(wxCommandEvent &event);
 	void	Save(wxCommandEvent &event);
 	void	Reset(wxCommandEvent &event);
-
+	void	OnChanged(wxCommandEvent &event);
+	void	GenerateSound();
+	
 	DECLARE_EVENT_TABLE()
 	wxTextCtrl		*textctrl;
 	wxSlider		*sliderwords;
@@ -115,6 +117,8 @@ public:
 	wxComboBox		*boxcharset;
 
 	char			charset[256];
+
+	int ShouldGenerate;
 
 /*
  -----------------------------------------------------------------------------------------------------------------------
@@ -156,7 +160,8 @@ enum
 	ID_MP3,
 	ID_Load,
 	ID_Save,
-	ID_Reset
+	ID_Reset,
+	ID_Text
 };
 
 BEGIN_EVENT_TABLE(CWWindow, wxFrame)
@@ -173,6 +178,7 @@ EVT_BUTTON(ID_Load, CWWindow::Load)
 EVT_BUTTON(ID_Save, CWWindow::Save)
 EVT_BUTTON(ID_Reset, CWWindow::Reset)
 EVT_SPINCTRL(ID_Update, CWWindow::Update)
+EVT_TEXT(ID_Text, CWWindow::OnChanged)
 END_EVENT_TABLE()
 IMPLEMENT_APP(CWStudio)
 
@@ -365,7 +371,7 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	wxBoxSizer	*lowbuttonsizer = new wxBoxSizer(wxHORIZONTAL);
 
 	for(int i = 0; i < 5; i++) spinsizers[i] = new wxBoxSizer(wxHORIZONTAL);
-	textctrl = new wxTextCtrl(panel, wxID_ANY, wxT("VVV ="), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
+	textctrl = new wxTextCtrl(panel, ID_Text, wxT("VVV ="), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
 	textctrl->SetFont(wxFont(14, wxSWISS, wxNORMAL, wxNORMAL, false, wxT("Courier New")));
 
 	mainsizer->Add(lowbuttonsizer, 0, wxEXPAND, 0);
@@ -501,6 +507,7 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 		spins[23]->SetValue(wordset);
 		spins[24]->SetValue(param.wspaces);
 	}
+	ShouldGenerate = 1;
 }
 
 /*
@@ -585,14 +592,23 @@ void CWWindow::GenerateWords(wxCommandEvent &WXUNUSED(event))
 
 /*
  =======================================================================================================================
- Play audio
+ Text in textcontrol was changed
  =======================================================================================================================
  */
-void CWWindow::Play(wxCommandEvent &WXUNUSED(event))
+void CWWindow::OnChanged(wxCommandEvent &WXUNUSED(event))
 {
-	if(playmode == CWPLAYING) playmode = cwstudio_stop();
-	if(playmode == CWSTOPPED)
-	{
+	ShouldGenerate = 1;
+	SetStatusText(wxT(""));
+
+}
+
+/*
+ =======================================================================================================================
+ Generate sound
+ =======================================================================================================================
+ */
+void CWWindow::GenerateSound()
+{
 		SetStatusText(wxT("Generating."));
 
 		cw_free(text);
@@ -604,9 +620,11 @@ void CWWindow::Play(wxCommandEvent &WXUNUSED(event))
 		cw_freesample(&csound);
 		cw_initsample(&asound, NULL);
 		asound.samplerate = samplerate;
+
 		cw_initsample(&csound, &asound);
 		morsetext = cw_encode(text);
 		cw_signals(&asound, param, morsetext);
+
 		cw_convert(&asound, &csound, bits);
 */
 		Generator	*gen = new Generator();
@@ -614,10 +632,26 @@ void CWWindow::Play(wxCommandEvent &WXUNUSED(event))
 		gen->Run();
 		gen->Wait();
 
+		ShouldGenerate = 0;
+
+		delete gen;
+
+}
+
+/*
+ =======================================================================================================================
+ Play audio
+ =======================================================================================================================
+ */
+void CWWindow::Play(wxCommandEvent &WXUNUSED(event))
+{
+	if(playmode == CWPLAYING) playmode = cwstudio_stop();
+	if(playmode == CWSTOPPED)
+	{
+		if(ShouldGenerate) GenerateSound();
 		playmode = cwstudio_play(&csound);
 		SetStatusText(wxT("Playing."));
 
-		delete gen;
 	}
 }
 
@@ -680,6 +714,9 @@ void CWWindow::Update(wxSpinEvent &WXUNUSED(event))
 	param.window = spins[22]->GetValue();
 	wordset = spins[23]->GetValue();
 	param.wspaces = spins[24]->GetValue();
+
+	ShouldGenerate = 1;
+	SetStatusText(wxT(""));
 }
 
 /*
@@ -701,8 +738,11 @@ void CWWindow::WAV(wxCommandEvent &WXUNUSED(event))
 
 	if(savedialog->ShowModal() == wxID_OK)
 	{
+		if(ShouldGenerate) GenerateSound();
 		wxString	filename = savedialog->GetPath();
 		cw_wavout(filename.mb_str(wxConvUTF8), &csound);
+		SetStatusText(wxT("WAV file written."));
+
 	}
 }
 
@@ -760,6 +800,8 @@ void CWWindow::MP3(wxCommandEvent &WXUNUSED(event))
 
 	if(savedialog->ShowModal() == wxID_OK)
 	{
+		if(ShouldGenerate) GenerateSound();
+
 		wxString	filename = savedialog->GetPath();
 		pFileOut = fopen(filename.mb_str(wxConvUTF8), "wb+");
 		memset(&beConfig, 0, sizeof(beConfig));
@@ -848,12 +890,13 @@ void CWWindow::MP3(wxCommandEvent &WXUNUSED(event))
 
 		}
 
-		SetStatusText(wxT("MP3 file written."));
 
 		beCloseStream(hbeStream);
 		delete[] pMP3Buffer;
 		fclose(pFileOut);
 
+		SetStatusText(wxT("MP3 file written."));
+		
 		//beWriteVBRHeader(filename.mb_str(wxConvUTF8));
 	}
 #endif
@@ -919,6 +962,10 @@ void CWWindow::Load(wxCommandEvent &WXUNUSED(event))
 			spins[22]->SetValue(param.window);
 			spins[23]->SetValue(wordset);
 			spins[24]->SetValue(param.wspaces);
+
+			ShouldGenerate = 1;
+			SetStatusText(wxT("Loaded."));
+
 		}
 	}
 }
@@ -958,6 +1005,8 @@ void CWWindow::Save(wxCommandEvent &WXUNUSED(event))
 			fprintf(f, "%s", (const char *) boxcharset->GetValue().mb_str(wxConvUTF8));
 			fclose(f);
 		}
+			SetStatusText(wxT("Saved."));
+
 	}
 }
 
@@ -1005,6 +1054,10 @@ void CWWindow::Reset(wxCommandEvent &WXUNUSED(event))
 		spins[22]->SetValue(param.window);
 		spins[23]->SetValue(wordset);
 		spins[24]->SetValue(param.wspaces);
+
+		ShouldGenerate = 1;
+		SetStatusText(wxT("Reset done."));
+
 	}
 }
 
