@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.60])
-AC_INIT(cwstudio, 0.9.3)
+AC_INIT(cwstudio, 0.9.4)
 AC_CONFIG_SRCDIR([src/cwcli.c])
 m4_include([m4/ax_with_curses.m4])
 
@@ -23,8 +23,11 @@ AC_PROG_LN_S
 AC_PROG_RANLIB
 
 # Windres
-AC_CHECK_PROG(HAVE_WINDRES, windres, "yes", "no")
-AM_CONDITIONAL(HAVE_WINDRES, [test "$HAVE_WINDRES" == "yes"])
+#AC_CHECK_PROG(HAVE_WINDRES, windres, "yes", "no")
+#AM_CONDITIONAL(HAVE_WINDRES, [test "$HAVE_WINDRES" == "yes"])
+AC_CHECK_TOOL([WINDRES], [windres], [no])
+AC_ARG_VAR([WINDRES], [path to windres utility])
+AM_CONDITIONAL([HAVE_WINDRES], [test "$WINDRES" != "no"])
 
 # Checks for libraries.
 AC_CHECK_LIB([m],[sinf])
@@ -56,11 +59,13 @@ AM_CONDITIONAL(COMPILE_CURSES, test "x$ax_cv_curses" = "xyes" || test "x$ax_cv_n
 # Check for mouse support
 ac_save_LIBS="$LIBS"
 LIBS="$LIBS $CURSES_LIB"
-AC_CHECK_FUNCS([mousemask],
-                     [AC_DEFINE([HAVE_CURSES_MOUSE], 1,
-                        [Define to 1 if you have curses mouse support.])],
-				[])
+AC_CHECK_FUNCS([mousemask])#,
+#                     [AC_DEFINE([HAVE_CURSES_MOUSE], 1,
+#                        [Define to 1 if you have curses mouse support.])],
+				#[])
+AC_CHECK_FUNCS([nc_getmouse])
 LIBS="$ac_save_LIBS"
+
 
 # Checks for header files.
 AC_CHECK_HEADERS([ctype.h getopt.h math.h stdlib.h string.h unistd.h fcntl.h sys/ioctl.h sys/time.h time.h windows.h process.h signal.h termios.h])
@@ -72,6 +77,13 @@ AC_CHECK_HEADERS([pulse/simple.h pulse/error.h],
                      [AC_DEFINE([HAVE_PULSEAUDIO], 1,
                         [Define to 1 if you have PULSE AUDIO.])],
                      [])
+AC_CHECK_HEADERS([AudioToolbox/AudioToolbox.h],
+                     [AC_DEFINE([HAVE_COREAUDIO], 1,
+                        [Define to 1 if you have COREAUDIO.])],
+                     [])
+if test "$HAVE_COREAUDIO" == "yes"; then
+                     LIBS="$LIBS -framework AudioToolbox -framework CoreFoundation"
+fi
 AC_CHECK_HEADERS([pthread.h],
                      [AC_DEFINE([HAVE_PTHREAD], 1,
                         [Define to 1 if you have pthread.])],
@@ -80,7 +92,7 @@ AC_CHECK_HEADERS([pthread.h],
 AC_TYPE_SIZE_T
 
 # Checks for library functions.
-AC_FUNC_MALLOC
+#AC_FUNC_MALLOC
 AC_CHECK_FUNCS([pow sqrt])
 
 AC_CONFIG_FILES([Makefile

@@ -1,10 +1,10 @@
-/*$T src/cwstudio.c GC 1.140 04/22/13 17:07:17 */
+/*$T cwcurses.c GC 1.150 2015-02-08 20:58:42 */
 
 /*$I0
 
     This file is part of CWStudio.
 
-    Copyright 2008-2014 Lukasz Komsta, SP8QED
+    Copyright 2008-2015 Lukasz Komsta, SP8QED
 
     CWStudio is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@
 	if(x > u) x = u;
 #if HAVE_WINDOWS_H
 #include <windows.h>
+#include "BladeMP3EncDLL.h"
 #endif
 #ifdef HAVE_PTHREAD
 #include <pthread.h>
@@ -52,6 +53,8 @@
 #define SOUND_INTERFACE "/pulseaudio"
 #elif defined HAVE_OSS
 #define SOUND_INTERFACE "/oss"
+#elif defined HAVE_COREAUDIO
+#define SOUND_INTERFACE "/coreaudio"
 #else
 #define SOUND_INTERFACE ""
 #endif
@@ -87,8 +90,8 @@ int getch()
 	/*~~~~~~~~~~~~~~~~~~~~~~~*/
 	struct termios	oldt, newt;
 	int				ch;
-	/*~~~~~~~~~~~~~~~~~~~~~~~*/
 
+	/*~~~~~~~~~~~~~~~~~~~~~~~*/
 	tcgetattr(STDIN_FILENO, &oldt);
 	newt = oldt;
 	newt.c_lflag &= ~(ICANON | ECHO);
@@ -110,6 +113,7 @@ static char			*text = NULL, *morsetext = NULL;
 static cw_sample	asound, csound;
 static cw_param		param;
 static int			mode = 0, wordset = 100, chars;
+static int	shouldgenerate = 1;
 static unsigned int bits = 16;
 static unsigned int samplerate = 44100;
 static char			filename[256] = "output.wav";
@@ -119,46 +123,49 @@ static char			charset_backup[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
 static int			playmode = CWSTOPPED;
 static char			statustext[256] = "Press <F1> or <1> for help.";
 static WINDOW		*win_title, *win_param, *win_text, *win_help;
-#ifdef HAVE_CURSES_MOUSE
+#ifdef HAVE_MOUSEMASK
 MEVENT				event;
 #endif
 #endif
 
-
+/* */
 void cwstudio_writeconfig()
 {
-	FILE *f;
-	char filename[255];
-	sprintf(filename,"%s",CANONICAL_HOST);
-	if ((f = fopen(filename,"w")) != NULL) {
-		fwrite(&mode,sizeof(int),1,f);
-		fwrite(&wordset,sizeof(int),1,f);
-		fwrite(&chars,sizeof(int),1,f);
-		fwrite(&bits,sizeof(int),1,f);
-		fwrite(&samplerate,sizeof(int),1,f);
-		fwrite(&param,sizeof(cw_param),1,f);
-		fprintf(f,"%s",charset);
+	FILE	*f;
+	char	filename[255];
+	sprintf(filename, "%s", CANONICAL_HOST);
+	if((f = fopen(filename, "w")) != NULL)
+	{
+		fwrite(&mode, sizeof(int), 1, f);
+		fwrite(&wordset, sizeof(int), 1, f);
+		fwrite(&chars, sizeof(int), 1, f);
+		fwrite(&bits, sizeof(int), 1, f);
+		fwrite(&samplerate, sizeof(int), 1, f);
+		fwrite(&param, sizeof(cw_param), 1, f);
+		fprintf(f, "%s", charset);
 		fclose(f);
 	}
 }
 
+/* */
 void cwstudio_readconfig()
 {
-	FILE *f;
-	char filename[255];
-	sprintf(filename,"%s",CANONICAL_HOST);
-	if ((f = fopen(filename,"r")) != NULL) {
-		fread(&mode,sizeof(int),1,f);
-		fread(&wordset,sizeof(int),1,f);
-		fread(&chars,sizeof(int),1,f);
-		fread(&bits,sizeof(int),1,f);
-		fread(&samplerate,sizeof(int),1,f);
-		fread(&param,sizeof(cw_param),1,f);
-		fgets(charset,256,f);
+	FILE	*f;
+	char	filename[255];
+	sprintf(filename, "%s", CANONICAL_HOST);
+	if((f = fopen(filename, "r")) != NULL)
+	{
+		fread(&mode, sizeof(int), 1, f);
+		fread(&wordset, sizeof(int), 1, f);
+		fread(&chars, sizeof(int), 1, f);
+		fread(&bits, sizeof(int), 1, f);
+		fread(&samplerate, sizeof(int), 1, f);
+		fread(&param, sizeof(cw_param), 1, f);
+		fgets(charset, 256, f);
 		fclose(f);
+		shouldgenerate = 1;
 	}
 }
-
 
 /*
  =======================================================================================================================
@@ -169,8 +176,8 @@ char *cwstudio_generate_text()
 {
 	/*~~~~~~~~~~~~~~~~~~~~~~*/
 	char	*generated = NULL;
-	/*~~~~~~~~~~~~~~~~~~~~~~*/
 
+	/*~~~~~~~~~~~~~~~~~~~~~~*/
 	switch(mode)
 	{
 	case 0: generated = cw_rand_groups(param.number, param.shape, charset, param.seed); break;
@@ -202,7 +209,8 @@ void cwstudio_resetwindows()
 	curs_set(0);
 	getmaxyx(stdscr, nrow, ncol);
 
-	if(has_colors()) {
+	if(has_colors())
+	{
 		start_color();
 		init_pair(1, COLOR_WHITE, COLOR_RED);
 		init_pair(2, COLOR_WHITE, COLOR_BLUE);
@@ -210,7 +218,8 @@ void cwstudio_resetwindows()
 	}
 
 	win_title = newwin(5, SPLIT, 0, 0);
-	if(has_colors()) {
+	if(has_colors())
+	{
 		wattron(win_title, COLOR_PAIR(1));
 		wbkgd(win_title, COLOR_PAIR(1));
 	}
@@ -218,11 +227,12 @@ void cwstudio_resetwindows()
 	box(win_title, 0, 0);
 	mvwprintw(win_title, 1, 1, "CWStudio %s (%ix%i)", VERSION, ncol, nrow);
 	mvwprintw(win_title, 2, 1, "(%s%s%s)", CANONICAL_HOST, SOUND_INTERFACE, THREAD_INTERFACE);
-	mvwprintw(win_title, 3, 1, "(C) 2009-2013 Lukasz Komsta, SP8QED");
+	mvwprintw(win_title, 3, 1, "(C) 2009-2015 Lukasz Komsta, SP8QED");
 	wrefresh(win_title);
 
 	win_param = newwin(nrow - 5, SPLIT, 5, 0);
-	if(has_colors()) {
+	if(has_colors())
+	{
 		wattron(win_param, COLOR_PAIR(2));
 		wbkgd(win_param, COLOR_PAIR(2));
 	}
@@ -233,7 +243,8 @@ void cwstudio_resetwindows()
 
 	win_param = newwin(nrow - 7, SPLIT - 2, 6, 1);
 	keypad(win_param, TRUE);
-	if(has_colors()) {
+	if(has_colors())
+	{
 		wattron(win_param, COLOR_PAIR(2));
 		wbkgd(win_param, COLOR_PAIR(2));
 	}
@@ -241,7 +252,8 @@ void cwstudio_resetwindows()
 	keypad(win_param, TRUE);
 
 	win_text = newwin(nrow, ncol - (SPLIT), 0, SPLIT);
-	if(has_colors()) {
+	if(has_colors())
+	{
 		wattron(win_text, COLOR_PAIR(2));
 		wbkgd(win_text, COLOR_PAIR(2));
 	}
@@ -251,7 +263,8 @@ void cwstudio_resetwindows()
 	delwin(win_text);
 
 	win_text = newwin(nrow - 2, ncol - (SPLIT) - 2, 1, SPLIT + 1);
-	if(has_colors()) {
+	if(has_colors())
+	{
 		wattron(win_text, COLOR_PAIR(2));
 		wbkgd(win_text, COLOR_PAIR(2));
 	}
@@ -271,7 +284,8 @@ void cwstudio_repaintwindows()
 
 	wprintw(win_param, "* %i Hz / %i bits\n", samplerate, bits);
 
-	if(isatty(STDIN_FILENO)) {
+	if(isatty(STDIN_FILENO))
+	{
 		switch(mode)
 		{
 		case 0: wprintw(win_param, "* %s\n\n", charset); break;
@@ -279,7 +293,8 @@ void cwstudio_repaintwindows()
 		case 2: wprintw(win_param, "* %i calls\n\n", param.number); break;
 		}
 	}
-	else {
+	else
+	{
 		wprintw(win_param, "* Getting text from stdin\n\n");
 	}
 
@@ -306,7 +321,8 @@ void cwstudio_repaintwindows()
 		wprintw(win_param, "\n");
 	if(param.signals > 1) wprintw(win_param, "* Mixing %i signals ", param.signals);
 	wprintw(win_param, "\n");
-	if(param.noise) {
+	if(param.noise)
+	{
 		wprintw(win_param, "* Adding %i%% noise, %i - %i Hz ", param.noise, param.lowcut, param.highcut);
 		if(param.agc) wprintw(win_param, "* %i%% AGC ", param.agc);
 		wprintw(win_param, "\n");
@@ -324,8 +340,6 @@ void cwstudio_repaintwindows()
 	wrefresh(win_param);
 
 	cwstudio_writeconfig();
-		
-
 }
 
 #ifdef HAVE_SIGNAL_H
@@ -351,12 +365,13 @@ void cwstudio_help()
 {
 	/*~~~~~~~~~~~*/
 	int ncol, nrow;
-	/*~~~~~~~~~~~*/
 
+	/*~~~~~~~~~~~*/
 	getmaxyx(stdscr, nrow, ncol);
 
 	win_help = newwin(20, 42, nrow / 2 - 10, ncol / 2 - 21);
-	if(has_colors()) {
+	if(has_colors())
+	{
 		wattron(win_help, COLOR_PAIR(3));
 		wbkgd(win_help, COLOR_PAIR(3));
 	}
@@ -366,12 +381,17 @@ void cwstudio_help()
 	delwin(win_help);
 
 	win_help = newwin(18, 40, nrow / 2 - 9, ncol / 2 - 20);
-	if(has_colors()) {
+	if(has_colors())
+	{
 		wattron(win_help, COLOR_PAIR(3));
 		wbkgd(win_help, COLOR_PAIR(3));
 	}
 
+#ifdef HAVE_WINDOWS_H
+	wprintw(win_help, "F1/1 - help, F2/2 - WAV, M - MP3\n");
+#else
 	wprintw(win_help, "F1/1 - help, F2/2 - save to WAV file\n");
+#endif
 	wprintw(win_help, "F3/3 - reset parameters\n");
 	wprintw(win_help, "F4/4, SPACE - regenerate random\n");
 	wprintw(win_help, "F5/5, ENTER - play\n");
@@ -421,414 +441,611 @@ int cwstudio_regeneratetext()
 int main(int argc, char **argv)
 {
 	/*~~~~~~~*/
-	int ch;
-	int i, err;
-	FILE *f;
+	int					ch;
+	int					i, err, m;
+	FILE				*f;
+#ifdef HAVE_WINDOWS_H
+	HINSTANCE			hDLL = NULL;
+	BEINITSTREAM		beInitStream = NULL;
+	BEENCODECHUNK		beEncodeChunk = NULL;
+	BEDEINITSTREAM		beDeinitStream = NULL;
+	BECLOSESTREAM		beCloseStream = NULL;
+	BEVERSION			beVersion = NULL;
+	BEWRITEVBRHEADER	beWriteVBRHeader = NULL;
+	BE_ERR				error = 0;
+	BE_CONFIG			beConfig = { 0, };
+	FILE				*pFileOut = NULL;
+	DWORD				dwSamples = 0;
+	DWORD				dwMP3Buffer = 0;
+	HBE_STREAM			hbeStream = 0;
+	PBYTE				pMP3Buffer = NULL;
+	PSHORT				pWAVBuffer = NULL;
+	DWORD				dwRead = 0;
+	DWORD				dwWrite = 0;
+	DWORD				dwDone = 0;
+	long int			length;
+#endif
+
 	/*~~~~~~~*/
 
 	/* Initialize parameters */
 	cw_initparam(&param);
-	
+
 	cwstudio_readconfig();
 
 #ifdef WIN32
 	SetConsoleTitle("CWStudio");
 #endif
+#ifdef HAVE_WINDOWS_H
+	hDLL = LoadLibrary("lame_enc.dll");
+#endif
 #if defined(HAVE_SIGNAL_H) && defined(SIGWINCH)
-		/* Register signal to handle terminal resize */
-		signal(SIGWINCH, cwstudio_resizeterm);
+	/* Register signal to handle terminal resize */
+	signal(SIGWINCH, cwstudio_resizeterm);
 #endif
-		chars = strlen(charset);
+	chars = strlen(charset);
 
-		/*$2- Initialize curses mode ---------------------------------------------------------------------------------*/
+	/*$2- Initialize curses mode -------------------------------------------------------------------------------------*/
 
-		initscr();
-		cwstudio_resetwindows();
-		cwstudio_regeneratetext();
-		cwstudio_repaintwindows();
+	initscr();
+	cwstudio_resetwindows();
+	cwstudio_regeneratetext();
+	cwstudio_repaintwindows();
 
-#ifdef HAVE_CURSES_MOUSE
-		mousemask(ALL_MOUSE_EVENTS, NULL);
+#ifdef HAVE_MOUSEMASK
+	mousemask(ALL_MOUSE_EVENTS, NULL);
 #endif
 
-		/*$3- Main loop for keyboard input in curses mode ============================================================*/
+	/*$3- Main loop for keyboard input in curses mode ================================================================*/
 
-		while(((ch = wgetch(win_param)) != KEY_F(10)) && (ch != '0')) {
-			switch(ch)
+	while(((ch = wgetch(win_param)) != KEY_F(10)) && (ch != '0'))
+	{
+		switch(ch)
+		{
+#ifdef HAVE_MOUSEMASK
+
+		/* Mouse suppord compiled conditionally */
+		case KEY_MOUSE:
+#ifdef HAVE_NC_GETMOUSE
+			m = nc_getmouse(&event);
+#else
+			m = getmouse(&event);
+#endif
+			if(m == OK)
 			{
-#ifdef HAVE_CURSES_MOUSE
-
-			/* Mouse suppord compiled conditionally */
-			case KEY_MOUSE:
-				if(getmouse(&event) == OK) {
-					if(event.bstate & BUTTON1_PRESSED) {
-						if((playmode == CWPLAYING) || (playmode == CWPAUSED)) {
-							playmode = cwstudio_stop();
-							strcpy(statustext, "Playback stopped.");
-						}
-						else {
-							cw_freesample(&asound);
-							cw_freesample(&csound);
-							cw_initsample(&asound, NULL);
-							asound.samplerate = samplerate;
-							cw_initsample(&csound, &asound);
-							wattron(win_text, COLOR_PAIR(1));
-							wprintw(win_text,"\n\n *** Please wait *** \n");
-							wattron(win_text, COLOR_PAIR(2));
-							wrefresh(win_text);
-							if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
-							if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
-							playmode = cwstudio_play(&csound);
-							if(playmode == CWPLAYING) strcpy(statustext, "Playback started.");
-						}
+				if(event.bstate & BUTTON1_PRESSED)
+				{
+					if((playmode == CWPLAYING) || (playmode == CWPAUSED))
+					{
+						playmode = cwstudio_stop();
+						strcpy(statustext, "Playback stopped.");
 					}
-					else if(event.bstate & BUTTON2_PRESSED) {
-						param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
+					else
+					{
+						if (shouldgenerate)
+						{
+						cw_freesample(&asound);
+						cw_freesample(&csound);
+						cw_initsample(&asound, NULL);
+						asound.samplerate = samplerate;
+						cw_initsample(&csound, &asound);
+						wattron(win_text, COLOR_PAIR(1));
+						wprintw(win_text, "\n\n *** Please wait *** \n");
+						wattron(win_text, COLOR_PAIR(2));
+						wrefresh(win_text);
+						if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
+						if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
 						}
-					else if(event.bstate & BUTTON3_PRESSED) {
-						playmode = cwstudio_pause();
-						if(playmode == CWPLAYING)
-							strcpy(statustext, "Playback resumed.");
-						else if(playmode == CWPAUSED)
-							strcpy(statustext, "Playback paused.");
-						else if(playmode == CWSTOPPED)
-							strcpy(statustext, "Playback stopped.");
-						}
+						playmode = cwstudio_play(&csound);
+						if(playmode == CWPLAYING) strcpy(statustext, "Playback started.");
+					}
+				}
+				else if(event.bstate & BUTTON2_PRESSED)
+				{
+					param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
+					shouldgenerate = 1;
 
 				}
-				break;
+				else if(event.bstate & BUTTON3_PRESSED)
+				{
+					playmode = cwstudio_pause();
+					if(playmode == CWPLAYING)
+						strcpy(statustext, "Playback resumed.");
+					else if(playmode == CWPAUSED)
+						strcpy(statustext, "Playback paused.");
+					else if(playmode == CWSTOPPED)
+						strcpy(statustext, "Playback stopped.");
+				}
+			}
+			break;
 #endif
 
-			case KEY_F(1):
-			case '1':
-				cwstudio_help();
-				break;
+		case KEY_F(1):
+		case '1':
+			cwstudio_help();
+			break;
 
-			case KEY_F(2):
-			case '2':
-				if(csound.length) {
-					i = (int) time(NULL);
-					sprintf(filename, "%x.wav", i);
-					if((err = cw_wavout(filename, &csound)) != CWOK) return(i);
-					sprintf(filename, "%x.txt", i);
-					f = fopen(filename,"w");
-					fputs(text,f);
-					fclose(f);
-					sprintf(statustext, "Saved to %x.wav.", i);
+		case KEY_F(2):
+		case '2':
+			if(shouldgenerate)
+			{
+				cw_freesample(&asound);
+				cw_freesample(&csound);
+				cw_initsample(&asound, NULL);
+				asound.samplerate = samplerate;
+				cw_initsample(&csound, &asound);
+				wattron(win_text, COLOR_PAIR(1));
+				wprintw(win_text, "\n\n *** Please wait *** \n");
+				wattron(win_text, COLOR_PAIR(2));
+				wrefresh(win_text);
+				if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
+				if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
+				shouldgenerate = 0;
 				}
-				break;
+			i = (int) time(NULL);
+			sprintf(filename, "%x.wav", i);
+			if((err = cw_wavout(filename, &csound)) != CWOK) return(i);
+			sprintf(filename, "%x.txt", i);
+			f = fopen(filename, "w");
+			fputs(text, f);
+			fclose(f);
+			sprintf(statustext, "Saved to %x.wav.", i);
+			break;
 
-			case KEY_F(3):
-			case '3':
-				i = param.seed;
-				cw_initparam(&param);
-				param.seed = i;
-				break;
+		case KEY_F(3):
+		case '3':
+			i = param.seed;
+			cw_initparam(&param);
+			param.seed = i;
+			shouldgenerate = 1;
+			break;
 
-			case KEY_F(4):
-			case '4':
-			case ' ':
-				param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
-				break;
+		case KEY_F(4):
+		case '4':
+		case ' ':
+			param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
+			shouldgenerate = 1;
+			break;
+#if defined(HAVE_OSS) || defined(HAVE_PULSEAUDIO) || defined(HAVE_LIBWINMM) || defined(HAVE_COREAUDIO)
 
-			case KEY_F(5):
-			case '5':
-				if(playmode == CWSTOPPED) {
+		case KEY_F(5):
+		case '5':
+			if(playmode == CWSTOPPED)
+			{
+				if(shouldgenerate)
+				{
+				cw_freesample(&asound);
+				cw_freesample(&csound);
+				cw_initsample(&asound, NULL);
+				asound.samplerate = samplerate;
+				cw_initsample(&csound, &asound);
+				wattron(win_text, COLOR_PAIR(1));
+				wprintw(win_text, "\n\n *** Please wait *** \n");
+				wattron(win_text, COLOR_PAIR(2));
+				wrefresh(win_text);
+				if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
+				if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
+				shouldgenerate = 0;
+				}
+				playmode = cwstudio_play(&csound);
+				if(playmode == CWPLAYING) strcpy(statustext, "Playback started.");
+			}
+			break;
+
+		case KEY_F(6):
+		case '6':
+			playmode = cwstudio_stop();
+			strcpy(statustext, "Playback stopped.");
+			break;
+
+		case KEY_F(7):
+		case '7':
+			playmode = cwstudio_pause();
+			if(playmode == CWPLAYING)
+				strcpy(statustext, "Playback resumed.");
+			else if(playmode == CWPAUSED)
+				strcpy(statustext, "Playback paused.");
+			else if(playmode == CWSTOPPED)
+				strcpy(statustext, "Playback stopped.");
+			break;
+#endif
+
+		case KEY_F(8):
+		case '8':
+			if(param.noise == 100)
+				param.noise = 0;
+			else
+				param.noise = param.noise + 25;
+			if(param.lowcut == 300)
+			{
+				param.lowcut = 100;
+				param.highcut = 6000;
+			}
+			else
+			{
+				param.lowcut = 300;
+				param.highcut = 2400;
+			}
+			shouldgenerate = 1;
+			break;
+
+		case KEY_F(9):
+		case '9':
+			param.freq = param.freq + 100;
+			if(param.freq > 4000) param.freq = 100;
+			shouldgenerate = 1;
+			break;
+
+		case KEY_F(11):
+		case '-':
+			if(param.qsb == 0)
+				param.qsb = 10;
+			else if(param.qsb == 10)
+				param.qsb = 0;
+
+			if(param.detune >= 100)
+				param.detune = 0;
+			else
+				param.detune = param.detune + 25;
+			shouldgenerate = 1;
+			break;
+
+		case KEY_F(12):
+		case '=':
+			mode++;
+			if(mode >= 3) mode = 0;
+			shouldgenerate = 1;
+			break;
+
+		case KEY_BACKSPACE:
+		case '\\':
+			if(param.shape >= 20)
+				param.shape = -20;
+			else
+				param.shape = param.shape + 5;
+			shouldgenerate = 1;
+			break;
+
+		case KEY_PPAGE:
+		case ']':
+			param.tempo = param.tempo + 5;
+			RANGE(tempo, 5, 500);
+			shouldgenerate = 1;
+			break;
+
+		case KEY_NPAGE:
+		case '[':
+			param.tempo = param.tempo - 5;
+			RANGE(tempo, 5, 500);
+			shouldgenerate = 1;
+			break;
+
+		case KEY_HOME:
+		case '{':
+			strncpy(charset, charset_backup, 256);
+			chars--;
+			BOUND(chars, 2, strlen(charset_backup));
+			charset[chars] = '\0';
+			shouldgenerate = 1;
+			break;
+
+		case KEY_END:
+		case '}':
+			strncpy(charset, charset_backup, 256);
+			chars++;
+			BOUND(chars, 2, strlen(charset_backup));
+			charset[chars] = '\0';
+			shouldgenerate = 1;
+			break;
+
+		case KEY_SHOME:
+		case ';':
+			if(param.dashlen >= 800)
+				param.dashlen = 200;
+			else
+				param.dashlen = param.dashlen + 50;
+			shouldgenerate = 1;
+			break;
+
+		case KEY_SEND:
+		case '\'':
+			if(param.spacelen >= 200)
+				param.spacelen = 50;
+			else
+				param.spacelen = param.spacelen + 25;
+			shouldgenerate = 1;
+			break;
+
+		case KEY_IC:
+		case '"':
+			param.signals++;
+			RANGE(signals, 1, 5);
+			shouldgenerate = 1;
+			break;
+
+		case KEY_DC:
+		case ':':
+			param.signals--;
+			RANGE(signals, 1, 5);
+			shouldgenerate = 1;
+			break;
+
+		case KEY_RIGHT:
+		case '.':
+			param.cspaces++;
+			RANGE(cspaces, 0, 100);
+			shouldgenerate = 1;
+			break;
+
+		case KEY_LEFT:
+		case ',':
+			param.cspaces--;
+			RANGE(cspaces, 0, 100);
+			shouldgenerate = 1;
+			break;
+
+		case KEY_SRIGHT:
+		case '>':
+			param.wspaces++;
+			RANGE(wspaces, 0, 100);
+			shouldgenerate = 1;
+			break;
+
+		case KEY_SLEFT:
+		case '<':
+			param.wspaces--;
+			RANGE(wspaces, 0, 100);
+			shouldgenerate = 1;
+			break;
+
+		case KEY_UP:
+		case '!':
+			param.number = param.number - 5;
+			RANGE(number, 5, 100);
+			shouldgenerate = 1;
+			break;
+
+		case KEY_DOWN:
+		case '@':
+			param.number = param.number + 5;
+			RANGE(number, 5, 100);
+			shouldgenerate = 1;
+			break;
+
+		case '/':
+			if(samplerate == 8000)
+				samplerate = 11025;
+			else if(samplerate == 11025)
+				samplerate = 22050;
+			else if(samplerate == 22050)
+				samplerate = 44100;
+			else if(samplerate == 44100)
+				samplerate = 16000;
+			else if(samplerate == 16000)
+				samplerate = 24000;
+			else if(samplerate == 24000)
+				samplerate = 48000;
+			else if(samplerate == 48000)
+				samplerate = 96000;
+			else if(samplerate == 96000)
+				samplerate = 192000;
+			else if(samplerate == 192000)
+				samplerate = 8000;
+			shouldgenerate = 1;
+			break;
+
+		case '?':
+			if(bits == 16)
+				bits = 8;
+			else
+				bits = 16;
+			shouldgenerate = 1;
+			break;
+
+		case 'A':
+		case 'a':
+			if(param.agc >= 100)
+				param.agc = 0;
+			else
+				param.agc = param.agc + 25;
+			shouldgenerate = 1;
+			break;
+
+		case 'C':
+		case 'c':
+			if(param.click >= 10)
+				param.click = 1;
+			else
+				param.click = param.click + 2;
+			shouldgenerate = 1;
+			break;
+
+		case 'E':
+		case 'e':
+			if(param.even >= 10)
+				param.even = 0;
+			else
+				param.even++;
+			shouldgenerate = 1;
+			break;
+
+		case 'H':
+		case 'h':
+			if(param.hum >= 100)
+				param.hum = 0;
+			else
+				param.hum = param.hum + 25;
+			shouldgenerate = 1;
+			break;
+
+		case 'O':
+		case 'o':
+			if(param.odd >= 10)
+				param.odd = 0;
+			else
+				param.odd++;
+			shouldgenerate = 1;
+			break;
+
+		case 's':
+		case 'S':
+			if(param.sweepness == 200)
+				param.sweepness = 0;
+			else
+				param.sweepness = 200;
+
+			if(param.sweep >= 3000)
+				param.sweep = -3000;
+			else
+				param.sweep = param.sweep + 1000;
+			shouldgenerate = 1;
+			break;
+
+		case 'Q':
+		case 'q':
+			if(param.hand >= 100)
+				param.hand = 0;
+			else
+				param.hand = param.hand + 20;
+			shouldgenerate = 1;
+			break;
+#ifdef HAVE_WINDOWS_H
+
+		case 'M':
+		case 'm':
+			if(hDLL == NULL)
+				sprintf(statustext, "No lame_enc.dll found.");
+			else
+			{
+				beInitStream = (BEINITSTREAM) GetProcAddress(hDLL, TEXT_BEINITSTREAM);
+				beEncodeChunk = (BEENCODECHUNK) GetProcAddress(hDLL, TEXT_BEENCODECHUNK);
+				beDeinitStream = (BEDEINITSTREAM) GetProcAddress(hDLL, TEXT_BEDEINITSTREAM);
+				beCloseStream = (BECLOSESTREAM) GetProcAddress(hDLL, TEXT_BECLOSESTREAM);
+				beVersion = (BEVERSION) GetProcAddress(hDLL, TEXT_BEVERSION);
+				beWriteVBRHeader = (BEWRITEVBRHEADER) GetProcAddress(hDLL, TEXT_BEWRITEVBRHEADER);
+
+				if
+				(
+					!beInitStream
+				||	!beEncodeChunk
+				||	!beDeinitStream
+				||	!beCloseStream
+				||	!beVersion
+				||	!beWriteVBRHeader
+				) sprintf(statustext, "lame_enc.dll error.");
+				else if((bits != 16) || (samplerate != 44100))
+				sprintf(statustext, "Unsupported samplerate/bits.");
+				else 
+				{
+					if(shouldgenerate)
+					{
 					cw_freesample(&asound);
 					cw_freesample(&csound);
 					cw_initsample(&asound, NULL);
 					asound.samplerate = samplerate;
 					cw_initsample(&csound, &asound);
 					wattron(win_text, COLOR_PAIR(1));
-					wprintw(win_text,"\n\n *** Please wait *** \n");
+					wprintw(win_text, "\n\n *** Please wait *** \n");
 					wattron(win_text, COLOR_PAIR(2));
 					wrefresh(win_text);
 					if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
 					if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
-					playmode = cwstudio_play(&csound);
-					if(playmode == CWPLAYING) strcpy(statustext, "Playback started.");
+					shouldgenerate = 0;
+					}
+
+					i = (int) time(NULL);
+					sprintf(filename, "%x.mp3", i);
+					pFileOut = fopen(filename, "wb+");
+					memset(&beConfig, 0, sizeof(beConfig));
+
+					beConfig.dwConfig = BE_CONFIG_LAME;
+					beConfig.format.LHV1.dwStructVersion = 1;
+					beConfig.format.LHV1.dwStructSize = sizeof(beConfig);
+					beConfig.format.LHV1.dwSampleRate = csound.samplerate;
+					beConfig.format.LHV1.dwReSampleRate = 0;
+					beConfig.format.LHV1.nMode = BE_MP3_MODE_MONO;
+					beConfig.format.LHV1.dwBitrate = 128;
+					beConfig.format.LHV1.dwMaxBitrate = 320;
+					beConfig.format.LHV1.nPreset = LQP_NOPRESET;
+					beConfig.format.LHV1.dwMpegVersion = MPEG1;
+					beConfig.format.LHV1.dwPsyModel = 0;
+					beConfig.format.LHV1.dwEmphasis = 0;
+					beConfig.format.LHV1.bOriginal = TRUE;
+					beConfig.format.LHV1.bCRC = TRUE;
+					beConfig.format.LHV1.bCopyright = TRUE;
+					beConfig.format.LHV1.bPrivate = TRUE;
+					beConfig.format.LHV1.bWriteVBRHeader = FALSE;
+					beConfig.format.LHV1.bEnableVBR = FALSE;
+					beConfig.format.LHV1.nVBRQuality = 5;
+					beConfig.format.LHV1.bNoRes = TRUE;
+
+					error = beInitStream(&beConfig, &dwSamples, &dwMP3Buffer, &hbeStream);
+					pMP3Buffer = malloc(dwMP3Buffer);
+
+					pWAVBuffer = (PSHORT) csound.data;
+
+					length = csound.length;
+					wattron(win_text, COLOR_PAIR(1));
+					wprintw(win_text, "\n\nMP3 Exporting...\n\n");
+					wattron(win_text, COLOR_PAIR(2));
+					wrefresh(win_text);
+
+					while(length >= dwSamples)
+					{
+						error = beEncodeChunk(hbeStream, dwSamples, pWAVBuffer, pMP3Buffer, &dwWrite);
+						fwrite(pMP3Buffer, 1, dwWrite, pFileOut);
+						dwDone += dwRead * sizeof(SHORT);
+
+						length -= dwSamples;
+						pWAVBuffer += dwSamples;
+					}
+
+					if(length > 0)
+					{
+						error = beEncodeChunk(hbeStream, length, pWAVBuffer, pMP3Buffer, &dwWrite);
+						fwrite(pMP3Buffer, 1, dwWrite, pFileOut);
+					}
+
+					error = beDeinitStream(hbeStream, pMP3Buffer, &dwWrite);
+					if(dwWrite) fwrite(pMP3Buffer, 1, dwWrite, pFileOut);
+
+					sprintf(statustext, "Saved to %x.mp3.", i);
+					beCloseStream(hbeStream);
+					free(pMP3Buffer);
+					fclose(pFileOut);
+
+					sprintf(filename, "%x.txt", i);
+					f = fopen(filename, "w");
+					fputs(text, f);
+					fclose(f);
 				}
-				break;
-
-			case KEY_F(6):
-			case '6':
-				playmode = cwstudio_stop();
-				strcpy(statustext, "Playback stopped.");
-				break;
-
-			case KEY_F(7):
-			case '7':
-				playmode = cwstudio_pause();
-				if(playmode == CWPLAYING)
-					strcpy(statustext, "Playback resumed.");
-				else if(playmode == CWPAUSED)
-					strcpy(statustext, "Playback paused.");
-				else if(playmode == CWSTOPPED)
-					strcpy(statustext, "Playback stopped.");
-				break;
-
-			case KEY_F(8):
-			case '8':
-				if(param.noise == 100)
-					param.noise = 0;
-				else
-					param.noise = param.noise + 25;
-				if(param.lowcut == 300) {
-					param.lowcut = 100;
-					param.highcut = 6000;
-				}
-				else {
-					param.lowcut = 300;
-					param.highcut = 2400;
-				}
-				break;
-
-			case KEY_F(9):
-			case '9':
-				param.freq = param.freq + 100;
-				if (param.freq > 4000) param.freq = 100;
-				break;
-
-			case KEY_F(11):
-			case '-':
-				if(param.qsb == 0)
-					param.qsb = 10;
-				else if(param.qsb == 10)
-					param.qsb = 0;
-
-				if(param.detune >= 100)
-					param.detune = 0;
-				else
-					param.detune = param.detune + 25;
-				break;
-
-			case KEY_F(12):
-			case '=':
-				mode++;
-				if(mode >= 3) mode = 0;
-				break;
-
-			case KEY_BACKSPACE:
-			case '\\':
-				if(param.shape >= 20)
-					param.shape = -20;
-				else
-					param.shape = param.shape + 5;
-				break;
-
-			case KEY_PPAGE:
-			case ']':
-				param.tempo = param.tempo + 5;
-				RANGE(tempo, 5, 500);
-				break;
-
-			case KEY_NPAGE:
-			case '[':
-				param.tempo = param.tempo - 5;
-				RANGE(tempo, 5, 500);
-				break;
-
-			case KEY_HOME:
-			case '{':
-				strncpy(charset, charset_backup, 256);
-				chars--;
-				BOUND(chars, 2, strlen(charset_backup));
-				charset[chars] = '\0';
-				break;
-
-			case KEY_END:
-			case '}':
-				strncpy(charset, charset_backup, 256);
-				chars++;
-				BOUND(chars, 2, strlen(charset_backup));
-				charset[chars] = '\0';
-				break;
-
-			case KEY_SHOME:
-			case ';':
-				if(param.dashlen >= 800)
-					param.dashlen = 200;
-				else
-					param.dashlen = param.dashlen + 50;
-				break;
-
-			case KEY_SEND:
-			case '\'':
-				if(param.spacelen >= 200)
-					param.spacelen = 50;
-				else
-					param.spacelen = param.spacelen + 25;
-				break;
-
-			case KEY_IC:
-			case '"':
-				param.signals++;
-				RANGE(signals, 1, 5);
-				break;
-
-			case KEY_DC:
-			case ':':
-				param.signals--;
-				RANGE(signals, 1, 5);
-				break;
-
-			case KEY_RIGHT:
-			case '.':
-				param.cspaces++;
-				RANGE(cspaces, 0, 100);
-				break;
-
-			case KEY_LEFT:
-			case ',':
-				param.cspaces--;
-				RANGE(cspaces, 0, 100);
-				break;
-
-			case KEY_SRIGHT:
-			case '>':
-				param.wspaces++;
-				RANGE(wspaces, 0, 100);
-				break;
-
-			case KEY_SLEFT:
-			case '<':
-			
-				param.wspaces--;
-				RANGE(wspaces, 0, 100);
-				break;
-
-			case KEY_UP:
-			case '!':
-				param.number = param.number - 5;
-				RANGE(number, 5, 100);
-				break;
-
-			case KEY_DOWN:
-			case '@':
-				param.number = param.number + 5;
-				RANGE(number, 5, 100);
-				break;
-
-			case '/':
-				if(samplerate == 8000)
-					samplerate = 11025;
-				else if(samplerate == 11025)
-					samplerate = 22050;
-				else if(samplerate == 22050)
-					samplerate = 44100;
-				else if(samplerate == 44100)
-					samplerate = 16000;
-				else if(samplerate == 16000)
-					samplerate = 24000;
-				else if(samplerate == 24000)
-					samplerate = 48000;
-				else if(samplerate == 48000)
-					samplerate = 96000;
-				else if(samplerate == 96000)
-					samplerate = 192000;
-				else if(samplerate == 192000)
-					samplerate = 8000;
-				break;
-
-			case '?':
-				if(bits == 16)
-					bits = 8;
-				else
-					bits = 16;
-				break;
-
-			case 'A':
-			case 'a':
-				if(param.agc >= 100)
-					param.agc = 0;
-				else
-					param.agc = param.agc + 25;
-				break;
-
-			case 'C':
-			case 'c':
-				if(param.click >= 10)
-					param.click = 1;
-				else
-					param.click = param.click + 2;
-				break;
-
-			case 'E':
-			case 'e':
-				if(param.even >= 10)
-					param.even = 0;
-				else
-					param.even++;
-				break;
-
-			case 'H':
-			case 'h':
-				if(param.hum >= 100)
-					param.hum = 0;
-				else
-					param.hum = param.hum + 25;
-				break;
-
-			case 'O':
-			case 'o':
-				if(param.odd >= 10)
-					param.odd = 0;
-				else
-					param.odd++;
-				break;
-
-			case 's':
-			case 'S':
-				if(param.sweepness == 200)
-					param.sweepness = 0;
-				else
-					param.sweepness = 200;
-
-				if(param.sweep >= 3000)
-					param.sweep = -3000;
-				else
-					param.sweep = param.sweep + 1000;
-				break;
-
-			case 'Q':
-			case 'q':
-				if(param.hand >= 100)
-					param.hand = 0;
-				else
-					param.hand = param.hand + 20;
-				break;
 			}
-
-			/*$2- Regenerate text and refresh screen after each keypress ---------------------------------------------*/
-
-			cwstudio_regeneratetext();
-			cwstudio_repaintwindows();
+			break;
+#endif
 		}
 
-		/* End curses */
-		endwin();
-		initscr();
-		refresh();
-		endwin();
-		
-		/* Free memory */
-		cw_freesample(&asound);
-		cw_freesample(&csound);
-		cw_free(text);
-		cw_free(morsetext);
-		
-		/* Exit */
-		return(CWOK);
+		/*$2- Regenerate text and refresh screen after each keypress -------------------------------------------------*/
 
-		/* Free memory */
-		cw_freesample(&asound);
-		cw_freesample(&csound);
-		cw_free(text);
-		cw_free(morsetext);
+		cwstudio_regeneratetext();
+		cwstudio_repaintwindows();
+	}
 
-		/* Exit */
-		return(CWOK);
+	/* End curses */
+	endwin();
+	initscr();
+	refresh();
+	endwin();
 
-#ifdef HAVE_CURSES
+	/* Free memory */
+	cw_freesample(&asound);
+	cw_freesample(&csound);
+	cw_free(text);
+	cw_free(morsetext);
+
+#ifdef HAVE_WINDOWS_H
+	FreeLibrary(hDLL);
 #endif
+
+	/* Exit */
+	return(CWOK);
 }
