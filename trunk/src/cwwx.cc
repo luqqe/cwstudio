@@ -356,6 +356,8 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 #endif
 
 	wxPanel		*panel = new wxPanel(this, wxID_ANY);
+	
+	CreateStatusBar();
 
 	/*
 	 * wxMenu *menuFile = new wxMenu;
@@ -463,7 +465,6 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	/*
 	 * SetMenuBar(menuBar);
 	 */
-	CreateStatusBar();
 	SetStatusText(wxT("(C) 2008-2015 Lukasz Komsta SP8QED. http://cwstudio.sf.net/"));
 	SetTitle(wxString(wxT("CWStudio ")) + wxString(wxT(VERSION)) + wxString(wxT(" (")) + wxString(wxT(CANONICAL_HOST)) + wxString(wxT(WXGUI)) + wxString(wxT(SOUND_INTERFACE)) + wxString(wxT(")")));
 	param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
