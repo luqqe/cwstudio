@@ -4,7 +4,7 @@
 
     This file is part of CWStudio.
 
-    Copyright 2008-2015 Lukasz Komsta, SP8QED
+    Copyright 2008-2016 Lukasz Komsta, SP8QED
 
     CWStudio is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -114,8 +114,13 @@ static cw_sample	asound, csound;
 static cw_param		param;
 static int			mode = 0, wordset = 100, chars;
 static int	shouldgenerate = 1;
+#ifdef __DJGPP__
+static unsigned int bits = 8;
+static unsigned int samplerate = 8000;
+#else
 static unsigned int bits = 16;
 static unsigned int samplerate = 44100;
+#endif
 static char			filename[256] = "output.wav";
 static char			charset[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
 static char			charset_backup[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
