@@ -57,6 +57,15 @@ int cw_wavout(const char *filename, cw_sample *sound)
 	header[41] = (unsigned char) (l >> 8) & 0xff;
 	header[42] = (unsigned char) (l >> 16) & 0xff;
 	header[43] = (unsigned char) (l >> 24) & 0xff;
+
+	/* Bitrate (bug fixed since 0.9.5) */
+	l = sound->samplerate * 1 * (sound->bits / 8);  
+	header[28] = (unsigned char) l & 0xff;
+	header[29] = (unsigned char) (l >> 8) & 0xff;
+	header[30] = (unsigned char) (l >> 16) & 0xff;
+	header[31] = (unsigned char) (l >> 24) & 0xff;
+
+
 	if(filename != NULL) {
 		if((f = fopen(filename, "wb+")) == NULL) {
 			return(CWFOPEN);
