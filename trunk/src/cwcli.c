@@ -134,8 +134,13 @@ static char			*text = NULL, *morsetext = NULL;
 static cw_sample	asound, csound;
 static cw_param		param;
 static int			play = 1, output = 1, mode = 0, wordset = 100, chars;
+#ifdef __DJGPP__
+static unsigned int bits = 8;
+static unsigned int samplerate = 8000;
+#else
 static unsigned int bits = 16;
 static unsigned int samplerate = 44100;
+#endif
 static char			filename[256] = "output.wav";
 static char			charset[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
 static char			charset_backup[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
@@ -456,7 +461,7 @@ int main(int argc, char **argv)
 			fprintf
 			(
 				stderr,
-				"CWStudio %s (%s%s%s)\nCopyright 2009-2015 Lukasz Komsta, SP8QED\n",
+				"CWStudio %s (%s%s%s)\nCopyright 2009-2016 Lukasz Komsta, SP8QED\n",
 				VERSION,
 				CANONICAL_HOST,
 				SOUND_INTERFACE,

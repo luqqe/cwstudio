@@ -20,6 +20,7 @@ AM_CONFIG_HEADER([src/config.h])
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_LN_S
+AM_PROG_AR
 AC_PROG_RANLIB
 
 # Windres
@@ -38,12 +39,12 @@ AC_CHECK_LIB([pulse-simple],[main])
 AC_CHECK_LIB([pthread],[main])
 
 # wxWidgets
-AC_CHECK_PROG(HAVE_WXCONFIG, wx-config, "yes", "no")
-if test "$HAVE_WXCONFIG" == "yes"; then
+#AC_CHECK_PROG(HAVE_WXCONFIG, wx-config, "yes", "no")
+#if test "$HAVE_WXCONFIG" == "yes"; then
 	AM_OPTIONS_WXCONFIG
 	AM_PATH_WXCONFIG([2.8.0], WX_RIGHT_VERSION=1)
 #WX_LIBS=`wx-config --libs all`
-fi
+#fi
 AM_CONDITIONAL([COMPILE_WX],[test "$WX_RIGHT_VERSION" == 1])
 
 #CPPFLAGS="$CPPFLAGS $WX_CPPFLAGS"
