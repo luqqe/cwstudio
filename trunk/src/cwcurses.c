@@ -133,7 +133,22 @@ MEVENT				event;
 #endif
 #endif
 
-/* */
+#ifdef WIN32
+void cwstudio_initwinconsole()
+{
+	HWND desktop = GetDesktopWindow();
+	HWND console = GetConsoleWindow();
+	RECT r,d;
+
+	GetWindowRect(console, &r); 
+	GetWindowRect(desktop, &d); 
+	MoveWindow(console, (d.right-r.right)/2, (d.bottom-r.bottom)/2, r.right, r.bottom, TRUE);
+
+	SetConsoleTitle("CWStudio");
+
+}
+#endif
+
 void cwstudio_writeconfig()
 {
 	FILE	*f;
@@ -479,7 +494,7 @@ int main(int argc, char **argv)
 	cwstudio_readconfig();
 
 #ifdef WIN32
-	SetConsoleTitle("CWStudio");
+	cwstudio_initwinconsole();
 #endif
 #ifdef HAVE_WINDOWS_H
 	hDLL = LoadLibrary("lame_enc.dll");
