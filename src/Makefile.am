@@ -1,3 +1,5 @@
+EXTRA_DIST = cwcli.ico cwcurses.ico cwwx.ico
+
 bin_PROGRAMS = cwcli
 
 if COMPILE_CURSES
