@@ -374,8 +374,9 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 
 	for(int i = 0; i < 5; i++) spinsizers[i] = new wxBoxSizer(wxHORIZONTAL);
 	textctrl = new wxTextCtrl(panel, ID_Text, wxT("VVV ="), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
-	textctrl->SetFont(wxFont(14, wxSWISS, wxNORMAL, wxNORMAL, false, wxT("Courier New")));
-
+	//textctrl->SetFont(wxFont(14, wxSWISS, wxNORMAL, wxNORMAL, false, wxT("Courier New")));
+	wxFont* tempfont = new wxFont(14,wxMODERN,wxNORMAL,wxNORMAL);
+    	textctrl->SetFont(*tempfont);
 	mainsizer->Add(lowbuttonsizer, 0, wxEXPAND, 0);
 	for(int i = 0; i < 5; i++) mainsizer->Add(spinsizers[i], 0, 0, 0);
 	mainsizer->Add(buttonsizer, 0, wxEXPAND, 0);
