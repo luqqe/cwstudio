@@ -247,7 +247,7 @@ void cwstudio_resetwindows()
 	box(win_title, 0, 0);
 	mvwprintw(win_title, 1, 1, "CWStudio %s (%ix%i)", VERSION, ncol, nrow);
 	mvwprintw(win_title, 2, 1, "(%s%s%s)", CANONICAL_HOST, SOUND_INTERFACE, THREAD_INTERFACE);
-	mvwprintw(win_title, 3, 1, "(C) 2009-2015 Lukasz Komsta, SP8QED");
+	mvwprintw(win_title, 3, 1, "(C) 2009-2016 Lukasz Komsta, SP8QED");
 	wrefresh(win_title);
 
 	win_param = newwin(nrow - 5, SPLIT, 5, 0);
