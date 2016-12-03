@@ -510,6 +510,7 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 		spins[24]->SetValue(param.wspaces);
 	}
 	ShouldGenerate = 1;
+	panel->Layout();
 }
 
 /*
