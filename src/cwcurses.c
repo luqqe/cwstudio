@@ -127,7 +127,7 @@ static char			charset_backup[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
 #ifdef HAVE_CURSES
 static int			playmode = CWSTOPPED;
 static char			statustext[256] = "Press <F1> or <1> for help.";
-static WINDOW		*win_title, *win_param, *win_text, *win_help;
+static WINDOW			*win_screen, *win_title, *win_param, *win_text, *win_help, *win_bar;
 #ifdef HAVE_MOUSEMASK
 MEVENT				event;
 #endif
@@ -223,7 +223,7 @@ void cwstudio_resetwindows()
 #define SPLIT	ncol / 2 + 8
 	endwin();
 	refresh();
-	initscr();
+	win_screen = initscr();
 	cbreak();
 	noecho();
 	curs_set(0);
@@ -232,9 +232,10 @@ void cwstudio_resetwindows()
 	if(has_colors())
 	{
 		start_color();
-		init_pair(1, COLOR_WHITE, COLOR_RED);
+		init_pair(1, COLOR_RED, COLOR_WHITE);
 		init_pair(2, COLOR_WHITE, COLOR_BLUE);
 		init_pair(3, COLOR_BLACK, COLOR_WHITE);
+		init_pair(4, COLOR_BLUE, COLOR_WHITE);
 	}
 
 	win_title = newwin(5, SPLIT, 0, 0);
@@ -250,7 +251,7 @@ void cwstudio_resetwindows()
 	mvwprintw(win_title, 3, 1, "(C) 2009-2016 Lukasz Komsta, SP8QED");
 	wrefresh(win_title);
 
-	win_param = newwin(nrow - 5, SPLIT, 5, 0);
+	win_param = newwin(nrow - 9, SPLIT, 5, 0);
 	if(has_colors())
 	{
 		wattron(win_param, COLOR_PAIR(2));
@@ -261,7 +262,7 @@ void cwstudio_resetwindows()
 	wrefresh(win_param);
 	delwin(win_param);
 
-	win_param = newwin(nrow - 7, SPLIT - 2, 6, 1);
+	win_param = newwin(nrow - 11, SPLIT - 2, 6, 1);
 	keypad(win_param, TRUE);
 	if(has_colors())
 	{
@@ -271,7 +272,7 @@ void cwstudio_resetwindows()
 
 	keypad(win_param, TRUE);
 
-	win_text = newwin(nrow, ncol - (SPLIT), 0, SPLIT);
+	win_text = newwin(nrow - 4, ncol - (SPLIT), 0, SPLIT);
 	if(has_colors())
 	{
 		wattron(win_text, COLOR_PAIR(2));
@@ -282,7 +283,7 @@ void cwstudio_resetwindows()
 	wrefresh(win_text);
 	delwin(win_text);
 
-	win_text = newwin(nrow - 2, ncol - (SPLIT) - 2, 1, SPLIT + 1);
+	win_text = newwin(nrow - 6, ncol - (SPLIT) - 2, 1, SPLIT + 1);
 	if(has_colors())
 	{
 		wattron(win_text, COLOR_PAIR(2));
@@ -291,6 +292,15 @@ void cwstudio_resetwindows()
 
 	keypad(win_text, TRUE);
 	wrefresh(win_text);
+
+	win_bar = newwin(4, ncol, nrow-4, 0);
+	if(has_colors())
+	{
+		wattron(win_bar, COLOR_PAIR(4));
+		wbkgd(win_bar, COLOR_PAIR(4));
+	}
+	keypad(win_bar, TRUE);
+	wrefresh(win_bar);
 }
 
 /*
@@ -318,7 +328,7 @@ void cwstudio_repaintwindows()
 		wprintw(win_param, "* Getting text from stdin\n\n");
 	}
 
-	wprintw(win_param, "* Frequency %i Hz * Window %i samples\n", param.freq, param.window);
+	wprintw(win_param, "* Frequency %i Hz\n", param.freq);
 	if(param.even) wprintw(win_param, "* %i%% even harmonics ", param.even);
 	if(param.odd) wprintw(win_param, "* %i%% odd harmonics ", param.odd);
 	if(param.even || param.odd) wprintw(win_param, "\n");
@@ -356,8 +366,20 @@ void cwstudio_repaintwindows()
 	werase(win_text);
 	wprintw(win_text, "%s", text);
 	wrefresh(win_text);
+
 	mvwprintw(win_param, nrow - 8, 0, "* %s", statustext);
 	wrefresh(win_param);
+
+	werase(win_bar);
+	mvwprintw(win_bar,0,0,"[ Play ][ Stop ][Pause ][Random][ Mode ][ Freq ][Noise ][Reset ][ Help ][Shape ]");
+	mvwprintw(win_bar,1,0,"[ AGC  ][Click ][ Dlen ][ SLen ][DetQSB][ Even ][ Odd  ][ Hand ][ Hum  ][Sweep ]");
+#ifdef HAVE_WINDOWS_H
+	mvwprintw(win_bar,2,0,"[ Rate ][ Bits ][ WAV  ][ MP3  ]                                [<<< Groups >>>]");
+#else
+	mvwprintw(win_bar,2,0,"[ Rate ][ Bits ][ WAV  ]                                        [<<< Groups >>>]");
+#endif
+	mvwprintw(win_bar,3,0,"[<<< Tempo  >>>][<<<Charset >>>][<<<Wspaces >>>][<<<Cspaces >>>][<<<Charset >>>]");
+	wrefresh(win_bar);
 
 	cwstudio_writeconfig();
 }
@@ -424,7 +446,7 @@ void cwstudio_help()
 	wprintw(win_help, "HOME/END({}) - charset, / - rate\n");
 	wprintw(win_help, "PGUP/PGDN/([]) - tempo, BKSP(\\) - shape\n");
 	wprintw(win_help, "INS/DEL(:\") - signals, Q - hand\n");
-	wprintw(win_help, "F10/0 - exit, S - sweep\n");
+	wprintw(win_help, "F10/0 - exit, S - sweep, C - click\n");
 	wprintw(win_help, "A - AGC, E - even harmonics\n");
 	wprintw(win_help, "H - hum, O - odd harmonics\n");
 	wprintw(win_help, "Shift-HOME(:) - dash length\n");
@@ -518,14 +540,11 @@ int main(int argc, char **argv)
 
 	/*$3- Main loop for keyboard input in curses mode ================================================================*/
 
-	while(((ch = wgetch(win_param)) != KEY_F(10)) && (ch != '0'))
+	while(((ch = wgetch(win_bar)) != KEY_F(10)) && (ch != '0'))
 	{
-		switch(ch)
-		{
 #ifdef HAVE_MOUSEMASK
-
-		/* Mouse suppord compiled conditionally */
-		case KEY_MOUSE:
+		if (ch == KEY_MOUSE)
+		{
 #ifdef HAVE_NC_GETMOUSE
 			m = nc_getmouse(&event);
 #else
@@ -533,52 +552,13 @@ int main(int argc, char **argv)
 #endif
 			if(m == OK)
 			{
-				if(event.bstate & BUTTON1_PRESSED)
-				{
-					if((playmode == CWPLAYING) || (playmode == CWPAUSED))
-					{
-						playmode = cwstudio_stop();
-						strcpy(statustext, "Playback stopped.");
-					}
-					else
-					{
-						if (shouldgenerate)
-						{
-						cw_freesample(&asound);
-						cw_freesample(&csound);
-						cw_initsample(&asound, NULL);
-						asound.samplerate = samplerate;
-						cw_initsample(&csound, &asound);
-						wattron(win_text, COLOR_PAIR(1));
-						wprintw(win_text, "\n\n *** Please wait *** \n");
-						wattron(win_text, COLOR_PAIR(2));
-						wrefresh(win_text);
-						if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
-						if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
-						}
-						playmode = cwstudio_play(&csound);
-						if(playmode == CWPLAYING) strcpy(statustext, "Playback started.");
-					}
-				}
-				else if(event.bstate & BUTTON2_PRESSED)
-				{
-					param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
-					shouldgenerate = 1;
-
-				}
-				else if(event.bstate & BUTTON3_PRESSED)
-				{
-					playmode = cwstudio_pause();
-					if(playmode == CWPLAYING)
-						strcpy(statustext, "Playback resumed.");
-					else if(playmode == CWPAUSED)
-						strcpy(statustext, "Playback paused.");
-					else if(playmode == CWSTOPPED)
-						strcpy(statustext, "Playback stopped.");
-				}
+				
 			}
-			break;
+		}
 #endif
+
+		switch(ch)
+		{
 
 		case KEY_F(1):
 		case '1':
