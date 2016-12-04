@@ -74,6 +74,7 @@
 #elif defined HAVE_NCURSES_H
 #include <ncurses.h>
 #elif defined HAVE_CURSES_H
+#include <curses.h>
 #endif
 
 /* Global variables */
@@ -89,7 +90,7 @@ static unsigned int samplerate = 8000;
 static unsigned int bits = 16;
 static unsigned int samplerate = 44100;
 #endif
-static char			filename[256] = "output.wav";
+static char			filename[256], inputbuffer[256];
 static char			charset[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
 static char			charset_backup[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
 #ifdef HAVE_CURSES
@@ -382,7 +383,7 @@ void cwstudio_help()
 	wrefresh(win_help);
 	delwin(win_help);
 
-	win_help = newwin(18, 40, nrow / 2 - 9, ncol / 2 - 20);
+	win_help = newwin(18, 40, nrow / 2 - 11, ncol / 2 - 20);
 	if(has_colors())
 	{
 		wattron(win_help, COLOR_PAIR(3));
@@ -420,6 +421,23 @@ void cwstudio_help()
 	cwstudio_resetwindows();
 }
 #endif
+
+/*
+ =======================================================================================================================
+    Input text string from user, with customized prompt and maximum size.
+ =======================================================================================================================
+ */
+void cwstudio_input(const char *prompt, char *entered, int length)
+{
+	mvwprintw(win_text, nrow - 9, 1, "%s", prompt);
+	wrefresh(win_text);
+	echo();
+	curs_set(2);
+	mvwgetnstr(win_text, nrow - 7, 1, entered, length);
+	noecho();
+	curs_set(0);
+	wrefresh(win_text);
+}
 
 /*
  =======================================================================================================================
@@ -545,13 +563,14 @@ int main(int argc, char **argv)
 				shouldgenerate = 0;
 				}
 			i = (int) time(NULL);
-			sprintf(filename, "%x.wav", i);
+			cwstudio_input("Filename without ext :",inputbuffer,8);
+			if(inputbuffer[0] == '\0') sprintf(filename, "%x.wav", i); else sprintf(filename,"%s.wav", inputbuffer);			
 			if((err = cw_wavout(filename, &csound)) != CWOK) return(i);
-			sprintf(filename, "%x.txt", i);
+			if(inputbuffer[0] == '\0') sprintf(filename, "%x.txt", i); else sprintf(filename,"%s.txt", inputbuffer);			
 			f = fopen(filename, "w");
 			fputs(text, f);
 			fclose(f);
-			sprintf(statustext, "Saved to %x.wav.", i);
+			if(inputbuffer[0] == '\0') sprintf(statustext, "%x.wav/txt saved.", i); else sprintf(statustext, "%s.wav/txt saved.", inputbuffer);
 			break;
 
 		case KEY_F(3):
@@ -916,7 +935,8 @@ int main(int argc, char **argv)
 					}
 
 					i = (int) time(NULL);
-					sprintf(filename, "%x.mp3", i);
+					cwstudio_input("Filename without ext :",inputbuffer,8);
+					if(inputbuffer[0] == '\0') sprintf(filename, "%x.mp3", i); else sprintf(filename,"%s.mp3", inputbuffer);
 					pFileOut = fopen(filename, "wb+");
 					memset(&beConfig, 0, sizeof(beConfig));
 
@@ -971,15 +991,17 @@ int main(int argc, char **argv)
 					error = beDeinitStream(hbeStream, pMP3Buffer, &dwWrite);
 					if(dwWrite) fwrite(pMP3Buffer, 1, dwWrite, pFileOut);
 
-					sprintf(statustext, "Saved to %x.mp3.", i);
 					beCloseStream(hbeStream);
 					free(pMP3Buffer);
 					fclose(pFileOut);
 
-					sprintf(filename, "%x.txt", i);
+					if(inputbuffer[0] == '\0') sprintf(filename, "%x.txt", i); else sprintf(filename,"%s.txt", inputbuffer);
 					f = fopen(filename, "w");
 					fputs(text, f);
 					fclose(f);
+
+					if(inputbuffer[0] == '\0') sprintf(statustext, "%x.mp3/txt saved.", i); else sprintf(statustext, "%s.mp3/txt saved.", inputbuffer);
+
 				}
 			}
 			break;
