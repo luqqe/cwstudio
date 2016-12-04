@@ -381,7 +381,7 @@ void cwstudio_repaintwindows()
 	mvwprintw(win_bar,3,0,"[<<< Tempo  >>>][<<<Charset >>>][<<<Wspaces >>>][<<<Cspaces >>>][<<<Charset >>>]");
 	wrefresh(win_bar);
 
-	cwstudio_writeconfig();
+	if (shouldgenerate) cwstudio_writeconfig();
 }
 
 #ifdef HAVE_SIGNAL_H
