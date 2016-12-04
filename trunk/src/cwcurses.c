@@ -1,4 +1,4 @@
-/*$T cwcurses.c GC 1.150 2015-02-08 20:58:42 */
+/*$T cwcurses.c GC 1.150 2016-12-04 21:56:44 */
 
 /*$I0
 
@@ -82,7 +82,7 @@ static char			*text = NULL, *morsetext = NULL;
 static cw_sample	asound, csound;
 static cw_param		param;
 static int			filemode = 0, mode = 0, wordset = 100, chars;
-static int	shouldgenerate = 1;
+static int			shouldgenerate = 1;
 #ifdef __DJGPP__
 static unsigned int bits = 8;
 static unsigned int samplerate = 8000;
@@ -96,28 +96,29 @@ static char			charset_backup[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
 #ifdef HAVE_CURSES
 static int			playmode = CWSTOPPED;
 static char			statustext[256] = "Press <F1> or <1> for help.";
-static WINDOW			*win_screen, *win_title, *win_param, *win_text, *win_help, *win_bar;
+static WINDOW		*win_screen, *win_title, *win_param, *win_text, *win_help, *win_bar;
 #ifdef HAVE_MOUSEMASK
 MEVENT				event;
 #endif
 #endif
-
 #ifdef WIN32
+
+/* */
 void cwstudio_initwinconsole()
 {
-	HWND desktop = GetDesktopWindow();
-	HWND console = GetConsoleWindow();
-	RECT r,d;
+	HWND	desktop = GetDesktopWindow();
+	HWND	console = GetConsoleWindow();
+	RECT	r, d;
 
-	GetWindowRect(console, &r); 
-	GetWindowRect(desktop, &d); 
-	MoveWindow(console, (d.right-r.right)/2, (d.bottom-r.bottom)/2, r.right, r.bottom, TRUE);
+	GetWindowRect(console, &r);
+	GetWindowRect(desktop, &d);
+	MoveWindow(console, (d.right - r.right) / 2, (d.bottom - r.bottom) / 2, r.right, r.bottom, TRUE);
 
 	SetConsoleTitle("CWStudio");
-
 }
 #endif
 
+/* */
 void cwstudio_writeconfig()
 {
 	FILE	*f;
@@ -169,10 +170,10 @@ char *cwstudio_generate_text()
 	/*~~~~~~~~~~~~~~~~~~~~~~*/
 	switch(mode)
 	{
-	case 0: generated = cw_rand_groups(param.number, param.shape, charset, param.seed); break;
-	case 1: generated = cw_rand_words(param.number, param.shape, wordset, param.seed); break;
-	case 2: generated = cw_rand_calls(param.number, param.shape, param.seed); break;
-	default: generated = NULL;	
+	case 0:		generated = cw_rand_groups(param.number, param.shape, charset, param.seed); break;
+	case 1:		generated = cw_rand_words(param.number, param.shape, wordset, param.seed); break;
+	case 2:		generated = cw_rand_calls(param.number, param.shape, param.seed); break;
+	default:	generated = NULL;
 	}
 
 	return(generated);
@@ -263,12 +264,13 @@ void cwstudio_resetwindows()
 	keypad(win_text, TRUE);
 	wrefresh(win_text);
 
-	win_bar = newwin(4, ncol, nrow-4, 0);
+	win_bar = newwin(4, ncol, nrow - 4, 0);
 	if(has_colors())
 	{
 		wattron(win_bar, COLOR_PAIR(4));
 		wbkgd(win_bar, COLOR_PAIR(4));
 	}
+
 	keypad(win_bar, TRUE);
 	wrefresh(win_bar);
 	mouseinterval(0);
@@ -315,6 +317,7 @@ void cwstudio_repaintwindows()
 		if(param.agc) wprintw(win_param, "* %i%% AGC ", param.agc);
 		wprintw(win_param, "\n");
 	}
+
 	if(param.dashlen != 300) wprintw(win_param, "* Dash length: %i%% ", param.dashlen);
 	if(param.spacelen != 100) wprintw(win_param, "* Space length: %i%% ", param.spacelen);
 	if((param.dashlen != 300) || (param.spacelen != 100)) wprintw(win_param, "\n");
@@ -326,17 +329,17 @@ void cwstudio_repaintwindows()
 	wrefresh(win_text);
 
 	werase(win_bar);
-	mvwprintw(win_bar,0,0,"[ Play ][ Stop ][Pause ][Random][ Mode ][ Freq ][Noise ][Reset ][ Help ][Shape ]");
-	mvwprintw(win_bar,1,0,"[ AGC  ][Click ][ Dlen ][ SLen ][DetQSB][ Even ][ Odd  ][ Hand ][ Hum  ][Sweep ]");
+	mvwprintw(win_bar, 0, 0, "[ Play ][ Stop ][Pause ][Random][ Mode ][ Freq ][Noise ][Reset ][ Help ][Shape ]");
+	mvwprintw(win_bar, 1, 0, "[ AGC  ][Click ][ Dlen ][ SLen ][DetQSB][ Even ][ Odd  ][ Hand ][ Hum  ][Sweep ]");
 #ifdef HAVE_WINDOWS_H
-	mvwprintw(win_bar,2,0,"[ Rate ][ Bits ][ WAV  ][ MP3  ]                        [ Load ][<<< Groups >>>]");
+	mvwprintw(win_bar, 2, 0, "[ Rate ][ Bits ][ WAV  ][ MP3  ]                        [ Load ][<<< Groups >>>]");
 #else
-	mvwprintw(win_bar,2,0,"[ Rate ][ Bits ][ WAV  ]                                [ Load ][<<< Groups >>>]");
+	mvwprintw(win_bar, 2, 0, "[ Rate ][ Bits ][ WAV  ]                                [ Load ][<<< Groups >>>]");
 #endif
-	mvwprintw(win_bar,3,0,"[<<< Tempo  >>>][<<<Signals >>>][<<<Wspaces >>>][<<<Cspaces >>>][<<<Charset >>>]");
+	mvwprintw(win_bar, 3, 0, "[<<< Tempo  >>>][<<<Signals >>>][<<<Wspaces >>>][<<<Cspaces >>>][<<<Charset >>>]");
 	wrefresh(win_bar);
 
-	if (shouldgenerate) cwstudio_writeconfig();
+	if(shouldgenerate) cwstudio_writeconfig();
 }
 
 #ifdef HAVE_SIGNAL_H
@@ -440,13 +443,14 @@ void cwstudio_input(const char *prompt, char *entered, int length)
  */
 int cwstudio_regeneratetext()
 {
-	if (!filemode)
+	if(!filemode)
 	{
 		cw_free(text);
 		if((text = cwstudio_generate_text()) == NULL) return(CWALLOC);
 		cw_free(morsetext);
 		if((morsetext = cw_encode(text)) == NULL) return(CWALLOC);
 	}
+
 	return(CWOK);
 }
 
@@ -461,9 +465,51 @@ int main(int argc, char **argv)
 	int					ch;
 	int					i, err, m;
 	FILE				*f;
-	size_t size;
+	size_t				size;
 
-	const int		buttontable[40] = {'5','6','7','4','=','9','8','3','1','\'','A','C',';','\'','-','E','O','Q','H','S','/','?','2','M',0,0,0,'L','!','@','[',']',':','"','<','>',',','.','{','}'};
+	const int			buttontable[40] =
+	{
+		'5',
+		'6',
+		'7',
+		'4',
+		'=',
+		'9',
+		'8',
+		'3',
+		'1',
+		'\'',
+		'A',
+		'C',
+		';',
+		'\'',
+		'-',
+		'E',
+		'O',
+		'Q',
+		'H',
+		'S',
+		'/',
+		'?',
+		'2',
+		'M',
+		0,
+		0,
+		0,
+		'L',
+		'!',
+		'@',
+		'[',
+		']',
+		':',
+		'"',
+		'<',
+		'>',
+		',',
+		'.',
+		'{',
+		'}'
+	};
 #ifdef HAVE_WINDOWS_H
 	HINSTANCE			hDLL = NULL;
 	BEINITSTREAM		beInitStream = NULL;
@@ -472,7 +518,7 @@ int main(int argc, char **argv)
 	BECLOSESTREAM		beCloseStream = NULL;
 	BEVERSION			beVersion = NULL;
 	BEWRITEVBRHEADER	beWriteVBRHeader = NULL;
-	BE_ERR				error = 0; 
+	BE_ERR				error = 0;
 	BE_CONFIG			beConfig = { 0, };
 	FILE				*pFileOut = NULL;
 	DWORD				dwSamples = 0;
@@ -521,7 +567,7 @@ int main(int argc, char **argv)
 	while(((ch = wgetch(win_bar)) != KEY_F(10)) && (ch != '0'))
 	{
 #ifdef HAVE_MOUSEMASK
-		if (ch == KEY_MOUSE)
+		if(ch == KEY_MOUSE)
 		{
 #ifdef HAVE_NC_GETMOUSE
 			m = nc_getmouse(&event);
@@ -530,15 +576,13 @@ int main(int argc, char **argv)
 #endif
 			if(m == OK)
 			{
-			 	i = (event.y - nrow + 4 )* 10 + (event.x / 8);
-				ch = buttontable[i];				
+				i = (event.y - nrow + 4) * 10 + (event.x / 8);
+				ch = buttontable[i];
 			}
 		}
 #endif
-
 		switch(ch)
 		{
-
 		case KEY_F(1):
 		case '1':
 			cwstudio_help();
@@ -560,16 +604,26 @@ int main(int argc, char **argv)
 				if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
 				if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
 				shouldgenerate = 0;
-				}
+			}
+
 			i = (int) time(NULL);
-			cwstudio_input("Filename without ext :",inputbuffer,8);
-			if(inputbuffer[0] == '\0') sprintf(filename, "%x.wav", i); else sprintf(filename,"%s.wav", inputbuffer);			
+			cwstudio_input("Filename without ext :", inputbuffer, 8);
+			if(inputbuffer[0] == '\0')
+				sprintf(filename, "%x.wav", i);
+			else
+				sprintf(filename, "%s.wav", inputbuffer);
 			if((err = cw_wavout(filename, &csound)) != CWOK) return(i);
-			if(inputbuffer[0] == '\0') sprintf(filename, "%x.txt", i); else sprintf(filename,"%s.txt", inputbuffer);			
+			if(inputbuffer[0] == '\0')
+				sprintf(filename, "%x.txt", i);
+			else
+				sprintf(filename, "%s.txt", inputbuffer);
 			f = fopen(filename, "w");
 			fputs(text, f);
 			fclose(f);
-			if(inputbuffer[0] == '\0') sprintf(statustext, "%x.wav/txt saved.", i); else sprintf(statustext, "%s.wav/txt saved.", inputbuffer);
+			if(inputbuffer[0] == '\0')
+				sprintf(statustext, "%x.wav/txt saved.", i);
+			else
+				sprintf(statustext, "%s.wav/txt saved.", inputbuffer);
 			break;
 
 		case KEY_F(3):
@@ -595,19 +649,20 @@ int main(int argc, char **argv)
 			{
 				if(shouldgenerate)
 				{
-				cw_freesample(&asound);
-				cw_freesample(&csound);
-				cw_initsample(&asound, NULL);
-				asound.samplerate = samplerate;
-				cw_initsample(&csound, &asound);
-				wattron(win_text, COLOR_PAIR(1));
-				wprintw(win_text, "\n\n *** Please wait *** \n");
-				wattron(win_text, COLOR_PAIR(2));
-				wrefresh(win_text);
-				if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
-				if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
-				shouldgenerate = 0;
+					cw_freesample(&asound);
+					cw_freesample(&csound);
+					cw_initsample(&asound, NULL);
+					asound.samplerate = samplerate;
+					cw_initsample(&csound, &asound);
+					wattron(win_text, COLOR_PAIR(1));
+					wprintw(win_text, "\n\n *** Please wait *** \n");
+					wattron(win_text, COLOR_PAIR(2));
+					wrefresh(win_text);
+					if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
+					if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
+					shouldgenerate = 0;
 				}
+
 				playmode = cwstudio_play(&csound);
 				if(playmode == CWPLAYING) strcpy(statustext, "Playback started.");
 			}
@@ -647,6 +702,7 @@ int main(int argc, char **argv)
 				param.lowcut = 300;
 				param.highcut = 2400;
 			}
+
 			shouldgenerate = 1;
 			break;
 
@@ -684,7 +740,7 @@ int main(int argc, char **argv)
 				param.shape = -20;
 			else
 				param.shape = param.shape + 5;
-			if (!filemode) shouldgenerate = 1;
+			if(!filemode) shouldgenerate = 1;
 			break;
 
 		case KEY_PPAGE:
@@ -707,7 +763,7 @@ int main(int argc, char **argv)
 			chars--;
 			BOUND(chars, 2, strlen(charset_backup));
 			charset[chars] = '\0';
-			if (!filemode) shouldgenerate = 1;
+			if(!filemode) shouldgenerate = 1;
 			break;
 
 		case KEY_END:
@@ -716,7 +772,7 @@ int main(int argc, char **argv)
 			chars++;
 			BOUND(chars, 2, strlen(charset_backup));
 			charset[chars] = '\0';
-			if (!filemode) shouldgenerate = 1;
+			if(!filemode) shouldgenerate = 1;
 			break;
 
 		case KEY_SHOME:
@@ -783,14 +839,14 @@ int main(int argc, char **argv)
 		case '!':
 			param.number = param.number - 5;
 			RANGE(number, 5, 100);
-			if (!filemode) shouldgenerate = 1;
+			if(!filemode) shouldgenerate = 1;
 			break;
 
 		case KEY_DOWN:
 		case '@':
 			param.number = param.number + 5;
 			RANGE(number, 5, 100);
-			if (!filemode) shouldgenerate = 1;
+			if(!filemode) shouldgenerate = 1;
 			break;
 
 		case '/':
@@ -861,14 +917,14 @@ int main(int argc, char **argv)
 
 		case 'L':
 		case 'l':
-			cwstudio_input("Filename :",filename,13);
+			cwstudio_input("Filename :", filename, 13);
 			filemode = 0;
-			if (strcmp(filename,""))
+			if(strcmp(filename, ""))
 			{
 				cw_free(text);
-				text = cw_malloc(1024);			
+				text = cw_malloc(1024);
 				size = 0;
-				if ((f = fopen(filename,"r")) != NULL)
+				if((f = fopen(filename, "r")) != NULL)
 				{
 					size = fread(text, 1, 1024, f);
 					fclose(f);
@@ -876,10 +932,13 @@ int main(int argc, char **argv)
 					shouldgenerate = 1;
 					cw_free(morsetext);
 					if((morsetext = cw_encode(text)) == NULL) return(CWALLOC);
-				} else sprintf(statustext,"No such file.");
-			text[size] = '\0';
+				}
+				else
+					sprintf(statustext, "No such file.");
+				text[size] = '\0';
 			}
-	else break;
+			else
+				break;
 
 		case 'O':
 		case 'o':
@@ -937,28 +996,31 @@ int main(int argc, char **argv)
 				||	!beWriteVBRHeader
 				) sprintf(statustext, "lame_enc.dll error.");
 				else if((bits != 16) || (samplerate != 44100))
-				sprintf(statustext, "Unsupported samplerate/bits.");
-				else 
+					sprintf(statustext, "Unsupported samplerate/bits.");
+				else
 				{
 					if(shouldgenerate)
 					{
-					cw_freesample(&asound);
-					cw_freesample(&csound);
-					cw_initsample(&asound, NULL);
-					asound.samplerate = samplerate;
-					cw_initsample(&csound, &asound);
-					wattron(win_text, COLOR_PAIR(1));
-					wprintw(win_text, "\n\n *** Please wait *** \n");
-					wattron(win_text, COLOR_PAIR(2));
-					wrefresh(win_text);
-					if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
-					if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
-					shouldgenerate = 0;
+						cw_freesample(&asound);
+						cw_freesample(&csound);
+						cw_initsample(&asound, NULL);
+						asound.samplerate = samplerate;
+						cw_initsample(&csound, &asound);
+						wattron(win_text, COLOR_PAIR(1));
+						wprintw(win_text, "\n\n *** Please wait *** \n");
+						wattron(win_text, COLOR_PAIR(2));
+						wrefresh(win_text);
+						if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
+						if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
+						shouldgenerate = 0;
 					}
 
 					i = (int) time(NULL);
-					cwstudio_input("Filename without ext :",inputbuffer,8);
-					if(inputbuffer[0] == '\0') sprintf(filename, "%x.mp3", i); else sprintf(filename,"%s.mp3", inputbuffer);
+					cwstudio_input("Filename without ext :", inputbuffer, 8);
+					if(inputbuffer[0] == '\0')
+						sprintf(filename, "%x.mp3", i);
+					else
+						sprintf(filename, "%s.mp3", inputbuffer);
 					pFileOut = fopen(filename, "wb+");
 					memset(&beConfig, 0, sizeof(beConfig));
 
@@ -1017,13 +1079,18 @@ int main(int argc, char **argv)
 					free(pMP3Buffer);
 					fclose(pFileOut);
 
-					if(inputbuffer[0] == '\0') sprintf(filename, "%x.txt", i); else sprintf(filename,"%s.txt", inputbuffer);
+					if(inputbuffer[0] == '\0')
+						sprintf(filename, "%x.txt", i);
+					else
+						sprintf(filename, "%s.txt", inputbuffer);
 					f = fopen(filename, "w");
 					fputs(text, f);
 					fclose(f);
 
-					if(inputbuffer[0] == '\0') sprintf(statustext, "%x.mp3/txt saved.", i); else sprintf(statustext, "%s.mp3/txt saved.", inputbuffer);
-
+					if(inputbuffer[0] == '\0')
+						sprintf(statustext, "%x.mp3/txt saved.", i);
+					else
+						sprintf(statustext, "%s.mp3/txt saved.", inputbuffer);
 				}
 			}
 			break;
