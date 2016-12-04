@@ -81,7 +81,7 @@
 static char			*text = NULL, *morsetext = NULL;
 static cw_sample	asound, csound;
 static cw_param		param;
-static int			mode = 0, wordset = 100, chars;
+static int			filemode = 0, mode = 0, wordset = 100, chars;
 static int	shouldgenerate = 1;
 #ifdef __DJGPP__
 static unsigned int bits = 8;
@@ -90,7 +90,7 @@ static unsigned int samplerate = 8000;
 static unsigned int bits = 16;
 static unsigned int samplerate = 44100;
 #endif
-static char			filename[256], inputbuffer[256];
+static char			filename[256] = "", inputbuffer[256] = "";
 static char			charset[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
 static char			charset_backup[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
 #ifdef HAVE_CURSES
@@ -172,6 +172,7 @@ char *cwstudio_generate_text()
 	case 0: generated = cw_rand_groups(param.number, param.shape, charset, param.seed); break;
 	case 1: generated = cw_rand_words(param.number, param.shape, wordset, param.seed); break;
 	case 2: generated = cw_rand_calls(param.number, param.shape, param.seed); break;
+	default: generated = NULL;	
 	}
 
 	return(generated);
@@ -298,29 +299,22 @@ void cwstudio_repaintwindows()
 	if(param.click) wprintw(win_param, "* %i dB Click ", param.click);
 	if(param.hand) wprintw(win_param, "* Hand simulation %i%% ", param.hand);
 	if(param.hum) wprintw(win_param, "* %i%% Hum ", param.hum);
-	wprintw(win_param, "\n");
 	if(param.sweepness) wprintw(win_param, "* Sweep from %i Hz, sweepness %i\n", param.sweep, param.sweepness);
 	if(param.detune) wprintw(win_param, "* Detune %i%% ", param.detune);
 	if(param.qsb) wprintw(win_param, "* QSB %i%% ", param.qsb);
-	wprintw(win_param, "\n");
 	wprintw(win_param, "* Tempo is %i cpm ", param.tempo);
 	if(param.cspaces) wprintw(win_param, "* Char spacing +%i ", param.cspaces);
 	if(param.wspaces) wprintw(win_param, "* Word spacing +%i ", param.wspaces);
-	wprintw(win_param, "\n");
 	wprintw(win_param, "* Random seed: %i ", param.seed);
-	if(param.shape)
-		wprintw(win_param, "* Random shape: %i \n", param.shape);
-	else
-		wprintw(win_param, "\n");
-	if(param.signals > 1) wprintw(win_param, "* Mixing %i signals ", param.signals);
+	wprintw(win_param, "* Random shape: %i \n", param.shape);
 	wprintw(win_param, "\n");
+	if(param.signals > 1) wprintw(win_param, "* Mixing %i signals ", param.signals);
 	if(param.noise)
 	{
 		wprintw(win_param, "* Adding %i%% noise, %i - %i Hz ", param.noise, param.lowcut, param.highcut);
 		if(param.agc) wprintw(win_param, "* %i%% AGC ", param.agc);
 		wprintw(win_param, "\n");
 	}
-
 	if(param.dashlen != 300) wprintw(win_param, "* Dash length: %i%% ", param.dashlen);
 	if(param.spacelen != 100) wprintw(win_param, "* Space length: %i%% ", param.spacelen);
 	if((param.dashlen != 300) || (param.spacelen != 100)) wprintw(win_param, "\n");
@@ -335,9 +329,9 @@ void cwstudio_repaintwindows()
 	mvwprintw(win_bar,0,0,"[ Play ][ Stop ][Pause ][Random][ Mode ][ Freq ][Noise ][Reset ][ Help ][Shape ]");
 	mvwprintw(win_bar,1,0,"[ AGC  ][Click ][ Dlen ][ SLen ][DetQSB][ Even ][ Odd  ][ Hand ][ Hum  ][Sweep ]");
 #ifdef HAVE_WINDOWS_H
-	mvwprintw(win_bar,2,0,"[ Rate ][ Bits ][ WAV  ][ MP3  ]                                [<<< Groups >>>]");
+	mvwprintw(win_bar,2,0,"[ Rate ][ Bits ][ WAV  ][ MP3  ]                        [ Load ][<<< Groups >>>]");
 #else
-	mvwprintw(win_bar,2,0,"[ Rate ][ Bits ][ WAV  ]                                        [<<< Groups >>>]");
+	mvwprintw(win_bar,2,0,"[ Rate ][ Bits ][ WAV  ]                                [ Load ][<<< Groups >>>]");
 #endif
 	mvwprintw(win_bar,3,0,"[<<< Tempo  >>>][<<<Signals >>>][<<<Wspaces >>>][<<<Cspaces >>>][<<<Charset >>>]");
 	wrefresh(win_bar);
@@ -372,7 +366,7 @@ void cwstudio_help()
 	/*~~~~~~~~~~~*/
 	getmaxyx(stdscr, nrow, ncol);
 
-	win_help = newwin(20, 42, nrow / 2 - 10, ncol / 2 - 21);
+	win_help = newwin(20, 42, nrow / 2 - 12, ncol / 2 - 21);
 	if(has_colors())
 	{
 		wattron(win_help, COLOR_PAIR(3));
@@ -429,7 +423,7 @@ void cwstudio_help()
  */
 void cwstudio_input(const char *prompt, char *entered, int length)
 {
-	mvwprintw(win_text, nrow - 9, 1, "%s", prompt);
+	mvwprintw(win_text, nrow - 8, 1, "%s", prompt);
 	wrefresh(win_text);
 	echo();
 	curs_set(2);
@@ -446,10 +440,13 @@ void cwstudio_input(const char *prompt, char *entered, int length)
  */
 int cwstudio_regeneratetext()
 {
-	cw_free(text);
-	cw_free(morsetext);
-	if((text = cwstudio_generate_text()) == NULL) return(CWALLOC);
-	if((morsetext = cw_encode(text)) == NULL) return(CWALLOC);
+	if (!filemode)
+	{
+		cw_free(text);
+		if((text = cwstudio_generate_text()) == NULL) return(CWALLOC);
+		cw_free(morsetext);
+		if((morsetext = cw_encode(text)) == NULL) return(CWALLOC);
+	}
 	return(CWOK);
 }
 
@@ -464,7 +461,9 @@ int main(int argc, char **argv)
 	int					ch;
 	int					i, err, m;
 	FILE				*f;
-	const int		buttontable[40] = {'5','6','7','4','=','9','8','3','1','\'','A','C',';','\'','-','E','O','Q','H','S','/','?','2','M',0,0,0,0,'!','@','[',']',':','"','<','>',',','.','{','}'};
+	size_t size;
+
+	const int		buttontable[40] = {'5','6','7','4','=','9','8','3','1','\'','A','C',';','\'','-','E','O','Q','H','S','/','?','2','M',0,0,0,'L','!','@','[',']',':','"','<','>',',','.','{','}'};
 #ifdef HAVE_WINDOWS_H
 	HINSTANCE			hDLL = NULL;
 	BEINITSTREAM		beInitStream = NULL;
@@ -473,7 +472,7 @@ int main(int argc, char **argv)
 	BECLOSESTREAM		beCloseStream = NULL;
 	BEVERSION			beVersion = NULL;
 	BEWRITEVBRHEADER	beWriteVBRHeader = NULL;
-	BE_ERR				error = 0;
+	BE_ERR				error = 0; 
 	BE_CONFIG			beConfig = { 0, };
 	FILE				*pFileOut = NULL;
 	DWORD				dwSamples = 0;
@@ -586,6 +585,7 @@ int main(int argc, char **argv)
 		case ' ':
 			param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
 			shouldgenerate = 1;
+			filemode = 0;
 			break;
 #if defined(HAVE_OSS) || defined(HAVE_PULSEAUDIO) || defined(HAVE_LIBWINMM) || defined(HAVE_COREAUDIO)
 
@@ -684,7 +684,7 @@ int main(int argc, char **argv)
 				param.shape = -20;
 			else
 				param.shape = param.shape + 5;
-			shouldgenerate = 1;
+			if (!filemode) shouldgenerate = 1;
 			break;
 
 		case KEY_PPAGE:
@@ -707,7 +707,7 @@ int main(int argc, char **argv)
 			chars--;
 			BOUND(chars, 2, strlen(charset_backup));
 			charset[chars] = '\0';
-			shouldgenerate = 1;
+			if (!filemode) shouldgenerate = 1;
 			break;
 
 		case KEY_END:
@@ -716,7 +716,7 @@ int main(int argc, char **argv)
 			chars++;
 			BOUND(chars, 2, strlen(charset_backup));
 			charset[chars] = '\0';
-			shouldgenerate = 1;
+			if (!filemode) shouldgenerate = 1;
 			break;
 
 		case KEY_SHOME:
@@ -783,14 +783,14 @@ int main(int argc, char **argv)
 		case '!':
 			param.number = param.number - 5;
 			RANGE(number, 5, 100);
-			shouldgenerate = 1;
+			if (!filemode) shouldgenerate = 1;
 			break;
 
 		case KEY_DOWN:
 		case '@':
 			param.number = param.number + 5;
 			RANGE(number, 5, 100);
-			shouldgenerate = 1;
+			if (!filemode) shouldgenerate = 1;
 			break;
 
 		case '/':
@@ -858,6 +858,28 @@ int main(int argc, char **argv)
 				param.hum = param.hum + 25;
 			shouldgenerate = 1;
 			break;
+
+		case 'L':
+		case 'l':
+			cwstudio_input("Filename :",filename,13);
+			filemode = 0;
+			if (strcmp(filename,""))
+			{
+				cw_free(text);
+				text = cw_malloc(1024);			
+				size = 0;
+				if ((f = fopen(filename,"r")) != NULL)
+				{
+					size = fread(text, 1, 1024, f);
+					fclose(f);
+					filemode = 1;
+					shouldgenerate = 1;
+					cw_free(morsetext);
+					if((morsetext = cw_encode(text)) == NULL) return(CWALLOC);
+				} else sprintf(statustext,"No such file.");
+			text[size] = '\0';
+			}
+	else break;
 
 		case 'O':
 		case 'o':
