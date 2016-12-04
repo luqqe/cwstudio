@@ -535,7 +535,7 @@ int main(int argc, char **argv)
 	cwstudio_repaintwindows();
 
 #ifdef HAVE_MOUSEMASK
-	mousemask(ALL_MOUSE_EVENTS, NULL);
+	mousemask(BUTTON1_PRESSED, NULL);
 #endif
 
 	/*$3- Main loop for keyboard input in curses mode ================================================================*/
@@ -552,6 +552,8 @@ int main(int argc, char **argv)
 #endif
 			if(m == OK)
 			{
+			 	i = event.y * 10 + (event.x / 8);
+				wprintw(win_text,"%i ",i);
 				
 			}
 		}
