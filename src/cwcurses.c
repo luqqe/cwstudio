@@ -301,23 +301,24 @@ void cwstudio_repaintwindows()
 	if(param.click) wprintw(win_param, "* %i dB Click ", param.click);
 	if(param.hand) wprintw(win_param, "* Hand simulation %i%% ", param.hand);
 	if(param.hum) wprintw(win_param, "* %i%% Hum ", param.hum);
+	wprintw(win_param, "\n");
 	if(param.sweepness) wprintw(win_param, "* Sweep from %i Hz, sweepness %i\n", param.sweep, param.sweepness);
 	if(param.detune) wprintw(win_param, "* Detune %i%% ", param.detune);
 	if(param.qsb) wprintw(win_param, "* QSB %i%% ", param.qsb);
 	wprintw(win_param, "* Tempo is %i cpm ", param.tempo);
 	if(param.cspaces) wprintw(win_param, "* Char spacing +%i ", param.cspaces);
 	if(param.wspaces) wprintw(win_param, "* Word spacing +%i ", param.wspaces);
+	wprintw(win_param, "\n");
 	wprintw(win_param, "* Random seed: %i ", param.seed);
 	wprintw(win_param, "* Random shape: %i \n", param.shape);
-	wprintw(win_param, "\n");
 	if(param.signals > 1) wprintw(win_param, "* Mixing %i signals ", param.signals);
+	wprintw(win_param, "\n");
 	if(param.noise)
 	{
-		wprintw(win_param, "* Adding %i%% noise, %i - %i Hz ", param.noise, param.lowcut, param.highcut);
+		wprintw(win_param, "* Adding %i%% noise, %i-%i Hz ", param.noise, param.lowcut, param.highcut);
 		if(param.agc) wprintw(win_param, "* %i%% AGC ", param.agc);
-		wprintw(win_param, "\n");
 	}
-
+	wprintw(win_param, "\n");
 	if(param.dashlen != 300) wprintw(win_param, "* Dash length: %i%% ", param.dashlen);
 	if(param.spacelen != 100) wprintw(win_param, "* Space length: %i%% ", param.spacelen);
 	if((param.dashlen != 300) || (param.spacelen != 100)) wprintw(win_param, "\n");
@@ -478,7 +479,7 @@ int main(int argc, char **argv)
 		'8',
 		'3',
 		'1',
-		'\'',
+		'\\',
 		'A',
 		'C',
 		';',
