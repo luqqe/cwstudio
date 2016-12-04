@@ -74,38 +74,6 @@
 #elif defined HAVE_NCURSES_H
 #include <ncurses.h>
 #elif defined HAVE_CURSES_H
-#include <curses.h>
-#elif defined HAVE_TERMIOS_H
-#include <termios.h>
-
-/*
- =======================================================================================================================
-    This is getch() replacement for compilation without ncurses, used for control of playback. The aim is to turn off
-    echo in terminal and do not wait for ENTER. In the case of WIN32, the _getch() of conio.h is used. Any other
-    configuration will result in getchar() behavior (echo and waiting for ENTER).
- =======================================================================================================================
- */
-int getch()
-{
-	/*~~~~~~~~~~~~~~~~~~~~~~~*/
-	struct termios	oldt, newt;
-	int				ch;
-
-	/*~~~~~~~~~~~~~~~~~~~~~~~*/
-	tcgetattr(STDIN_FILENO, &oldt);
-	newt = oldt;
-	newt.c_lflag &= ~(ICANON | ECHO);
-	tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-	ch = getchar();
-	tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-	return ch;
-}
-
-#elif defined WIN32
-#include <conio.h>
-#define getch	_getch
-#else
-#define getch	getchar
 #endif
 
 /* Global variables */
@@ -315,18 +283,11 @@ void cwstudio_repaintwindows()
 
 	wprintw(win_param, "* %i Hz / %i bits\n", samplerate, bits);
 
-	if(isatty(STDIN_FILENO))
+	switch(mode)
 	{
-		switch(mode)
-		{
-		case 0: wprintw(win_param, "* %s\n\n", charset); break;
-		case 1: wprintw(win_param, "* %i words from %i most common\n\n", param.number, wordset); break;
-		case 2: wprintw(win_param, "* %i calls\n\n", param.number); break;
-		}
-	}
-	else
-	{
-		wprintw(win_param, "* Getting text from stdin\n\n");
+	case 0: wprintw(win_param, "* %s\n\n", charset); break;
+	case 1: wprintw(win_param, "* %i words from %i most common\n\n", param.number, wordset); break;
+	case 2: wprintw(win_param, "* %i calls\n\n", param.number); break;
 	}
 
 	wprintw(win_param, "* Frequency %i Hz\n", param.freq);
