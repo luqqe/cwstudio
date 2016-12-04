@@ -301,6 +301,7 @@ void cwstudio_resetwindows()
 	}
 	keypad(win_bar, TRUE);
 	wrefresh(win_bar);
+	mouseinterval(0);
 }
 
 /*
@@ -361,14 +362,12 @@ void cwstudio_repaintwindows()
 	if(param.dashlen != 300) wprintw(win_param, "* Dash length: %i%% ", param.dashlen);
 	if(param.spacelen != 100) wprintw(win_param, "* Space length: %i%% ", param.spacelen);
 	if((param.dashlen != 300) || (param.spacelen != 100)) wprintw(win_param, "\n");
+	mvwprintw(win_param, nrow - 12, 0, "* %s", statustext);
 	wrefresh(win_param);
 
 	werase(win_text);
 	wprintw(win_text, "%s", text);
 	wrefresh(win_text);
-
-	mvwprintw(win_param, nrow - 8, 0, "* %s", statustext);
-	wrefresh(win_param);
 
 	werase(win_bar);
 	mvwprintw(win_bar,0,0,"[ Play ][ Stop ][Pause ][Random][ Mode ][ Freq ][Noise ][Reset ][ Help ][Shape ]");
@@ -378,7 +377,7 @@ void cwstudio_repaintwindows()
 #else
 	mvwprintw(win_bar,2,0,"[ Rate ][ Bits ][ WAV  ]                                        [<<< Groups >>>]");
 #endif
-	mvwprintw(win_bar,3,0,"[<<< Tempo  >>>][<<<Charset >>>][<<<Wspaces >>>][<<<Cspaces >>>][<<<Charset >>>]");
+	mvwprintw(win_bar,3,0,"[<<< Tempo  >>>][<<<Signals >>>][<<<Wspaces >>>][<<<Cspaces >>>][<<<Charset >>>]");
 	wrefresh(win_bar);
 
 	if (shouldgenerate) cwstudio_writeconfig();
@@ -486,6 +485,7 @@ int main(int argc, char **argv)
 	int					ch;
 	int					i, err, m;
 	FILE				*f;
+	const int		buttontable[40] = {'5','6','7','4','=','9','8','3','1','\'','A','C',';','\'','-','E','O','Q','H','S','/','?','2','M',0,0,0,0,'!','@','[',']',':','"','<','>',',','.','{','}'};
 #ifdef HAVE_WINDOWS_H
 	HINSTANCE			hDLL = NULL;
 	BEINITSTREAM		beInitStream = NULL;
@@ -552,9 +552,8 @@ int main(int argc, char **argv)
 #endif
 			if(m == OK)
 			{
-			 	i = event.y * 10 + (event.x / 8);
-				wprintw(win_text,"%i ",i);
-				
+			 	i = (event.y - nrow + 4 )* 10 + (event.x / 8);
+				ch = buttontable[i];				
 			}
 		}
 #endif
