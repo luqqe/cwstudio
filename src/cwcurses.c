@@ -395,7 +395,11 @@ void cwstudio_help()
 #endif
 	wprintw(win_help, "F3/3 - reset parameters\n");
 	wprintw(win_help, "F4/4 - regenerate random, SPACE - enter\n");
+#ifdef HAVE_WINDOWS_H
+	wprintw(win_help, "F5/5,ENTER-play, Ctrl-Ins/Del-copy,paste\n");
+#else
 	wprintw(win_help, "F5/5, ENTER - play\n");
+#endif
 	wprintw(win_help, "F6/6 - stop, F7/7 - pause\n");
 	wprintw(win_help, "F8/8 - noise mode, F9/9 - freq\n");
 	wprintw(win_help, "F11/- - detune/qsb, F12/= - mode\n");
@@ -556,6 +560,9 @@ int main(int argc, char **argv)
 	DWORD				dwWrite = 0;
 	DWORD				dwDone = 0;
 	long int			length;
+
+	HANDLE				h;
+	HGLOBAL 			hMem;
 #endif
 
 	/*~~~~~~~*/
@@ -564,6 +571,23 @@ int main(int argc, char **argv)
 	cw_initparam(&param);
 
 	cwstudio_readconfig();
+
+	/*$2- Parse command line argument (file name to read from)---------------------------------------------------------*/	
+	filemode = 0;
+	if(argc == 2)
+	if((f = fopen(argv[1], "r")) != NULL)
+	{
+		cw_free(text);
+		text = cw_malloc(1024);
+		size = 0;
+		size = fread(text, 1, 1024, f);
+		fclose(f);
+		filemode = 1;
+		shouldgenerate = 1;
+		cw_free(morsetext);
+		if((morsetext = cw_encode(text)) == NULL) return(CWALLOC);
+		text[size] = '\0';
+	}
 
 #ifdef WIN32
 	cwstudio_initwinconsole();
@@ -1009,6 +1033,41 @@ int main(int argc, char **argv)
 			shouldgenerate = 1;
 			break;
 #ifdef HAVE_WINDOWS_H
+
+		case CTL_INS:
+			OpenClipboard(NULL);			
+			h = GetClipboardData(CF_TEXT);
+			if(strcmp((char *)h, ""))
+			{
+				cw_free(text);
+				text = cw_malloc(1024);
+				i = -1;
+				strncpy(text,(char *)h,255);
+				for (i = 0; i < 256; i++) if (text[i] == '\r') text[i] = ' ';								
+				filemode = 1;
+				shouldgenerate = 1;
+				cw_free(morsetext);
+				if((morsetext = cw_encode(text)) == NULL) return(CWALLOC);
+			}
+			CloseClipboard();
+			break;
+
+		case CTL_DEL:
+			hMem = GlobalAlloc(GMEM_MOVEABLE, 2*strlen(text) + 1);
+			f = fopen("cw.tmp","w");
+			fputs(text,f);
+			fclose(f);
+			f = fopen("cw.tmp","rb");
+			fread(GlobalLock(hMem),1,2*strlen(text),f);
+			fclose(f);
+			remove("cw.tmp");		
+			//memcpy(GlobalLock(hMem), text, strlen(text) + 1);
+			GlobalUnlock(hMem);
+			OpenClipboard(0);
+			EmptyClipboard();
+			SetClipboardData(CF_TEXT, hMem);
+			CloseClipboard();
+			break;
 
 		case 'M':
 		case 'm':
