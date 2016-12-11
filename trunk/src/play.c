@@ -43,7 +43,7 @@
 #include <sys/ioctl.h>
 #endif
 volatile static int			status = CWSTOPPED;
-unsigned long int			counter;
+long int			counter;
 char						*place;
 
 #ifdef HAVE_PTHREAD
@@ -135,6 +135,7 @@ void *cwstudio_playthread(void *arg)
 	}
 
 	pa_simple_drain(pa, &e);
+	pa_simple_free(pa);
 #elif defined HAVE_OSS
 	audio = open("/dev/dsp", O_WRONLY, 0);
 	if((sample->bits == 8))
@@ -281,6 +282,7 @@ int cwstudio_stop()
 	AudioQueueReset(queue);
 #elif defined HAVE_PULSE_AUDIO
 	pa_simple_flush(pa, &e);
+	pa_simple_free(pa);
 #elif defined HAVE_OSS
 	status = CWSTOPPED;
 
