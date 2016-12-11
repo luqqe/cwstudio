@@ -394,7 +394,7 @@ void cwstudio_help()
 	wprintw(win_help, "F1/1 - help, F2/2 - save to WAV file\n");
 #endif
 	wprintw(win_help, "F3/3 - reset parameters\n");
-	wprintw(win_help, "F4/4, SPACE - regenerate random\n");
+	wprintw(win_help, "F4/4 - regenerate random, SPACE - enter\n");
 	wprintw(win_help, "F5/5, ENTER - play\n");
 	wprintw(win_help, "F6/6 - stop, F7/7 - pause\n");
 	wprintw(win_help, "F8/8 - noise mode, F9/9 - freq\n");
@@ -662,7 +662,6 @@ int main(int argc, char **argv)
 
 		case KEY_F(4):
 		case '4':
-		case ' ':
 			param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
 			shouldgenerate = 1;
 			filemode = 0;
@@ -943,7 +942,7 @@ int main(int argc, char **argv)
 
 		case 'L':
 		case 'l':
-			cwstudio_input("Filename :", filename, 13);
+			cwstudio_input("Filename :", filename, 250);
 			filemode = 0;
 			if(strcmp(filename, ""))
 			{
@@ -963,8 +962,19 @@ int main(int argc, char **argv)
 					sprintf(statustext, "No such file.");
 				text[size] = '\0';
 			}
-			else
-				break;
+			break;
+		case ' ':
+			cwstudio_input("Text :", inputbuffer, 255);
+			if(strcmp(inputbuffer, ""))
+			{
+				cw_free(text);
+				text = cw_malloc(1024);
+				strncpy(text,inputbuffer,255);
+				filemode = 1;
+				cw_free(morsetext);
+				if((morsetext = cw_encode(text)) == NULL) return(CWALLOC);
+			}
+			break;
 
 		case 'O':
 		case 'o':
