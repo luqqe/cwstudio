@@ -96,7 +96,7 @@ static char			charset_backup[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
 #ifdef HAVE_CURSES
 static int			playmode = CWSTOPPED;
 static char			statustext[256] = "Press <F1> or <1> for help.";
-static WINDOW		*win_screen, *win_title, *win_param, *win_text, *win_help, *win_bar;
+static WINDOW		*win_screen, *win_title, *win_param, *win_text, *win_help, *win_bar, *win_prompt;
 #ifdef HAVE_MOUSEMASK
 MEVENT				event;
 #endif
@@ -427,14 +427,39 @@ void cwstudio_help()
  */
 void cwstudio_input(const char *prompt, char *entered, int length)
 {
-	mvwprintw(win_text, nrow - 8, 1, "%s", prompt);
-	wrefresh(win_text);
+	/*~~~~~~~~~~~*/
+	int ncol, nrow;
+
+	/*~~~~~~~~~~~*/
+	getmaxyx(stdscr, nrow, ncol);
+
+	win_prompt = newwin(4, ncol, nrow - 4, 0);
+	if(has_colors())
+	{
+		wattron(win_prompt, COLOR_PAIR(3));
+		wbkgd(win_prompt, COLOR_PAIR(3));
+	}
+
+	box(win_prompt, 0, 0);
+	mvwprintw(win_prompt, 0, 3, "%s", prompt);
+	wrefresh(win_prompt);
+	delwin(win_prompt);
+
+	win_prompt = newwin(2, ncol - 2, nrow - 3, 1);
+	if(has_colors())
+	{
+		wattron(win_prompt, COLOR_PAIR(3));
+		wbkgd(win_prompt, COLOR_PAIR(3));
+	}
+
+	wrefresh(win_prompt);
 	echo();
 	curs_set(2);
-	mvwgetnstr(win_text, nrow - 7, 1, entered, length);
+	mvwgetnstr(win_prompt, 0, 0, entered, length);
 	noecho();
 	curs_set(0);
-	wrefresh(win_text);
+	delwin(win_prompt);
+
 }
 
 /*
@@ -608,7 +633,7 @@ int main(int argc, char **argv)
 			}
 
 			i = (int) time(NULL);
-			cwstudio_input("Filename without ext :", inputbuffer, 8);
+			cwstudio_input("Filename without ext :", inputbuffer, 250);
 			if(inputbuffer[0] == '\0')
 				sprintf(filename, "%x.wav", i);
 			else
