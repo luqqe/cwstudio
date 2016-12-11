@@ -120,7 +120,7 @@ void *cwstudio_playthread(void *arg)
 		pas.format = PA_SAMPLE_S16LE;
 	pas.rate = sample->samplerate;
 	pas.channels = 1;
-	if(!(pa = pa_simple_new(NULL, "qrq", PA_STREAM_PLAYBACK, NULL, "playback", &pas, NULL, NULL, &e))) {
+	if(!(pa = pa_simple_new(NULL, "cwgen", PA_STREAM_PLAYBACK, NULL, "playback", &pas, NULL, NULL, &e))) {
 		fprintf(stderr, "pa_simple_new() failed: %s\n", pa_strerror(e));
 	}
 

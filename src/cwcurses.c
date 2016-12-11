@@ -971,6 +971,7 @@ int main(int argc, char **argv)
 				text = cw_malloc(1024);
 				strncpy(text,inputbuffer,255);
 				filemode = 1;
+				shouldgenerate = 1;
 				cw_free(morsetext);
 				if((morsetext = cw_encode(text)) == NULL) return(CWALLOC);
 			}
