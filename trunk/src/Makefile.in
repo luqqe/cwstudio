@@ -116,20 +116,17 @@ libcwgen_a_OBJECTS = $(am_libcwgen_a_OBJECTS)
 @COMPILE_WX_TRUE@am__EXEEXT_2 = cwwx$(EXEEXT)
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am__cwcli_SOURCES_DIST = cwstudio.c cwcli.c play.c cwstudio.h \
-	cwcli-res.rc
+am__cwcli_SOURCES_DIST = cwcli.c play.c cwstudio.h cwcli-res.rc
 @HAVE_WINDRES_TRUE@am__objects_1 = cwcli-res.$(OBJEXT)
-am_cwcli_OBJECTS = cwstudio.$(OBJEXT) cwcli.$(OBJEXT) play.$(OBJEXT) \
-	$(am__objects_1)
+am_cwcli_OBJECTS = cwcli.$(OBJEXT) play.$(OBJEXT) $(am__objects_1)
 cwcli_OBJECTS = $(am_cwcli_OBJECTS)
 am__DEPENDENCIES_1 =
 cwcli_DEPENDENCIES = libcwgen.a $(am__DEPENDENCIES_1)
-am__cwcurses_SOURCES_DIST = cwstudio.c cwcurses.c play.c cwstudio.h \
+am__cwcurses_SOURCES_DIST = cwcurses.c play.c cwstudio.h \
 	cwcurses-res.rc
 @COMPILE_CURSES_TRUE@@HAVE_WINDRES_TRUE@am__objects_2 = cwcurses-res.$(OBJEXT)
-@COMPILE_CURSES_TRUE@am_cwcurses_OBJECTS = cwstudio.$(OBJEXT) \
-@COMPILE_CURSES_TRUE@	cwcurses.$(OBJEXT) play.$(OBJEXT) \
-@COMPILE_CURSES_TRUE@	$(am__objects_2)
+@COMPILE_CURSES_TRUE@am_cwcurses_OBJECTS = cwcurses.$(OBJEXT) \
+@COMPILE_CURSES_TRUE@	play.$(OBJEXT) $(am__objects_2)
 cwcurses_OBJECTS = $(am_cwcurses_OBJECTS)
 @COMPILE_CURSES_TRUE@cwcurses_DEPENDENCIES = libcwgen.a \
 @COMPILE_CURSES_TRUE@	$(am__DEPENDENCIES_1)
@@ -333,13 +330,13 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 EXTRA_DIST = cwcli.ico cwcurses.ico cwwx.ico
-@COMPILE_CURSES_TRUE@cwcurses_SOURCES = cwstudio.c cwcurses.c play.c \
-@COMPILE_CURSES_TRUE@	cwstudio.h $(am__append_2)
+@COMPILE_CURSES_TRUE@cwcurses_SOURCES = cwcurses.c play.c cwstudio.h \
+@COMPILE_CURSES_TRUE@	$(am__append_2)
 @COMPILE_CURSES_TRUE@cwcurses_LDADD = libcwgen.a $(PTHREAD_LIBS) $(CURSES_LIB)
 @COMPILE_WX_TRUE@cwwx_SOURCES = cwwx.cc $(am__append_4)
 @COMPILE_WX_TRUE@cwwx_CPPFLAGS = $(WX_CPPFLAGS)
 @COMPILE_WX_TRUE@cwwx_LDADD = play.o libcwgen.a $(WX_LIBS)
-cwcli_SOURCES = cwstudio.c cwcli.c play.c cwstudio.h $(am__append_5)
+cwcli_SOURCES = cwcli.c play.c cwstudio.h $(am__append_5)
 cwcli_LDADD = libcwgen.a $(PTHREAD_LIBS) $(CURSES_LIB)
 AM_CFLAGS = -Wall -pedantic -static-libgcc
 AM_CXXFLAGS = -static-libgcc
