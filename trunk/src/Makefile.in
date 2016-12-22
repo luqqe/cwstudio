@@ -329,7 +329,7 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-EXTRA_DIST = cwcli.ico cwcurses.ico cwwx.ico
+EXTRA_DIST = cwcli.ico cwcurses.ico cwwx.ico BladeMP3EncDLL.h
 @COMPILE_CURSES_TRUE@cwcurses_SOURCES = cwcurses.c play.c cwstudio.h \
 @COMPILE_CURSES_TRUE@	$(am__append_2)
 @COMPILE_CURSES_TRUE@cwcurses_LDADD = libcwgen.a $(PTHREAD_LIBS) $(CURSES_LIB)
