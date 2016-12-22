@@ -333,7 +333,7 @@ void cwstudio_repaintwindows()
 	mvwprintw(win_bar, 0, 0, "[ Play ][ Stop ][Pause ][Random][ Mode ][ Freq ][Noise ][Reset ][ Help ][Shape ]");
 	mvwprintw(win_bar, 1, 0, "[ AGC  ][Click ][ Dlen ][ SLen ][DetQSB][ Even ][ Odd  ][ Hand ][ Hum  ][Sweep ]");
 #ifdef HAVE_WINDOWS_H
-	mvwprintw(win_bar, 2, 0, "[ Rate ][ Bits ][ WAV  ][ MP3  ]                        [ Load ][<<< Groups >>>]");
+	mvwprintw(win_bar, 2, 0, "[ Rate ][ Bits ][ WAV  ][ MP3  ][ Copy ][Paste ]        [ Load ][<<< Groups >>>]");
 #else
 	mvwprintw(win_bar, 2, 0, "[ Rate ][ Bits ][ WAV  ]                                [ Load ][<<< Groups >>>]");
 #endif
@@ -522,9 +522,15 @@ int main(int argc, char **argv)
 		'/',
 		'?',
 		'2',
+#ifdef HAVE_WINDOWS_H
 		'M',
+		CTL_DEL,
+		CTL_INS,
+#else
 		0,
 		0,
+		0,
+#endif
 		0,
 		'L',
 		'!',
