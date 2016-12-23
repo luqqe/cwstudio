@@ -71,7 +71,7 @@ AudioQueueRef				queue;
 
 /* */
 
-void callback(void *data, AudioQueueRef queue, AudioQueueBufferRef buf_ref)
+void cwstudio_callback(void *data, AudioQueueRef queue, AudioQueueBufferRef buf_ref)
 {
 	OSStatus			ossstatus;
 	AudioQueueBuffer	*buf = buf_ref;
@@ -202,7 +202,7 @@ int cwstudio_play(cw_sample *sample)
 		ossstatus = AudioQueueNewOutput
 			(
 				&fmt,
-				callback,
+				cwstudio_callback,
 				sample->data,
 				CFRunLoopGetCurrent(),
 				kCFRunLoopCommonModes,
@@ -213,7 +213,7 @@ int cwstudio_play(cw_sample *sample)
 		buf = buf_ref;
 		buf->mAudioDataByteSize = BUFSIZE;
 		offsetmax = (sample->bits / 8) * sample->length - 2;
-		callback(sample->data, queue, buf_ref);
+		cwstudio_callback(sample->data, queue, buf_ref);
 		ossstatus = AudioQueueSetParameter(queue, kAudioQueueParam_Volume, 1.0);
 		ossstatus = AudioQueueStart(queue, NULL);
 #else
