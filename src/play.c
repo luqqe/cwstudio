@@ -223,7 +223,7 @@ void cwstudio_sbinit(char *sbconfig)
 	}
 
 	if(sb_base)
-		sprintf(sbconfig, "sb%03xh-irq%i-dma%i", sb_base, sb_irq, sb_dma);
+		sprintf(sbconfig, "/sb%03xh-irq%i-dma%i", sb_base, sb_irq, sb_dma);
 	else
 		strcat(sbconfig, "");
 }
