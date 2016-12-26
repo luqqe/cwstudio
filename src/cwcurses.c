@@ -1,6 +1,6 @@
-/*$T cwcurses.c GC 1.150 2016-12-04 21:56:44 */
+/*$T /cwcurses.c GC 1.150 2016-12-26 17:24:29 */
 
-/*$I0
+/*$I0 
 
     This file is part of CWStudio.
 
@@ -86,6 +86,7 @@ static int			shouldgenerate = 1;
 #ifdef __DJGPP__
 static unsigned int bits = 8;
 static unsigned int samplerate = 8000;
+static char			sbconfig[32] = "";
 #else
 static unsigned int bits = 16;
 static unsigned int samplerate = 44100;
@@ -94,7 +95,7 @@ static char			filename[256] = "", inputbuffer[256] = "";
 static char			charset[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
 static char			charset_backup[256] = "abstgjnokqfmzixdrhewlypvcu8219376450?!/=";
 #ifdef HAVE_CURSES
-static int			playmode = CWSTOPPED;
+volatile int		playmode = CWSTOPPED;
 static char			statustext[256] = "Press <F1> or <1> for help.";
 static WINDOW		*win_screen, *win_title, *win_param, *win_text, *win_help, *win_bar, *win_prompt;
 #ifdef HAVE_MOUSEMASK
@@ -102,6 +103,8 @@ MEVENT				event;
 #endif
 #endif
 #ifdef WIN32
+
+/*$2- Center console window and change its title under WIN32 ---------------------------------------------------------*/
 
 /* */
 void cwstudio_initwinconsole()
@@ -118,14 +121,15 @@ void cwstudio_initwinconsole()
 }
 #endif
 
+/*$2- Write config file, name is taken from canonical host name ------------------------------------------------------*/
+
 /* */
 void cwstudio_writeconfig()
 {
 	FILE	*f;
 	char	filename[255];
 	sprintf(filename, "%s", CANONICAL_HOST);
-	if((f = fopen(filename, "w")) != NULL)
-	{
+	if((f = fopen(filename, "w")) != NULL) {
 		fwrite(&mode, sizeof(int), 1, f);
 		fwrite(&wordset, sizeof(int), 1, f);
 		fwrite(&chars, sizeof(int), 1, f);
@@ -137,14 +141,15 @@ void cwstudio_writeconfig()
 	}
 }
 
+/*$2- Read config file, name is taken from canonical host name -------------------------------------------------------*/
+
 /* */
 void cwstudio_readconfig()
 {
 	FILE	*f;
 	char	filename[255];
 	sprintf(filename, "%s", CANONICAL_HOST);
-	if((f = fopen(filename, "r")) != NULL)
-	{
+	if((f = fopen(filename, "r")) != NULL) {
 		fread(&mode, sizeof(int), 1, f);
 		fread(&wordset, sizeof(int), 1, f);
 		fread(&chars, sizeof(int), 1, f);
@@ -200,8 +205,7 @@ void cwstudio_resetwindows()
 	curs_set(0);
 	getmaxyx(stdscr, nrow, ncol);
 
-	if(has_colors())
-	{
+	if(has_colors()) {
 		start_color();
 		init_pair(1, COLOR_RED, COLOR_WHITE);
 		init_pair(2, COLOR_WHITE, COLOR_BLUE);
@@ -210,21 +214,23 @@ void cwstudio_resetwindows()
 	}
 
 	win_title = newwin(5, SPLIT, 0, 0);
-	if(has_colors())
-	{
+	if(has_colors()) {
 		wattron(win_title, COLOR_PAIR(1));
 		wbkgd(win_title, COLOR_PAIR(1));
 	}
 
 	box(win_title, 0, 0);
 	mvwprintw(win_title, 1, 1, "CWStudio %s (%ix%i)", VERSION, ncol, nrow);
+#ifdef __DJGPP__
+	mvwprintw(win_title, 2, 1, "(%s/%s)", CANONICAL_HOST, sbconfig);
+#else
 	mvwprintw(win_title, 2, 1, "(%s%s%s)", CANONICAL_HOST, SOUND_INTERFACE, THREAD_INTERFACE);
+#endif
 	mvwprintw(win_title, 3, 1, "(C) 2009-2016 Lukasz Komsta, SP8QED");
 	wrefresh(win_title);
 
 	win_param = newwin(nrow - 9, SPLIT, 5, 0);
-	if(has_colors())
-	{
+	if(has_colors()) {
 		wattron(win_param, COLOR_PAIR(2));
 		wbkgd(win_param, COLOR_PAIR(2));
 	}
@@ -235,8 +241,7 @@ void cwstudio_resetwindows()
 
 	win_param = newwin(nrow - 11, SPLIT - 2, 6, 1);
 	keypad(win_param, TRUE);
-	if(has_colors())
-	{
+	if(has_colors()) {
 		wattron(win_param, COLOR_PAIR(2));
 		wbkgd(win_param, COLOR_PAIR(2));
 	}
@@ -244,8 +249,7 @@ void cwstudio_resetwindows()
 	keypad(win_param, TRUE);
 
 	win_text = newwin(nrow - 4, ncol - (SPLIT), 0, SPLIT);
-	if(has_colors())
-	{
+	if(has_colors()) {
 		wattron(win_text, COLOR_PAIR(2));
 		wbkgd(win_text, COLOR_PAIR(2));
 	}
@@ -255,8 +259,7 @@ void cwstudio_resetwindows()
 	delwin(win_text);
 
 	win_text = newwin(nrow - 6, ncol - (SPLIT) - 2, 1, SPLIT + 1);
-	if(has_colors())
-	{
+	if(has_colors()) {
 		wattron(win_text, COLOR_PAIR(2));
 		wbkgd(win_text, COLOR_PAIR(2));
 	}
@@ -265,8 +268,7 @@ void cwstudio_resetwindows()
 	wrefresh(win_text);
 
 	win_bar = newwin(4, ncol, nrow - 4, 0);
-	if(has_colors())
-	{
+	if(has_colors()) {
 		wattron(win_bar, COLOR_PAIR(4));
 		wbkgd(win_bar, COLOR_PAIR(4));
 	}
@@ -313,11 +315,11 @@ void cwstudio_repaintwindows()
 	wprintw(win_param, "* Random shape: %i \n", param.shape);
 	if(param.signals > 1) wprintw(win_param, "* Mixing %i signals ", param.signals);
 	wprintw(win_param, "\n");
-	if(param.noise)
-	{
+	if(param.noise) {
 		wprintw(win_param, "* Adding %i%% noise, %i-%i Hz ", param.noise, param.lowcut, param.highcut);
 		if(param.agc) wprintw(win_param, "* %i%% AGC ", param.agc);
 	}
+
 	wprintw(win_param, "\n");
 	if(param.dashlen != 300) wprintw(win_param, "* Dash length: %i%% ", param.dashlen);
 	if(param.spacelen != 100) wprintw(win_param, "* Space length: %i%% ", param.spacelen);
@@ -371,8 +373,7 @@ void cwstudio_help()
 	getmaxyx(stdscr, nrow, ncol);
 
 	win_help = newwin(20, 42, nrow / 2 - 12, ncol / 2 - 21);
-	if(has_colors())
-	{
+	if(has_colors()) {
 		wattron(win_help, COLOR_PAIR(3));
 		wbkgd(win_help, COLOR_PAIR(3));
 	}
@@ -382,8 +383,7 @@ void cwstudio_help()
 	delwin(win_help);
 
 	win_help = newwin(18, 40, nrow / 2 - 11, ncol / 2 - 20);
-	if(has_colors())
-	{
+	if(has_colors()) {
 		wattron(win_help, COLOR_PAIR(3));
 		wbkgd(win_help, COLOR_PAIR(3));
 	}
@@ -438,8 +438,7 @@ void cwstudio_input(const char *prompt, char *entered, int length)
 	getmaxyx(stdscr, nrow, ncol);
 
 	win_prompt = newwin(4, ncol, nrow - 4, 0);
-	if(has_colors())
-	{
+	if(has_colors()) {
 		wattron(win_prompt, COLOR_PAIR(3));
 		wbkgd(win_prompt, COLOR_PAIR(3));
 	}
@@ -450,8 +449,7 @@ void cwstudio_input(const char *prompt, char *entered, int length)
 	delwin(win_prompt);
 
 	win_prompt = newwin(2, ncol - 2, nrow - 3, 1);
-	if(has_colors())
-	{
+	if(has_colors()) {
 		wattron(win_prompt, COLOR_PAIR(3));
 		wbkgd(win_prompt, COLOR_PAIR(3));
 	}
@@ -463,7 +461,6 @@ void cwstudio_input(const char *prompt, char *entered, int length)
 	noecho();
 	curs_set(0);
 	delwin(win_prompt);
-
 }
 
 /*
@@ -473,8 +470,7 @@ void cwstudio_input(const char *prompt, char *entered, int length)
  */
 int cwstudio_regeneratetext()
 {
-	if(!filemode)
-	{
+	if(!filemode) {
 		cw_free(text);
 		if((text = cwstudio_generate_text()) == NULL) return(CWALLOC);
 		cw_free(morsetext);
@@ -568,7 +564,7 @@ int main(int argc, char **argv)
 	long int			length;
 
 	HANDLE				h;
-	HGLOBAL 			hMem;
+	HGLOBAL				hMem;
 #endif
 
 	/*~~~~~~~*/
@@ -578,21 +574,26 @@ int main(int argc, char **argv)
 
 	cwstudio_readconfig();
 
-	/*$2- Parse command line argument (file name to read from)---------------------------------------------------------*/	
+#ifdef __DJGPP__
+	cwstudio_sbinit(sbconfig);
+#endif
+
+	/*$2- Parse command line argument (file name to read from --------------------------------------------------------*/
+
 	filemode = 0;
-	if(argc == 2)
-	if((f = fopen(argv[1], "r")) != NULL)
-	{
-		cw_free(text);
-		text = cw_malloc(1024);
-		size = 0;
-		size = fread(text, 1, 1024, f);
-		fclose(f);
-		filemode = 1;
-		shouldgenerate = 1;
-		cw_free(morsetext);
-		if((morsetext = cw_encode(text)) == NULL) return(CWALLOC);
-		text[size] = '\0';
+	if(argc == 2) {
+		if((f = fopen(argv[1], "r")) != NULL) {
+			cw_free(text);
+			text = cw_malloc(1024);
+			size = 0;
+			size = fread(text, 1, 1024, f);
+			fclose(f);
+			filemode = 1;
+			shouldgenerate = 1;
+			cw_free(morsetext);
+			if((morsetext = cw_encode(text)) == NULL) return(CWALLOC);
+			text[size] = '\0';
+		}
 	}
 
 #ifdef WIN32
@@ -630,8 +631,7 @@ int main(int argc, char **argv)
 #else
 			m = getmouse(&event);
 #endif
-			if(m == OK)
-			{
+			if(m == OK) {
 				i = (event.y - nrow + 4) * 10 + (event.x / 8);
 				ch = buttontable[i];
 			}
@@ -646,8 +646,7 @@ int main(int argc, char **argv)
 
 		case KEY_F(2):
 		case '2':
-			if(shouldgenerate)
-			{
+			if(shouldgenerate) {
 				cw_freesample(&asound);
 				cw_freesample(&csound);
 				cw_initsample(&asound, NULL);
@@ -696,14 +695,15 @@ int main(int argc, char **argv)
 			shouldgenerate = 1;
 			filemode = 0;
 			break;
-#if defined(HAVE_OSS) || defined(HAVE_PULSEAUDIO) || defined(HAVE_LIBWINMM) || defined(HAVE_COREAUDIO)
+#if defined(HAVE_OSS) || defined(HAVE_PULSEAUDIO) || defined(HAVE_LIBWINMM) || defined(HAVE_COREAUDIO) || defined(__DJGPP__)
 
 		case KEY_F(5):
 		case '5':
-			if(playmode == CWSTOPPED)
+#ifdef __DJGPP__
+			if(sb_base)
 			{
-				if(shouldgenerate)
-				{
+#endif
+				if(shouldgenerate) {
 					cw_freesample(&asound);
 					cw_freesample(&csound);
 					cw_initsample(&asound, NULL);
@@ -720,24 +720,40 @@ int main(int argc, char **argv)
 
 				playmode = cwstudio_play(&csound);
 				if(playmode == CWPLAYING) strcpy(statustext, "Playback started.");
+#ifdef __DJGPP__
 			}
+#endif
 			break;
 
 		case KEY_F(6):
 		case '6':
-			playmode = cwstudio_stop();
-			strcpy(statustext, "Playback stopped.");
+#ifdef __DJGPP__
+			if(sb_base)
+			{
+#endif
+				playmode = cwstudio_stop();
+				strcpy(statustext, "Playback stopped.");
+#ifdef __DJGPP__
+			}
+#endif
 			break;
 
 		case KEY_F(7):
 		case '7':
-			playmode = cwstudio_pause();
-			if(playmode == CWPLAYING)
-				strcpy(statustext, "Playback resumed.");
-			else if(playmode == CWPAUSED)
-				strcpy(statustext, "Playback paused.");
-			else if(playmode == CWSTOPPED)
-				strcpy(statustext, "Playback stopped.");
+#ifdef __DJGPP__
+			if(sb_base)
+			{
+#endif
+				playmode = cwstudio_pause();
+				if(playmode == CWPLAYING)
+					strcpy(statustext, "Playback resumed.");
+				else if(playmode == CWPAUSED)
+					strcpy(statustext, "Playback paused.");
+				else if(playmode == CWSTOPPED)
+					strcpy(statustext, "Playback stopped.");
+#ifdef __DJGPP__
+			}
+#endif
 			break;
 #endif
 
@@ -747,13 +763,11 @@ int main(int argc, char **argv)
 				param.noise = 0;
 			else
 				param.noise = param.noise + 25;
-			if(param.lowcut == 300)
-			{
+			if(param.lowcut == 300) {
 				param.lowcut = 100;
 				param.highcut = 6000;
 			}
-			else
-			{
+			else {
 				param.lowcut = 300;
 				param.highcut = 2400;
 			}
@@ -974,13 +988,11 @@ int main(int argc, char **argv)
 		case 'l':
 			cwstudio_input("Filename :", filename, 250);
 			filemode = 0;
-			if(strcmp(filename, ""))
-			{
+			if(strcmp(filename, "")) {
 				cw_free(text);
 				text = cw_malloc(1024);
 				size = 0;
-				if((f = fopen(filename, "r")) != NULL)
-				{
+				if((f = fopen(filename, "r")) != NULL) {
 					size = fread(text, 1, 1024, f);
 					fclose(f);
 					filemode = 1;
@@ -993,13 +1005,13 @@ int main(int argc, char **argv)
 				text[size] = '\0';
 			}
 			break;
+
 		case ' ':
 			cwstudio_input("Text :", inputbuffer, 255);
-			if(strcmp(inputbuffer, ""))
-			{
+			if(strcmp(inputbuffer, "")) {
 				cw_free(text);
 				text = cw_malloc(1024);
-				strncpy(text,inputbuffer,255);
+				strncpy(text, inputbuffer, 255);
 				filemode = 1;
 				shouldgenerate = 1;
 				cw_free(morsetext);
@@ -1041,33 +1053,33 @@ int main(int argc, char **argv)
 #ifdef HAVE_WINDOWS_H
 
 		case CTL_INS:
-			OpenClipboard(NULL);			
+			OpenClipboard(NULL);
 			h = GetClipboardData(CF_TEXT);
-			if(strcmp((char *)h, ""))
-			{
+			if(strcmp((char *) h, "")) {
 				cw_free(text);
 				text = cw_malloc(1024);
 				i = -1;
-				strncpy(text,(char *)h,255);
-				for (i = 0; i < 256; i++) if (text[i] == '\r') text[i] = ' ';								
+				strncpy(text, (char *) h, 255);
+				for(i = 0; i < 256; i++)
+					if(text[i] == '\r') text[i] = ' ';
 				filemode = 1;
 				shouldgenerate = 1;
 				cw_free(morsetext);
 				if((morsetext = cw_encode(text)) == NULL) return(CWALLOC);
 			}
+
 			CloseClipboard();
 			break;
 
 		case CTL_DEL:
-			hMem = GlobalAlloc(GMEM_MOVEABLE, 2*strlen(text) + 1);
-			f = fopen("cw.tmp","w");
-			fputs(text,f);
+			hMem = GlobalAlloc(GMEM_MOVEABLE, 2 * strlen(text) + 1);
+			f = fopen("cw.tmp", "w");
+			fputs(text, f);
 			fclose(f);
-			f = fopen("cw.tmp","rb");
-			fread(GlobalLock(hMem),1,2*strlen(text),f);
+			f = fopen("cw.tmp", "rb");
+			fread(GlobalLock(hMem), 1, 2 * strlen(text), f);
 			fclose(f);
-			remove("cw.tmp");		
-			//memcpy(GlobalLock(hMem), text, strlen(text) + 1);
+			remove("cw.tmp");
 			GlobalUnlock(hMem);
 			OpenClipboard(0);
 			EmptyClipboard();
@@ -1079,8 +1091,7 @@ int main(int argc, char **argv)
 		case 'm':
 			if(hDLL == NULL)
 				sprintf(statustext, "No lame_enc.dll found.");
-			else
-			{
+			else {
 				beInitStream = (BEINITSTREAM) GetProcAddress(hDLL, TEXT_BEINITSTREAM);
 				beEncodeChunk = (BEENCODECHUNK) GetProcAddress(hDLL, TEXT_BEENCODECHUNK);
 				beDeinitStream = (BEDEINITSTREAM) GetProcAddress(hDLL, TEXT_BEDEINITSTREAM);
@@ -1099,10 +1110,8 @@ int main(int argc, char **argv)
 				) sprintf(statustext, "lame_enc.dll error.");
 				else if((bits != 16) || (samplerate != 44100))
 					sprintf(statustext, "Unsupported samplerate/bits.");
-				else
-				{
-					if(shouldgenerate)
-					{
+				else {
+					if(shouldgenerate) {
 						cw_freesample(&asound);
 						cw_freesample(&csound);
 						cw_initsample(&asound, NULL);
@@ -1158,8 +1167,7 @@ int main(int argc, char **argv)
 					wattron(win_text, COLOR_PAIR(2));
 					wrefresh(win_text);
 
-					while(length >= dwSamples)
-					{
+					while(length >= dwSamples) {
 						error = beEncodeChunk(hbeStream, dwSamples, pWAVBuffer, pMP3Buffer, &dwWrite);
 						fwrite(pMP3Buffer, 1, dwWrite, pFileOut);
 						dwDone += dwRead * sizeof(SHORT);
@@ -1168,8 +1176,7 @@ int main(int argc, char **argv)
 						pWAVBuffer += dwSamples;
 					}
 
-					if(length > 0)
-					{
+					if(length > 0) {
 						error = beEncodeChunk(hbeStream, length, pWAVBuffer, pMP3Buffer, &dwWrite);
 						fwrite(pMP3Buffer, 1, dwWrite, pFileOut);
 					}
@@ -1204,6 +1211,10 @@ int main(int argc, char **argv)
 		cwstudio_regeneratetext();
 		cwstudio_repaintwindows();
 	}
+
+#if defined(HAVE_OSS) || defined(HAVE_PULSEAUDIO) || defined(HAVE_LIBWINMM) || defined(HAVE_COREAUDIO) || defined(__DJGPP__)
+	cwstudio_stop();
+#endif
 
 	/* End curses */
 	endwin();

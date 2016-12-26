@@ -32,3 +32,10 @@ extern void *threadplay(void *arg);
 extern int	cwstudio_play(cw_sample *sample);
 extern int	cwstudio_pause();
 extern int	cwstudio_stop();
+
+#ifdef __DJGPP__
+extern unsigned int				sb_base;
+extern int							sb_dma;
+extern int							sb_irq;
+extern void 	cwstudio_sbinit(char *sbconfig);
+#endif

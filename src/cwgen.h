@@ -1,10 +1,10 @@
-/*$T src/cwgen.h GC 1.140 11/05/11 20:22:33 */
+/*$T /cwgen.h GC 1.150 2016-12-26 17:33:58 */
 
-/*$I0
+/*$I0 
 
     This file is part of CWStudio.
 
-    Copyright 2008-2011 Lukasz Komsta, SP8QED
+    Copyright 2008-2016 Lukasz Komsta, SP8QED
 
     CWStudio is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -145,7 +145,7 @@ extern void				cw_append
 						);
 extern void				cw_mix(cw_sample *sample1, cw_sample *sample2, floating amplitude);
 extern int				cw_add_noise(cw_sample *sample, cw_param param);
-extern int		cw_noisegen(cw_sample *anoise, long int duration, int low, int high);
+extern int				cw_noisegen(cw_sample *anoise, long int duration, int low, int high);
 
 /* Memory allocation functions */
 extern void * (*cw_malloc) (size_t);

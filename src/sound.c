@@ -1,10 +1,10 @@
-/*$T src/sound.c GC 1.140 11/05/11 20:22:38 */
+/*$T /sound.c GC 1.150 2016-12-26 17:33:58 */
 
-/*$I0
+/*$I0 
 
     This file is part of CWStudio.
 
-    Copyright 2008-2011 Lukasz Komsta, SP8QED
+    Copyright 2008-2016 Lukasz Komsta, SP8QED
 
     CWStudio is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -35,8 +35,8 @@ int cw_tone(cw_sample *atone, cw_param param, long int duration, int freq)
 	floating	swp, cl, p, q, x, ev, od, sum;
 	floating	humtable[882];
 	floating	*data;
-	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
+	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	if((atone->data = cw_malloc(duration * sizeof(floating))) == NULL) return(CWALLOC);
 	atone->length = duration;
 	atone->bits = 0;
@@ -112,8 +112,7 @@ int cw_tone(cw_sample *atone, cw_param param, long int duration, int freq)
 	}
 
 	/* Apply raising sine attack profile */
-	for(i = 0; i <= param.window; i++)
-		data[i] *= cw_sin((floating) i / (floating) param.window * 1.570796);
+	for(i = 0; i <= param.window; i++) data[i] *= cw_sin((floating) i / (floating) param.window * 1.570796);
 
 	/* If click, apply decay profile and attenuate sustain part of signal */
 	if(param.click) {
@@ -139,8 +138,8 @@ int cw_silence(cw_sample *asilence, long int duration)
 	/*~~~~~~~~~~~~~~*/
 	long int	i;
 	floating	*data;
-	/*~~~~~~~~~~~~~~*/
 
+	/*~~~~~~~~~~~~~~*/
 	if((asilence->data = cw_malloc(duration * sizeof(floating))) == NULL) return(CWALLOC);
 	asilence->length = duration;
 	asilence->bits = 0;
@@ -160,8 +159,8 @@ void cw_append(cw_sample *sample1, cw_sample *sample2, long int length, int wind
 	/*~~~~~~~~~~~~~~~~~*/
 	long int	i;
 	floating	*s1, *s2;
-	/*~~~~~~~~~~~~~~~~~*/
 
+	/*~~~~~~~~~~~~~~~~~*/
 	s1 = (floating *) sample1->data;
 	s2 = (floating *) sample2->data;
 	if((length == 0) || (length > sample2->length)) length = sample2->length;
@@ -187,8 +186,8 @@ void cw_mix(cw_sample *sample1, cw_sample *sample2, floating amplitude)
 	long int	i, l1, l2;
 	floating	a, b, c;
 	floating	*s1, *s2;
-	/*~~~~~~~~~~~~~~~~~~*/
 
+	/*~~~~~~~~~~~~~~~~~~*/
 	s1 = (floating *) sample1->data;
 	s2 = (floating *) sample2->data;
 	c = 1.0 + amplitude;
@@ -213,8 +212,8 @@ int cw_add_noise(cw_sample *sample, cw_param param)
 	floating	a, b, c, amplitude, agc, *rmstable = NULL;
 	floating	*s, *n;
 	cw_sample	pinknoise;
-	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
+	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	amplitude = ((floating) param.noise) / 100.0;
 	agc = ((floating) param.agc) / 100.0;
 	c = 1.0 + amplitude;
@@ -261,8 +260,8 @@ floating *cw_rms(cw_sample *sample, int window)
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	floating	*s, *result, rms, max, min;
 	long int	i;
-	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
+	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	s = (floating *) sample->data;
 	if((result = cw_malloc(sample->length * sizeof(floating))) == NULL) return(NULL);
 	rms = 0;
@@ -303,6 +302,7 @@ int cw_convert(cw_sample *input, cw_sample *output, unsigned int bits)
 	int					c;
 	floating			*in;
 	char				*out;
+
 	/*~~~~~~~~~~~~~~~~~~~~~*/
 
 	/* Allocate buffer for converted sound */
@@ -344,8 +344,8 @@ int cw_signal(cw_sample *sound, cw_param param, const char *text)
 	long int	samples;
 	floating	*detunes, *qsbs, *hands;
 	floating	x, ahand, amplitude, ldash, lspace;
-	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
+	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	detunes = NULL;
 	qsbs = NULL;
 	hands = NULL;
@@ -466,8 +466,8 @@ int cw_signals(cw_sample *signals, cw_param param, const char *text)
 	const floating	amult[5] = { 1, 0.2, 0.2, 0.5, 0.5 };		/* amplitude multipliers */
 	int				i, e;
 	cw_sample		anothersound;
-	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
+	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	cw_initsample(&anothersound, signals);
 	if((e = cw_signal(signals, param, text)) != CWOK) return(e);
 	if(param.signals > 1) {
