@@ -26,7 +26,6 @@
 #include <go32.h>
 #include <dpmi.h>
 #include <pc.h>
-#define DOSBUFLEN	32768
 #define BLOCKLEN	32768
 #define SUBBLOCKLEN 8192
 _go32_dpmi_seginfo			irq_backup, irq;
