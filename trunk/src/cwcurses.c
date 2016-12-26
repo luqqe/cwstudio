@@ -222,7 +222,7 @@ void cwstudio_resetwindows()
 	box(win_title, 0, 0);
 	mvwprintw(win_title, 1, 1, "CWStudio %s (%ix%i)", VERSION, ncol, nrow);
 #ifdef __DJGPP__
-	mvwprintw(win_title, 2, 1, "(%s/%s)", CANONICAL_HOST, sbconfig);
+	mvwprintw(win_title, 2, 1, "(%s%s)", CANONICAL_HOST, sbconfig);
 #else
 	mvwprintw(win_title, 2, 1, "(%s%s%s)", CANONICAL_HOST, SOUND_INTERFACE, THREAD_INTERFACE);
 #endif
@@ -1213,7 +1213,7 @@ int main(int argc, char **argv)
 	}
 
 #if defined(HAVE_OSS) || defined(HAVE_PULSEAUDIO) || defined(HAVE_LIBWINMM) || defined(HAVE_COREAUDIO) || defined(__DJGPP__)
-	cwstudio_stop();
+	if (sb_base) cwstudio_stop();
 #endif
 
 	/* End curses */
