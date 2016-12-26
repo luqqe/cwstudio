@@ -1,10 +1,10 @@
-/*$T vvv.c GC 1.140 04/24/13 20:05:55 */
+/*$T /vvv.c GC 1.150 2016-12-26 17:33:58 */
 
-/*$I0
+/*$I0 
 
     This file is part of CWStudio.
 
-    Copyright 2008-2013 Lukasz Komsta, SP8QED
+    Copyright 2008-2016 Lukasz Komsta, SP8QED
 
     CWStudio is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@
     along with CWStudio. If not, see <http://www.gnu.org/licenses/>.
 
  */
- 
 #include "cwgen.h"
 
 /*
@@ -36,15 +35,14 @@
  
  =======================================================================================================================
  */
-
 int main()
 {
 	/*~~~~~~~~~~~~~~~~~~~~~~~*/
 	char		*morsetext;
 	cw_sample	asound, csound;
 	cw_param	param;
-	/*~~~~~~~~~~~~~~~~~~~~~~~*/
 
+	/*~~~~~~~~~~~~~~~~~~~~~~~*/
 	cw_initparam(&param);
 	morsetext = cw_encode("VVV = CQ DE CWSTUDIO PSE K");
 	cw_initsample(&asound, NULL);

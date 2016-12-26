@@ -1,10 +1,10 @@
-/*$T src/cwstudio.c GC 1.140 04/22/13 17:07:17 */
+/*$T /cwcli.c GC 1.150 2016-12-26 17:33:58 */
 
-/*$I0
+/*$I0 
 
     This file is part of CWStudio.
 
-    Copyright 2008-2015 Lukasz Komsta, SP8QED
+    Copyright 2008-2016 Lukasz Komsta, SP8QED
 
     CWStudio is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -66,7 +66,6 @@
 #else
 #define THREAD_INTERFACE	""
 #endif
-
 #if defined HAVE_TERMIOS_H
 #include <termios.h>
 
@@ -82,8 +81,8 @@ int getch()
 	/*~~~~~~~~~~~~~~~~~~~~~~~*/
 	struct termios	oldt, newt;
 	int				ch;
-	/*~~~~~~~~~~~~~~~~~~~~~~~*/
 
+	/*~~~~~~~~~~~~~~~~~~~~~~~*/
 	tcgetattr(STDIN_FILENO, &oldt);
 	newt = oldt;
 	newt.c_lflag &= ~(ICANON | ECHO);
@@ -111,8 +110,8 @@ int separg(char *options, char *argv[], int size)
 	/*~~~~~~~~~~~~~~~~~~~*/
 	char	*str = options;
 	int		i, argc = 0;
-	/*~~~~~~~~~~~~~~~~~~~*/
 
+	/*~~~~~~~~~~~~~~~~~~~*/
 	for(i = 0; i < size; i++) {
 		while(isspace((int) *str)) str++;
 		if(*str != '\0')
@@ -155,6 +154,7 @@ void cwstudio_parseparam(int argc, char **argv)
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	char	*envv[20], *envs, *totalv[256];
 	int		envc = 0, i, c, val;
+
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 	/* If environmental variable is set, parse it */
@@ -217,8 +217,8 @@ void cwstudio_parseparam(int argc, char **argv)
 			{ "wspaces", required_argument, NULL, 'W' },
 			{ 0, 0, 0, 0 }
 		};
-		/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
+		/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 		c = getopt_long_only
 			(
 				argc + envc,
@@ -405,8 +405,8 @@ char *cwstudio_generate_text()
 {
 	/*~~~~~~~~~~~~~~~~~~~~~~*/
 	char	*generated = NULL;
-	/*~~~~~~~~~~~~~~~~~~~~~~*/
 
+	/*~~~~~~~~~~~~~~~~~~~~~~*/
 	switch(mode)
 	{
 	case 0: generated = cw_rand_groups(param.number, param.shape, charset, param.seed); break;
@@ -417,7 +417,6 @@ char *cwstudio_generate_text()
 	return(generated);
 }
 
-
 /*
  =======================================================================================================================
     CWStudio - Main
@@ -427,10 +426,11 @@ int main(int argc, char **argv)
 {
 	/*~~~~~~~*/
 #if defined(HAVE_OSS) || defined(HAVE_PULSEAUDIO) || defined(HAVE_LIBWINMM) || defined(HAVE_COREAUDIO)
-	int ch;
+	int		ch;
 #endif
-	int i, err;
-	FILE *f;
+	int		i, err;
+	FILE	*f;
+
 	/*~~~~~~~*/
 
 	/* Initialize parameters */
@@ -443,133 +443,132 @@ int main(int argc, char **argv)
 	SetConsoleTitle("CWStudio");
 #endif
 
-		/* If stdin is injected via pipe, read it. Otherwise, generate random group */
+	/* If stdin is injected via pipe, read it. Otherwise, generate random group */
+	if(isatty(STDIN_FILENO)) {
+		if((text = cwstudio_generate_text()) == NULL) return(CWALLOC);
+	}
+	else {
+		if((text = malloc(2048 * sizeof(char))) == NULL) return(CWALLOC);
+		(void) fgets(text, 2048, stdin);
+	}
+
+	/* Encode text */
+	if((morsetext = cw_encode(text)) == NULL) return(CWALLOC);
+
+	/* output */
+	if(output) {
+		fprintf(stderr, "\n----------------------------------------------------\n");
+		fprintf
+		(
+			stderr,
+			"CWStudio %s (%s%s%s)\nCopyright 2009-2016 Lukasz Komsta, SP8QED\n",
+			VERSION,
+			CANONICAL_HOST,
+			SOUND_INTERFACE,
+			THREAD_INTERFACE
+		);
+		fprintf(stderr, "----------------------------------------------------\n");
+		fprintf(stderr, "* Working at %i Hz, %i bits\n", samplerate, bits);
+
 		if(isatty(STDIN_FILENO)) {
-			if((text = cwstudio_generate_text()) == NULL) return(CWALLOC);
+			switch(mode)
+			{
+			case 0: fprintf(stderr, "* Charset: %s\n\n", charset); break;
+			case 1: fprintf(stderr, "* %i words from %i most common\n\n", param.number, wordset); break;
+			case 2: fprintf(stderr, "* %i calls\n\n", param.number); break;
+			}
 		}
 		else {
-			if((text = malloc(2048 * sizeof(char))) == NULL) return(CWALLOC);
-			(void) fgets(text, 2048, stdin);
+			fprintf(stderr, "* Getting text from stdin\n\n");
 		}
 
-		/* Encode text */
-		if((morsetext = cw_encode(text)) == NULL) return(CWALLOC);
-
-		/* output */
-		if(output) {
-			fprintf(stderr, "\n----------------------------------------------------\n");
-			fprintf
-			(
-				stderr,
-				"CWStudio %s (%s%s%s)\nCopyright 2009-2016 Lukasz Komsta, SP8QED\n",
-				VERSION,
-				CANONICAL_HOST,
-				SOUND_INTERFACE,
-				THREAD_INTERFACE
-			);
-			fprintf(stderr, "----------------------------------------------------\n");
-			fprintf(stderr, "* Working at %i Hz, %i bits\n", samplerate, bits);
-
-			if(isatty(STDIN_FILENO)) {
-				switch(mode)
-				{
-				case 0: fprintf(stderr, "* Charset: %s\n\n", charset); break;
-				case 1: fprintf(stderr, "* %i words from %i most common\n\n", param.number, wordset); break;
-				case 2: fprintf(stderr, "* %i calls\n\n", param.number); break;
-				}
-			}
-			else {
-				fprintf(stderr, "* Getting text from stdin\n\n");
-			}
-
-			fprintf(stderr, "* Frequency %i Hz * Window %i samples\n", param.freq, param.window);
-			if(param.even) fprintf(stderr, "* %i%% even harmonics ", param.even);
-			if(param.odd) fprintf(stderr, "* %i%% odd harmonics ", param.odd);
-			if(param.even || param.odd) fprintf(stderr, "\n");
-			if(param.click) fprintf(stderr, "* %i dB Click ", param.click);
-			if(param.hand) fprintf(stderr, "* Hand simulation %i%% ", param.hand);
-			if(param.hum) fprintf(stderr, "* %i%% Hum ", param.hum);
+		fprintf(stderr, "* Frequency %i Hz * Window %i samples\n", param.freq, param.window);
+		if(param.even) fprintf(stderr, "* %i%% even harmonics ", param.even);
+		if(param.odd) fprintf(stderr, "* %i%% odd harmonics ", param.odd);
+		if(param.even || param.odd) fprintf(stderr, "\n");
+		if(param.click) fprintf(stderr, "* %i dB Click ", param.click);
+		if(param.hand) fprintf(stderr, "* Hand simulation %i%% ", param.hand);
+		if(param.hum) fprintf(stderr, "* %i%% Hum ", param.hum);
+		fprintf(stderr, "\n");
+		if(param.sweepness) fprintf(stderr, "* Sweep from %i Hz, sweepness %i\n", param.sweep, param.sweepness);
+		if(param.detune) fprintf(stderr, "* Detune %i%% ", param.detune);
+		if(param.qsb) fprintf(stderr, "* QSB %i%% ", param.qsb);
+		fprintf(stderr, "\n");
+		fprintf(stderr, "* Tempo is %i cpm ", param.tempo);
+		if(param.cspaces) fprintf(stderr, "* Char spacing +%i ", param.cspaces);
+		if(param.wspaces) fprintf(stderr, "* Word spacing +%i ", param.wspaces);
+		fprintf(stderr, "\n");
+		fprintf(stderr, "* Random seed: %i ", param.seed);
+		if(param.shape)
+			fprintf(stderr, "* Random shape: %i \n", param.shape);
+		else
 			fprintf(stderr, "\n");
-			if(param.sweepness) fprintf(stderr, "* Sweep from %i Hz, sweepness %i\n", param.sweep, param.sweepness);
-			if(param.detune) fprintf(stderr, "* Detune %i%% ", param.detune);
-			if(param.qsb) fprintf(stderr, "* QSB %i%% ", param.qsb);
+		if(param.signals > 1) fprintf(stderr, "* Mixing %i signals ", param.signals);
+		fprintf(stderr, "\n");
+		if(param.noise) {
+			fprintf(stderr, "* Adding %i%% noise, %i - %i Hz ", param.noise, param.lowcut, param.highcut);
+			if(param.agc) fprintf(stderr, "* %i%% AGC ", param.agc);
 			fprintf(stderr, "\n");
-			fprintf(stderr, "* Tempo is %i cpm ", param.tempo);
-			if(param.cspaces) fprintf(stderr, "* Char spacing +%i ", param.cspaces);
-			if(param.wspaces) fprintf(stderr, "* Word spacing +%i ", param.wspaces);
-			fprintf(stderr, "\n");
-			fprintf(stderr, "* Random seed: %i ", param.seed);
-			if(param.shape)
-				fprintf(stderr, "* Random shape: %i \n", param.shape);
-			else
-				fprintf(stderr, "\n");
-			if(param.signals > 1) fprintf(stderr, "* Mixing %i signals ", param.signals);
-			fprintf(stderr, "\n");
-			if(param.noise) {
-				fprintf(stderr, "* Adding %i%% noise, %i - %i Hz ", param.noise, param.lowcut, param.highcut);
-				if(param.agc) fprintf(stderr, "* %i%% AGC ", param.agc);
-				fprintf(stderr, "\n");
-			}
-
-			if(param.dashlen != 300) fprintf(stderr, "* Dash length: %i%% ", param.dashlen);
-			if(param.spacelen != 100) fprintf(stderr, "* Space length: %i%% ", param.spacelen);
-			if((param.dashlen != 300) || (param.spacelen != 100)) fprintf(stderr, "\n");
-			fprintf(stderr, "----------------------------------------------------\n\n");
 		}
 
-		fprintf(stderr, "\n%s\n\n", text);
+		if(param.dashlen != 300) fprintf(stderr, "* Dash length: %i%% ", param.dashlen);
+		if(param.spacelen != 100) fprintf(stderr, "* Space length: %i%% ", param.spacelen);
+		if((param.dashlen != 300) || (param.spacelen != 100)) fprintf(stderr, "\n");
+		fprintf(stderr, "----------------------------------------------------\n\n");
+	}
 
-		/*
+	fprintf(stderr, "\n%s\n\n", text);
+
+	/*
 		 * "asound" is floating sample created by library, converted sample goest to
 		 * "csound"
 		 */
-		cw_initsample(&asound, NULL);
-		asound.samplerate = samplerate;
-		cw_initsample(&csound, &asound);
+	cw_initsample(&asound, NULL);
+	asound.samplerate = samplerate;
+	cw_initsample(&csound, &asound);
 
-		/* Sound generation */
-		if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
-		if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
+	/* Sound generation */
+	if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
+	if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
 
-		/* If stdout is redirected somewhere, feed generated WAV file there. */
-		if(isatty(STDOUT_FILENO)) {
-			i = (int) time(NULL);
-			sprintf(filename, "%x.wav", i);
-			if((err = cw_wavout(filename, &csound)) != CWOK) return(i);
-			sprintf(filename, "%x.txt", i);
-			f = fopen(filename,"w");
-			fputs(text,f);
-			fclose(f);
-		}
-		else {
-			fprintf(stderr, "* Redirecting sound to stdout\n\n");
-			if((i = cw_wavout(NULL, &csound)) != CWOK) return(i);
-		}
+	/* If stdout is redirected somewhere, feed generated WAV file there. */
+	if(isatty(STDOUT_FILENO)) {
+		i = (int) time(NULL);
+		sprintf(filename, "%x.wav", i);
+		if((err = cw_wavout(filename, &csound)) != CWOK) return(i);
+		sprintf(filename, "%x.txt", i);
+		f = fopen(filename, "w");
+		fputs(text, f);
+		fclose(f);
+	}
+	else {
+		fprintf(stderr, "* Redirecting sound to stdout\n\n");
+		if((i = cw_wavout(NULL, &csound)) != CWOK) return(i);
+	}
 
-		fflush(stderr);
+	fflush(stderr);
 
 #if defined(HAVE_OSS) || defined(HAVE_PULSEAUDIO) || defined(HAVE_LIBWINMM) || defined(HAVE_COREAUDIO)
-		/* Play if needed */
-		if(play) {
-			printf("<5> - PLAY, <6> - STOP, <7> - PAUSE, Ctrl-C - EXIT\n");
-			while((ch = getch()) != 3) { 
-				switch(ch)
-				{
-				case '5':	cwstudio_play(&csound); break;
-				case '6':	cwstudio_stop(); break;
-				case '7':	cwstudio_pause(); break;
-				}
+	/* Play if needed */
+	if(play) {
+		printf("<5> - PLAY, <6> - STOP, <7> - PAUSE, Ctrl-C - EXIT\n");
+		while((ch = getch()) != 3) {
+			switch(ch)
+			{
+			case '5':	cwstudio_play(&csound); break;
+			case '6':	cwstudio_stop(); break;
+			case '7':	cwstudio_pause(); break;
 			}
 		}
+	}
 #endif
 
-		/* Free memory */
-		cw_freesample(&asound);
-		cw_freesample(&csound);
-		cw_free(text);
-		cw_free(morsetext);
+	/* Free memory */
+	cw_freesample(&asound);
+	cw_freesample(&csound);
+	cw_free(text);
+	cw_free(morsetext);
 
-		/* Exit */
-		return(CWOK);
-
+	/* Exit */
+	return(CWOK);
 }

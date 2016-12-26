@@ -1,10 +1,10 @@
-/*$T src/morse.c GC 1.140 11/27/11 17:14:04 */
+/*$T /morse.c GC 1.150 2016-12-26 17:33:58 */
 
-/*$I0
+/*$I0 
 
     This file is part of CWStudio.
 
-    Copyright 2008-2011 Lukasz Komsta, SP8QED
+    Copyright 2008-2016 Lukasz Komsta, SP8QED
 
     CWStudio is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -32,8 +32,8 @@ char *cw_encode(const char *text)
 	/*~~~~~~~~~~~~~~*/
 	char	*decoded;
 	int		i, length;
-	/*~~~~~~~~~~~~~~*/
 
+	/*~~~~~~~~~~~~~~*/
 	length = strlen(text);
 	if((decoded = (char *) cw_malloc(10 * length * sizeof(char))) == NULL) return(NULL);
 	strncpy(decoded, "\0", 1);

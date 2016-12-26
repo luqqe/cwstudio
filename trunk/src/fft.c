@@ -1,10 +1,10 @@
-/*$T src/fft.c GC 1.140 10/28/11 20:45:57 */
+/*$T /fft.c GC 1.150 2016-12-26 17:33:58 */
 
-/*$I0
+/*$I0 
 
     This file is part of CWStudio.
 
-    Copyright 2008-2011 Lukasz Komsta, SP8QED
+    Copyright 2008-2016 Lukasz Komsta, SP8QED
 
     CWStudio is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -44,8 +44,8 @@ void cw_fftstep
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	long int	k, k1, k2, k3, k4, nh;
 	floating	c, s, t0, t1;
-	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
+	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	nh = n / 2;
 	if(n > 2) {
 		{
@@ -92,8 +92,8 @@ void cw_fft(floating *tr, floating *ti, floating *fr, floating *fi, long int n)
 	/*~~~~~~~~~~~~~~*/
 	floating	*temp;
 	long int	i;
-	/*~~~~~~~~~~~~~~*/
 
+	/*~~~~~~~~~~~~~~*/
 	temp = cw_malloc(2 * n * sizeof(floating));
 	for(i = 0; i < 2 * n; i++) temp[i] = 0;
 	cw_fftstep(tr, ti, fr, fi, temp, temp + n, n, 0, 1);
@@ -110,8 +110,8 @@ void cw_ifft(floating *tr, floating *ti, floating *fr, floating *fi, long int n)
 	/*~~~~~~~~~~~~~~~*/
 	long int	nh, i;
 	floating	t0, t1;
-	/*~~~~~~~~~~~~~~~*/
 
+	/*~~~~~~~~~~~~~~~*/
 	nh = n / 2;
 	cw_fft(fr, fi, tr, ti, n);
 	tr[0] /= n;
