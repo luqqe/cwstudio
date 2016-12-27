@@ -27,6 +27,11 @@
 #else
 #include "getopt_long_only.c"
 #endif
+
+#ifdef __NetBSD__
+#include "getopt_long_only.c"
+#endif
+
 #ifdef HAVE_CTYPE_H
 #include <ctype.h>
 #endif

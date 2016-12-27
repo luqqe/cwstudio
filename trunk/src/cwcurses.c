@@ -292,7 +292,9 @@ void cwstudio_resetwindows()
 
 	keypad(win_bar, TRUE);
 	wrefresh(win_bar);
+#ifdef HAVE_MOUSEMASK
 	mouseinterval(0);
+#endif
 }
 
 /*
