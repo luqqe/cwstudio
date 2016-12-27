@@ -531,12 +531,12 @@ int main(int argc, char **argv)
 	/*~~~~~~~*/
 	int					ch;
 	int					i, err, m;
-	long int			ii;
 	FILE				*f;
 	size_t				size;
 
 #ifdef __DJGPP__
 	uclock_t			start;
+	long int			ii;
 #endif
 	const int			buttontable[40] =
 	{
@@ -1297,9 +1297,11 @@ int main(int argc, char **argv)
 		cwstudio_regeneratetext();
 		cwstudio_repaintwindows();
 	}
-
+#ifdef __DJGPP__
+	if(sb_base)
+#endif
 #if defined(HAVE_OSS) || defined(HAVE_PULSEAUDIO) || defined(HAVE_LIBWINMM) || defined(HAVE_COREAUDIO) || defined(__DJGPP__)
-	if(sb_base) cwstudio_stop();
+	cwstudio_stop();
 #endif
 
 	/* End curses */
