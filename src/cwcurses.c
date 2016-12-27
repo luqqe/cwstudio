@@ -1,4 +1,4 @@
-/*$T /cwcurses.c GC 1.150 2016-12-26 17:24:29 */
+/*$T /cwcurses.c GC 1.150 2016-12-27 09:59:42 */
 
 /*$I0 
 
@@ -76,6 +76,10 @@
 #elif defined HAVE_CURSES_H
 #include <curses.h>
 #endif
+#ifdef __DJGPP__
+#include <pc.h>
+#include <time.h>
+#endif
 
 /* Global variables */
 static char			*text = NULL, *morsetext = NULL;
@@ -85,8 +89,14 @@ static int			filemode = 0, mode = 0, wordset = 100, chars;
 static int			shouldgenerate = 1;
 #ifdef __DJGPP__
 static unsigned int bits = 8;
-static unsigned int samplerate = 8000;
+static unsigned int samplerate = 11025;
 static char			sbconfig[32] = "";
+static int			lpt_base = 0x378;
+static int			dos_device = 0;
+#define DOS_PCSPEAKER	0
+#define DOS_LPT1		1
+#define DOS_LPT2		2
+#define DOS_SB8			3
 #else
 static unsigned int bits = 16;
 static unsigned int samplerate = 44100;
@@ -222,7 +232,14 @@ void cwstudio_resetwindows()
 	box(win_title, 0, 0);
 	mvwprintw(win_title, 1, 1, "CWStudio %s (%ix%i)", VERSION, ncol, nrow);
 #ifdef __DJGPP__
-	mvwprintw(win_title, 2, 1, "(%s%s)", CANONICAL_HOST, sbconfig);
+	switch(dos_device)
+	{
+	case DOS_SB8:		mvwprintw(win_title, 2, 1, "(%s%s)", CANONICAL_HOST, sbconfig); break;
+	case DOS_PCSPEAKER: mvwprintw(win_title, 2, 1, "(%s/pcspeaker)", CANONICAL_HOST); break;
+	case DOS_LPT1:		mvwprintw(win_title, 2, 1, "(%s/lpt0378h)", CANONICAL_HOST); break;
+	case DOS_LPT2:		mvwprintw(win_title, 2, 1, "(%s/lpt0278h)", CANONICAL_HOST); break;
+	}
+
 #else
 	mvwprintw(win_title, 2, 1, "(%s%s%s)", CANONICAL_HOST, SOUND_INTERFACE, THREAD_INTERFACE);
 #endif
@@ -482,6 +499,30 @@ int cwstudio_regeneratetext()
 
 /*
  =======================================================================================================================
+    Regenerate sound.
+ =======================================================================================================================
+ */
+int cwstudio_regeneratesound()
+{
+	int err;
+
+	cw_freesample(&asound);
+	cw_freesample(&csound);
+	cw_initsample(&asound, NULL);
+	asound.samplerate = samplerate;
+	cw_initsample(&csound, &asound);
+	wattron(win_text, COLOR_PAIR(1));
+	wprintw(win_text, "\n\n *** Please wait *** \n");
+	wattron(win_text, COLOR_PAIR(2));
+	wrefresh(win_text);
+	if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
+	if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
+	shouldgenerate = 0;
+	return(CWOK);
+}
+
+/*
+ =======================================================================================================================
     CWStudio - Main
  =======================================================================================================================
  */
@@ -490,9 +531,13 @@ int main(int argc, char **argv)
 	/*~~~~~~~*/
 	int					ch;
 	int					i, err, m;
+	long int			ii;
 	FILE				*f;
 	size_t				size;
 
+#ifdef __DJGPP__
+	uclock_t			start;
+#endif
 	const int			buttontable[40] =
 	{
 		'5',
@@ -576,6 +621,10 @@ int main(int argc, char **argv)
 
 #ifdef __DJGPP__
 	cwstudio_sbinit(sbconfig);
+	if(sb_base)
+		dos_device = DOS_SB8;
+	else
+		dos_device = DOS_PCSPEAKER;
 #endif
 
 	/*$2- Parse command line argument (file name to read from --------------------------------------------------------*/
@@ -646,21 +695,7 @@ int main(int argc, char **argv)
 
 		case KEY_F(2):
 		case '2':
-			if(shouldgenerate) {
-				cw_freesample(&asound);
-				cw_freesample(&csound);
-				cw_initsample(&asound, NULL);
-				asound.samplerate = samplerate;
-				cw_initsample(&csound, &asound);
-				wattron(win_text, COLOR_PAIR(1));
-				wprintw(win_text, "\n\n *** Please wait *** \n");
-				wattron(win_text, COLOR_PAIR(2));
-				wrefresh(win_text);
-				if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
-				if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
-				shouldgenerate = 0;
-			}
-
+			if(shouldgenerate) cwstudio_regeneratesound();
 			i = (int) time(NULL);
 			cwstudio_input("Filename without ext :", inputbuffer, 250);
 			if(inputbuffer[0] == '\0')
@@ -699,28 +734,65 @@ int main(int argc, char **argv)
 
 		case KEY_F(5):
 		case '5':
+			if(shouldgenerate) cwstudio_regeneratesound();
+
 #ifdef __DJGPP__
-			if(sb_base)
+			if(dos_device == DOS_SB8)
 			{
 #endif
-				if(shouldgenerate) {
-					cw_freesample(&asound);
-					cw_freesample(&csound);
-					cw_initsample(&asound, NULL);
-					asound.samplerate = samplerate;
-					cw_initsample(&csound, &asound);
-					wattron(win_text, COLOR_PAIR(1));
-					wprintw(win_text, "\n\n *** Please wait *** \n");
-					wattron(win_text, COLOR_PAIR(2));
-					wrefresh(win_text);
-					if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
-					if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
-					shouldgenerate = 0;
-				}
-
 				playmode = cwstudio_play(&csound);
 				if(playmode == CWPLAYING) strcpy(statustext, "Playback started.");
 #ifdef __DJGPP__
+			}
+			else {
+				strcpy(statustext, "Playback started.");
+				cwstudio_repaintwindows();
+				if(dos_device == DOS_PCSPEAKER) {
+					outportb(0x43, 0xb6);
+					outportb(0x42, 0xff);
+					outportb(0x42, 0x00);
+					outportb(0x43, 0x90);
+					outportb(0x61, inportb(0x61) | 3);
+				}
+
+				for(ii = 0; ii < csound.length; ii++) {
+					if(dos_device == DOS_PCSPEAKER)
+						outportb(0x42, *(((unsigned char *) csound.data) + ii) >> 2);
+					else
+						outportb(lpt_base, *(((unsigned char *) csound.data) + ii));
+					if(kbhit()) {
+						switch(wgetch(win_bar))
+						{
+						case KEY_F(7):
+							strcpy(statustext, "Playback paused.");
+							cwstudio_repaintwindows();
+							while(!kbhit());
+							while(kbhit()) wgetch(win_bar);
+							strcpy(statustext, "Playback resumed.");
+							cwstudio_repaintwindows();
+							break;
+
+						case KEY_F(6):
+							ii = csound.length;
+							while(kbhit()) wgetch(win_bar);
+							strcpy(statustext, "Playback stopped.");
+							break;
+
+						case KEY_F(5):
+							ii = 0;
+							while(kbhit()) wgetch(win_bar);
+							break;
+						}
+					}
+
+					start = uclock();
+					while(uclock() < start + UCLOCKS_PER_SEC / 11025);
+				}
+
+				if(dos_device == DOS_PCSPEAKER) {
+					outportb(0x43, 0xb6);
+					outportb(0x61, inportb(0x61) & 0xfc);
+				}
 			}
 #endif
 			break;
@@ -918,6 +990,7 @@ int main(int argc, char **argv)
 			if(!filemode) shouldgenerate = 1;
 			break;
 
+#ifndef __DJGPP__
 		case '/':
 			if(samplerate == 8000)
 				samplerate = 11025;
@@ -947,6 +1020,8 @@ int main(int argc, char **argv)
 				bits = 16;
 			shouldgenerate = 1;
 			break;
+
+#endif
 
 		case 'A':
 		case 'a':
@@ -1050,6 +1125,17 @@ int main(int argc, char **argv)
 				param.hand = param.hand + 20;
 			shouldgenerate = 1;
 			break;
+#ifdef __DJGPP__
+
+		case '`':
+			dos_device++;
+			dos_device &= 3;
+			if(!sb_base & (dos_device == 3)) dos_device = 0;
+			if(dos_device == DOS_LPT1) lpt_base = 0x378;
+			if(dos_device == DOS_LPT2) lpt_base = 0x278;
+			cwstudio_resetwindows();
+			break;
+#endif
 #ifdef HAVE_WINDOWS_H
 
 		case CTL_INS:
@@ -1213,7 +1299,7 @@ int main(int argc, char **argv)
 	}
 
 #if defined(HAVE_OSS) || defined(HAVE_PULSEAUDIO) || defined(HAVE_LIBWINMM) || defined(HAVE_COREAUDIO) || defined(__DJGPP__)
-	if (sb_base) cwstudio_stop();
+	if(sb_base) cwstudio_stop();
 #endif
 
 	/* End curses */
