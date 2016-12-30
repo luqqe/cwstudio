@@ -15,6 +15,7 @@ AC_DEFINE_UNQUOTED([CANONICAL_HOST], "$host", [Canoncal host])
 # 
 AM_INIT_AUTOMAKE(no-dependencies)
 AM_CONFIG_HEADER([src/config.h])
+AM_MAINTAINER_MODE
 
 # Checks for programs.
 AC_PROG_CC
