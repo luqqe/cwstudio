@@ -6,6 +6,9 @@
 /* Canonical target */
 #undef CANONICAL_TARGET
 
+/* Define to 1 if you have BSD native sound. */
+#undef HAVE_AUDIOIO
+
 /* Define to 1 if you have the <AudioToolbox/AudioToolbox.h> header file. */
 #undef HAVE_AUDIOTOOLBOX_AUDIOTOOLBOX_H
 
@@ -134,6 +137,9 @@
 
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
+
+/* Define to 1 if you have the <sys/audioio.h> header file. */
+#undef HAVE_SYS_AUDIOIO_H
 
 /* Define to 1 if you have the <sys/ioctl.h> header file. */
 #undef HAVE_SYS_IOCTL_H
