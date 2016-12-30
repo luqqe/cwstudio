@@ -61,7 +61,7 @@ long unsigned int			length;
 #ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif
-static int					status = CWSTOPPED;
+volatile int					status = CWSTOPPED;
 long int					counter;
 char						*place;
 

@@ -1075,4 +1075,5 @@ void *Generator::Entry()
 	morsetext = cw_encode(text);
 	cw_signals(&asound, param, morsetext);
 	cw_convert(&asound, &csound, bits);
+	return(NULL);
 }
