@@ -157,7 +157,7 @@ void *cwstudio_playthread(void *arg)
 	pa_simple_free(pa);
 #elif defined HAVE_OSS
 	audio = open("/dev/dsp", O_WRONLY, 0);
-	if((sample->bits == 8))
+	if(sample->bits == 8)
 		format = AFMT_U8;
 	else
 		format = AFMT_S16_LE;
@@ -174,7 +174,7 @@ void *cwstudio_playthread(void *arg)
 		counter = counter - 2;
 	}
 
-	if(close(audio) == -1);
+	close(audio);
 #endif
 	return(NULL);
 }
