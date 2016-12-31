@@ -186,16 +186,14 @@ void *cwstudio_playthread(void *arg)
 	sio_close(h);
 #elif defined HAVE_AUDIOIO
 	AUDIO_INITINFO(&info);
-//	info.mode = AUMODE_PLAY;
-	//info.play.encoding = AUDIO_ENCODING_SLINEAR;
+	info.mode = AUMODE_PLAY;
+	info.play.encoding = AUDIO_ENCODING_SLINEAR;
 	info.play.sample_rate = sample->samplerate;
 	info.play.precision = sample->bits;
 	info.play.channels = 1;
-	//info.play.bps = sample->bits / 8;
 	audio = open("/dev/sound", O_WRONLY, 0);
 	ioctl(audio,AUDIO_SETINFO,&info);
-//	ioctl(audio,AUDIO_GETINFO,&info);
-//	printf("%i",info.play.sample_rate);
+	ioctl(audio,AUDIO_GETINFO,&info);
 	status = CWPLAYING;
 	while((counter > 0) && (status != CWSTOPPED)) {
 		while(status == CWPAUSED);
