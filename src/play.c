@@ -61,6 +61,10 @@ long unsigned int			length;
 #ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif
+#ifdef HAVE_AUDIOIO
+#include <sys/audioio.h>
+#endif
+
 volatile int					status = CWSTOPPED;
 long int					counter;
 char						*place;
@@ -79,6 +83,9 @@ HANDLE						d;
 static pa_sample_spec		pas;
 pa_simple					*pa = NULL;
 int							e;
+#elif defined HAVE_AUDIOIO
+int				audio;
+struct audio_info			info;
 #elif defined HAVE_OSS
 int							audio;
 int							format, stereo;
@@ -155,6 +162,26 @@ void *cwstudio_playthread(void *arg)
 
 	pa_simple_drain(pa, &e);
 	pa_simple_free(pa);
+#elif defined HAVE_AUDIOIO
+	AUDIO_INITINFO(&info);
+//	info.mode = AUMODE_PLAY;
+	//info.play.encoding = AUDIO_ENCODING_SLINEAR;
+	info.play.sample_rate = sample->samplerate;
+	info.play.precision = sample->bits;
+	info.play.channels = 1;
+	//info.play.bps = sample->bits / 8;
+	audio = open("/dev/sound", O_WRONLY, 0);
+	ioctl(audio,AUDIO_SETINFO,&info);
+//	ioctl(audio,AUDIO_GETINFO,&info);
+//	printf("%i",info.play.sample_rate);
+	status = CWPLAYING;
+	while((counter > 0) && (status != CWSTOPPED)) {
+		while(status == CWPAUSED);
+		write(audio, place, 2);
+		place = place + 2;
+		counter = counter - 2;
+	}
+	close(audio);
 #elif defined HAVE_OSS
 	audio = open("/dev/dsp", O_WRONLY, 0);
 	if(sample->bits == 8)
