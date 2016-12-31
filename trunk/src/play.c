@@ -64,6 +64,9 @@ long unsigned int			length;
 #ifdef HAVE_AUDIOIO
 #include <sys/audioio.h>
 #endif
+#ifdef HAVE_SNDIO
+#include <sndio.h>
+#endif
 
 volatile int					status = CWSTOPPED;
 long int					counter;
@@ -82,7 +85,10 @@ HANDLE						d;
 #elif HAVE_PULSEAUDIO
 static pa_sample_spec		pas;
 pa_simple					*pa = NULL;
-int							e;
+int						e;
+#elif defined HAVE_SNDIO
+struct sio_hdl					*h;
+struct sio_par					p;
 #elif defined HAVE_AUDIOIO
 int				audio;
 struct audio_info			info;
@@ -162,6 +168,21 @@ void *cwstudio_playthread(void *arg)
 
 	pa_simple_drain(pa, &e);
 	pa_simple_free(pa);
+#elif defined HAVE_SNDIO
+	sio_initpar(&p);
+	p.rate = sample->samplerate;
+	p.pchan = 1;
+	p.bits = sample->bits;
+	sio_setpar(h,&p);
+	sio_start(h);
+	status = CWPLAYING;
+	while((counter > 0) && (status != CWSTOPPED)) {
+		while(status == CWPAUSED);
+		sio_write(h,place,2);
+		place = place + 2;
+		counter = counter - 2;
+	}
+	sio_close(h);
 #elif defined HAVE_AUDIOIO
 	AUDIO_INITINFO(&info);
 //	info.mode = AUMODE_PLAY;
