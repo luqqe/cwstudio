@@ -38,6 +38,7 @@ AC_CHECK_LIB([ossaudio],[main])
 AC_CHECK_LIB([pulse],[main])
 AC_CHECK_LIB([pulse-simple],[main])
 AC_CHECK_LIB([pthread],[main])
+AC_CHECK_LIB([sndio],[main])
 
 # wxWidgets
 #AC_CHECK_PROG(HAVE_WXCONFIG, wx-config, "yes", "no")
