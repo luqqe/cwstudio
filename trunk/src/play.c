@@ -169,6 +169,7 @@ void *cwstudio_playthread(void *arg)
 	pa_simple_drain(pa, &e);
 	pa_simple_free(pa);
 #elif defined HAVE_SNDIO
+	h = sio_open(NULL,SIO_PLAY,0);
 	sio_initpar(&p);
 	p.rate = sample->samplerate;
 	p.pchan = 1;
@@ -176,11 +177,11 @@ void *cwstudio_playthread(void *arg)
 	sio_setpar(h,&p);
 	sio_start(h);
 	status = CWPLAYING;
-	while((counter > 0) && (status != CWSTOPPED)) {
+	while((counter > 128) && (status != CWSTOPPED)) {
 		while(status == CWPAUSED);
-		sio_write(h,place,2);
-		place = place + 2;
-		counter = counter - 2;
+		sio_write(h,place,128);
+		place = place + 128;
+		counter = counter - 128;
 	}
 	sio_close(h);
 #elif defined HAVE_AUDIOIO

@@ -38,6 +38,8 @@ extern "C"
 #define SOUND_INTERFACE "/waveout"
 #elif defined HAVE_PULSEAUDIO
 #define SOUND_INTERFACE "/pulseaudio"
+#elif defined HAVE_SNDIO
+#define SOUND_INTERFACE "/sndio"
 #elif defined HAVE_AUDIOIO
 #define SOUND_INTERFACE "/audioio"
 #elif defined HAVE_OSS
