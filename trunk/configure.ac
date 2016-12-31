@@ -85,7 +85,11 @@ AC_CHECK_HEADERS([AudioToolbox/AudioToolbox.h],
                      [])
 AC_CHECK_HEADERS([sys/audioio.h],
                      [AC_DEFINE([HAVE_AUDIOIO], 1,
-                        [Define to 1 if you have BSD native sound.])],
+                        [Define to 1 if you have AUDIOIO.])],
+                     [])
+AC_CHECK_HEADERS([sndio.h],
+                     [AC_DEFINE([HAVE_SNDIO], 1,
+                        [Define to 1 if you have SNDIO.])],
                      [])
 if test "$HAVE_COREAUDIO" == "yes"; then
                      LIBS="$LIBS -framework AudioToolbox -framework CoreFoundation"
