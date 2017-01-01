@@ -26,8 +26,8 @@ cwcli_SOURCES = cwcli.c play.c cwstudio.h
 cwcli_LDADD = libcwgen.a $(PTHREAD_LIBS) $(CURSES_LIB)
 
 
-AM_CFLAGS = -Wall -pedantic -static-libgcc
-AM_CXXFLAGS =  -static-libgcc
+#AM_CFLAGS = -static-libgcc
+#AM_CXXFLAGS =  -static-libgcc -static-libstdc++
 
 noinst_LIBRARIES        = libcwgen.a
 libcwgen_a_SOURCES        = fft.c morse.c noise.c random.c sound.c wav.c words.c calls.c init.c cwgen.h
