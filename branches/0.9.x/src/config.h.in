@@ -6,6 +6,9 @@
 /* Canonical target */
 #undef CANONICAL_TARGET
 
+/* Define to 1 if you have AUDIOIO. */
+#undef HAVE_AUDIOIO
+
 /* Define to 1 if you have the <AudioToolbox/AudioToolbox.h> header file. */
 #undef HAVE_AUDIOTOOLBOX_AUDIOTOOLBOX_H
 
@@ -53,6 +56,9 @@
 
 /* Define to 1 if you have the `pulse-simple' library (-lpulse-simple). */
 #undef HAVE_LIBPULSE_SIMPLE
+
+/* Define to 1 if you have the `sndio' library (-lsndio). */
+#undef HAVE_LIBSNDIO
 
 /* Define to 1 if you have the `winmm' library (-lwinmm). */
 #undef HAVE_LIBWINMM
@@ -117,6 +123,12 @@
 /* Define to 1 if you have the <signal.h> header file. */
 #undef HAVE_SIGNAL_H
 
+/* Define to 1 if you have SNDIO. */
+#undef HAVE_SNDIO
+
+/* Define to 1 if you have the <sndio.h> header file. */
+#undef HAVE_SNDIO_H
+
 /* Define to 1 if you have the <soundcard.h> header file. */
 #undef HAVE_SOUNDCARD_H
 
@@ -134,6 +146,9 @@
 
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
+
+/* Define to 1 if you have the <sys/audioio.h> header file. */
+#undef HAVE_SYS_AUDIOIO_H
 
 /* Define to 1 if you have the <sys/ioctl.h> header file. */
 #undef HAVE_SYS_IOCTL_H

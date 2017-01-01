@@ -1,8 +1,10 @@
+EXTRA_DIST = cwcli.svg cwcurses.svg cwwx.svg cwcli.ico cwcurses.ico cwwx.ico BladeMP3EncDLL.h getopt_long_only.c vvv.c
+
 bin_PROGRAMS = cwcli
 
 if COMPILE_CURSES
 bin_PROGRAMS += cwcurses
-cwcurses_SOURCES = cwstudio.c cwcurses.c play.c cwstudio.h
+cwcurses_SOURCES = cwcurses.c play.c cwstudio.h
 cwcurses_LDADD = libcwgen.a $(PTHREAD_LIBS) $(CURSES_LIB)
 if HAVE_WINDRES
 cwcurses_SOURCES += cwcurses-res.rc
@@ -20,12 +22,12 @@ endif
 endif
 
 
-cwcli_SOURCES = cwstudio.c cwcli.c play.c cwstudio.h
+cwcli_SOURCES = cwcli.c play.c cwstudio.h
 cwcli_LDADD = libcwgen.a $(PTHREAD_LIBS) $(CURSES_LIB)
 
 
-AM_CFLAGS = -Wall -pedantic -static-libgcc
-AM_CXXFLAGS =  -static-libgcc
+#AM_CFLAGS = -static-libgcc
+#AM_CXXFLAGS =  -static-libgcc -static-libstdc++
 
 noinst_LIBRARIES        = libcwgen.a
 libcwgen_a_SOURCES        = fft.c morse.c noise.c random.c sound.c wav.c words.c calls.c init.c cwgen.h

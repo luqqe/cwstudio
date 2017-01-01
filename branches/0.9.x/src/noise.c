@@ -1,10 +1,10 @@
-/*$T src/noise.c GC 1.140 11/05/11 20:37:46 */
+/*$T /noise.c GC 1.150 2016-12-26 17:33:58 */
 
-/*$I0
+/*$I0 
 
     This file is part of CWStudio.
 
-    Copyright 2008-2011 Lukasz Komsta, SP8QED
+    Copyright 2008-2016 Lukasz Komsta, SP8QED
 
     CWStudio is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -49,6 +49,7 @@ int cw_noisegen(cw_sample *anoise, long int duration, int low, int high)
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	floating	*tr, *ti, *fr, *fi, max, min;
 	long int	i, n2;
+
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 	/* Time domain real values are Gaussian normal random variates */

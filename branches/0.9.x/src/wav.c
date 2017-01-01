@@ -1,10 +1,10 @@
-/*$T src/wav.c GC 1.140 10/28/11 20:52:16 */
+/*$T /wav.c GC 1.150 2016-12-26 17:33:58 */
 
-/*$I0
+/*$I0 
 
     This file is part of CWStudio.
 
-    Copyright 2008-2011 Lukasz Komsta, SP8QED
+    Copyright 2008-2016 Lukasz Komsta, SP8QED
 
     CWStudio is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -31,12 +31,13 @@ int cw_wavout(const char *filename, cw_sample *sound)
 {
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	unsigned long int	l;
+
 	/* WAV header */
 	unsigned char		header[45] =
 		("\x52\x49\x46\x46\x00\x00\x00\x00\x57\x41\x56\x45\x66\x6d\x74\x20\x10\x00\x00\x00\x01\x00\x01\x00\x44\xac\x00\x00\x88\x58\x01\x00\x02\x00\x10\x00\x64\x61\x74\x61\x00\x00\x00\x00");
 	FILE				*f;
-	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
+	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	l = sound->samplerate;
 	header[24] = (unsigned char) l & 0xff;
 	header[25] = (unsigned char) (l >> 8) & 0xff;
@@ -57,6 +58,14 @@ int cw_wavout(const char *filename, cw_sample *sound)
 	header[41] = (unsigned char) (l >> 8) & 0xff;
 	header[42] = (unsigned char) (l >> 16) & 0xff;
 	header[43] = (unsigned char) (l >> 24) & 0xff;
+
+	/* Bitrate (bug fixed since 0.9.5) */
+	l = sound->samplerate * 1 * (sound->bits / 8);
+	header[28] = (unsigned char) l & 0xff;
+	header[29] = (unsigned char) (l >> 8) & 0xff;
+	header[30] = (unsigned char) (l >> 16) & 0xff;
+	header[31] = (unsigned char) (l >> 24) & 0xff;
+
 	if(filename != NULL) {
 		if((f = fopen(filename, "wb+")) == NULL) {
 			return(CWFOPEN);

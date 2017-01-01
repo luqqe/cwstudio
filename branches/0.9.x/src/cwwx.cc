@@ -4,7 +4,7 @@
 
     This file is part of CWStudio.
 
-    Copyright 2008-2015 Lukasz Komsta, SP8QED
+    Copyright 2008-2016 Lukasz Komsta, SP8QED
 
     CWStudio is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -38,6 +38,10 @@ extern "C"
 #define SOUND_INTERFACE "/waveout"
 #elif defined HAVE_PULSEAUDIO
 #define SOUND_INTERFACE "/pulseaudio"
+#elif defined HAVE_SNDIO
+#define SOUND_INTERFACE "/sndio"
+#elif defined HAVE_AUDIOIO
+#define SOUND_INTERFACE "/audioio"
 #elif defined HAVE_OSS
 #define SOUND_INTERFACE "/oss"
 #elif defined HAVE_COREAUDIO
@@ -356,6 +360,8 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 #endif
 
 	wxPanel		*panel = new wxPanel(this, wxID_ANY);
+	
+	CreateStatusBar();
 
 	/*
 	 * wxMenu *menuFile = new wxMenu;
@@ -372,8 +378,9 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 
 	for(int i = 0; i < 5; i++) spinsizers[i] = new wxBoxSizer(wxHORIZONTAL);
 	textctrl = new wxTextCtrl(panel, ID_Text, wxT("VVV ="), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
-	textctrl->SetFont(wxFont(14, wxSWISS, wxNORMAL, wxNORMAL, false, wxT("Courier New")));
-
+	//textctrl->SetFont(wxFont(14, wxSWISS, wxNORMAL, wxNORMAL, false, wxT("Courier New")));
+	wxFont* tempfont = new wxFont(14,wxMODERN,wxNORMAL,wxNORMAL);
+    	textctrl->SetFont(*tempfont);
 	mainsizer->Add(lowbuttonsizer, 0, wxEXPAND, 0);
 	for(int i = 0; i < 5; i++) mainsizer->Add(spinsizers[i], 0, 0, 0);
 	mainsizer->Add(buttonsizer, 0, wxEXPAND, 0);
@@ -463,8 +470,7 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	/*
 	 * SetMenuBar(menuBar);
 	 */
-	CreateStatusBar();
-	SetStatusText(wxT("(C) 2008-2015 Lukasz Komsta SP8QED. http://cwstudio.sf.net/"));
+	SetStatusText(wxT("(C) 2008-2016 Lukasz Komsta SP8QED. http://cwstudio.sf.net/"));
 	SetTitle(wxString(wxT("CWStudio ")) + wxString(wxT(VERSION)) + wxString(wxT(" (")) + wxString(wxT(CANONICAL_HOST)) + wxString(wxT(WXGUI)) + wxString(wxT(SOUND_INTERFACE)) + wxString(wxT(")")));
 	param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
 	spins[15]->SetValue(param.seed);
@@ -508,6 +514,7 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 		spins[24]->SetValue(param.wspaces);
 	}
 	ShouldGenerate = 1;
+	panel->Layout();
 }
 
 /*
@@ -1072,4 +1079,5 @@ void *Generator::Entry()
 	morsetext = cw_encode(text);
 	cw_signals(&asound, param, morsetext);
 	cw_convert(&asound, &csound, bits);
+	return(NULL);
 }

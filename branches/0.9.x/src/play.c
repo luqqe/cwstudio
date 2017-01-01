@@ -1,10 +1,10 @@
-/*$T play.c GC 1.150 2014-04-27 20:40:47 */
+/*$T /play.c GC 1.150 2016-12-26 17:33:58 */
 
-/*$I0
+/*$I0 
 
     This file is part of CWStudio.
 
-    Copyright 2008-2014 Lukasz Komsta, SP8QED
+    Copyright 2008-2016 Lukasz Komsta, SP8QED
 
     CWStudio is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -22,6 +22,25 @@
  */
 #include "cwstudio.h"
 
+#ifdef __DJGPP__
+#include <go32.h>
+#include <dpmi.h>
+#include <pc.h>
+#define BLOCKLEN	32768
+#define SUBBLOCKLEN 8192
+_go32_dpmi_seginfo			irq_backup, irq;
+_go32_dpmi_seginfo			dos_buffer;
+volatile int				dos_offset;
+
+unsigned int				sb_base;
+int							sb_dma;
+int							sb_irq;
+
+volatile long unsigned int	playcounter;
+volatile int				dos_counter;
+unsigned char				*buffer;
+long unsigned int			length;
+#endif
 #if HAVE_WINDOWS_H
 #include <windows.h>
 #endif
@@ -42,8 +61,15 @@
 #ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif
-volatile static int			status = CWSTOPPED;
-unsigned long int			counter;
+#ifdef HAVE_AUDIOIO
+#include <sys/audioio.h>
+#endif
+#ifdef HAVE_SNDIO
+#include <sndio.h>
+#endif
+
+volatile int					status = CWSTOPPED;
+long int					counter;
 char						*place;
 
 #ifdef HAVE_PTHREAD
@@ -59,7 +85,13 @@ HANDLE						d;
 #elif HAVE_PULSEAUDIO
 static pa_sample_spec		pas;
 pa_simple					*pa = NULL;
-int							e;
+int						e;
+#elif defined HAVE_SNDIO
+struct sio_hdl					*h;
+struct sio_par					p;
+#elif defined HAVE_AUDIOIO
+int				audio;
+struct audio_info			info;
 #elif defined HAVE_OSS
 int							audio;
 int							format, stereo;
@@ -69,9 +101,9 @@ int							speed;
 volatile static long int	offset = 0, offsetmax = 0;
 AudioQueueRef				queue;
 
-/* */
+/*$3- Callback function for coreaudio - copy another part of buffer ==================================================*/
 
-void callback(void *data, AudioQueueRef queue, AudioQueueBufferRef buf_ref)
+void cwstudio_callback(void *data, AudioQueueRef queue, AudioQueueBufferRef buf_ref)
 {
 	OSStatus			ossstatus;
 	AudioQueueBuffer	*buf = buf_ref;
@@ -120,7 +152,7 @@ void *cwstudio_playthread(void *arg)
 		pas.format = PA_SAMPLE_S16LE;
 	pas.rate = sample->samplerate;
 	pas.channels = 1;
-	if(!(pa = pa_simple_new(NULL, "qrq", PA_STREAM_PLAYBACK, NULL, "playback", &pas, NULL, NULL, &e))) {
+	if(!(pa = pa_simple_new(NULL, "cwgen", PA_STREAM_PLAYBACK, NULL, "playback", &pas, NULL, NULL, &e))) {
 		fprintf(stderr, "pa_simple_new() failed: %s\n", pa_strerror(e));
 	}
 
@@ -135,9 +167,44 @@ void *cwstudio_playthread(void *arg)
 	}
 
 	pa_simple_drain(pa, &e);
+	pa_simple_free(pa);
+#elif defined HAVE_SNDIO
+	h = sio_open(NULL,SIO_PLAY,0);
+	sio_initpar(&p);
+	p.rate = sample->samplerate;
+	p.pchan = 1;
+	p.bits = sample->bits;
+	sio_setpar(h,&p);
+	sio_start(h);
+	status = CWPLAYING;
+	while((counter > 128) && (status != CWSTOPPED)) {
+		while(status == CWPAUSED);
+		sio_write(h,place,128);
+		place = place + 128;
+		counter = counter - 128;
+	}
+	sio_close(h);
+#elif defined HAVE_AUDIOIO
+	AUDIO_INITINFO(&info);
+	info.mode = AUMODE_PLAY;
+	info.play.encoding = AUDIO_ENCODING_SLINEAR;
+	info.play.sample_rate = sample->samplerate;
+	info.play.precision = sample->bits;
+	info.play.channels = 1;
+	audio = open("/dev/sound", O_WRONLY, 0);
+	ioctl(audio,AUDIO_SETINFO,&info);
+	ioctl(audio,AUDIO_GETINFO,&info);
+	status = CWPLAYING;
+	while((counter > 0) && (status != CWSTOPPED)) {
+		while(status == CWPAUSED);
+		write(audio, place, 2);
+		place = place + 2;
+		counter = counter - 2;
+	}
+	close(audio);
 #elif defined HAVE_OSS
 	audio = open("/dev/dsp", O_WRONLY, 0);
-	if((sample->bits == 8))
+	if(sample->bits == 8)
 		format = AFMT_U8;
 	else
 		format = AFMT_S16_LE;
@@ -154,9 +221,136 @@ void *cwstudio_playthread(void *arg)
 		counter = counter - 2;
 	}
 
-	if(close(audio) == -1);
+	close(audio);
 #endif
 	return(NULL);
+}
+#endif
+#ifdef __DJGPP__
+
+/* 
+ =======================================================================================================================
+	Parse "BLASTER" environment variable and set SB address, IRQ number and DMA Channel.
+	Based on parsing function in libmikmod, by Andrew Zabolotny 
+ =======================================================================================================================
+*/
+void cwstudio_sbinit(char *sbconfig)
+{
+	char	*env;
+	env = getenv("BLASTER");
+
+	sb_base = 0;
+	sb_irq = 7;
+	sb_dma = 1;
+
+	while(env && *env) {
+		while((*env == ' ') || (*env == '\t')) env++;
+		if(!*env) break;
+		switch(*env++)
+		{
+		case 'A':
+		case 'a':
+			sb_base = strtol(env, &env, 16);
+			break;
+
+		case 'I':
+		case 'i':
+			sb_irq = strtol(env, &env, 10);
+			break;
+
+		case 'D':
+		case 'd':
+			sb_dma = strtol(env, &env, 10);
+			break;
+
+		default:
+			while(*env && (*env != ' ') && (*env != '\t')) env++;
+			break;
+		}
+	}
+
+	if(sb_base)
+		sprintf(sbconfig, "/sb%03xh-irq%i-dma%i", sb_base, sb_irq, sb_dma);
+	else
+		strcat(sbconfig, "");
+}
+
+/* 
+ =======================================================================================================================
+	Allocate DOS memory of a given size, ensuring that all allocated memory lies in the same segment.
+ =======================================================================================================================
+*/
+void cwstudio_allocate_dos(int size)
+{
+	_go32_dpmi_seginfo	tmp1, tmp2;
+	dos_offset = 65535;
+	while((dos_offset >> 16) != ((dos_offset + size - 1) >> 16)) {
+		_go32_dpmi_free_dos_memory(&tmp2);
+		tmp2 = tmp1;
+		tmp1.size = size / 16;
+		_go32_dpmi_allocate_dos_memory(&tmp1);
+		dos_offset = tmp1.rm_segment << 4;
+	}
+
+	dos_buffer = tmp1;
+	dos_offset = dos_buffer.rm_segment << 4;
+}
+
+/* 
+ =======================================================================================================================
+	Write a byte to the DSP port of Sound Blaster
+ =======================================================================================================================
+*/
+void cwstudio_dsp_write(unsigned char Value)
+{
+	while((inportb(sb_base + 0xC) & 0x80) == 0x80);
+	outportb(sb_base + 0xC, Value);
+}
+
+/* 
+ =======================================================================================================================
+	IRQ (callback) function for dos playing. Called every played SUBBLOCKLEN samples, copies another part of the
+	sound to the proper part of the DOS DMA buffer.
+ =======================================================================================================================
+*/
+void cwstudio_dosplay_irq()
+{
+	inportb(0x22E);
+	outportb(0x20, 0x20);
+	if(sb_irq == 2 || sb_irq == 10 || sb_irq == 11) outportb(0xA0, 0x20);
+	playcounter += SUBBLOCKLEN;
+	dos_counter++;
+	dos_counter &= 3;
+
+	if(playcounter <= (length - BLOCKLEN + 2 * SUBBLOCKLEN)) {
+		dosmemput(buffer + playcounter + BLOCKLEN, SUBBLOCKLEN, dos_offset + (SUBBLOCKLEN * dos_counter));
+	}
+	else {
+		cwstudio_stop();
+	}
+}
+
+/* 
+ =======================================================================================================================
+	Set given DOS IRQ to a "cwstudio_dosplay_irq" function,
+ =======================================================================================================================
+*/
+void cwstudio_irq_set(int irq_vector)
+{
+	irq.pm_offset = (int) cwstudio_dosplay_irq;
+	irq.pm_selector = _go32_my_cs();
+	_go32_dpmi_get_protected_mode_interrupt_vector(irq_vector, &irq_backup);
+	_go32_dpmi_chain_protected_mode_interrupt_vector(irq_vector, &irq);
+}
+
+/* 
+ =======================================================================================================================
+	Reset given IRQ to the original pointer.
+ =======================================================================================================================
+*/
+void cwstudio_irq_reset(int irq_vector)
+{
+	_go32_dpmi_set_protected_mode_interrupt_vector(irq_vector, &irq_backup);
 }
 #endif
 
@@ -167,8 +361,75 @@ void *cwstudio_playthread(void *arg)
  */
 int cwstudio_play(cw_sample *sample)
 {
+#ifdef __DJGPP__
+	unsigned int	temp_page, temp_offset;
+#endif
+	if(status == CWPLAYING) cwstudio_stop();
 	if(status == CWSTOPPED)
 	{
+#ifdef __DJGPP__
+		/* The DMA playing code is inspired by Steven H Don's code snippets, adapted and almost rewritten */
+		playcounter = -SUBBLOCKLEN; /* counter of played bytes */
+		dos_counter = -1;			/* counter of subsample segment in DMA buffer */
+		cwstudio_allocate_dos(BLOCKLEN);
+		buffer = sample->data;
+		length = sample->length;
+
+		/* copy initial part of the sound samples to DOS memory */
+		dosmemput(buffer, BLOCKLEN, dos_offset);
+
+		/* Set IRQ */
+		if(sb_irq == 2)
+			cwstudio_irq_set(0x71);
+		else if(sb_irq == 10)
+			cwstudio_irq_set(0x72);
+		else if(sb_irq == 11)
+			cwstudio_irq_set(0x73);
+		else
+			cwstudio_irq_set(8 + sb_irq);
+
+		if(sb_irq == 2) outportb(0xA1, inportb(0xA1) & 253);
+		if(sb_irq == 10) outportb(0xA1, inportb(0xA1) & 251);
+		if(sb_irq == 11) outportb(0xA1, inportb(0xA1) & 247);
+		if(sb_irq == 2 || sb_irq == 10 || sb_irq == 11)
+			outportb(0x21, inportb(0x21) & 251);
+		else
+			outportb(0x21, inportb(0x21) &!(1 << sb_irq));
+
+		/* Enable speaker */
+		cwstudio_dsp_write(0xD1);
+
+		/* Set samplerate */
+		cwstudio_dsp_write(0x40);
+		cwstudio_dsp_write(165);
+
+		temp_page = dos_offset >> 16;
+		temp_offset = dos_offset & 0xFFFF;
+
+		outportb(0x0A, 4 | sb_dma);
+		outportb(0x0C, 0);
+		outportb(0x0B, 0x58 | sb_dma);
+		outportb(sb_dma << 1, temp_offset & 0xFF);
+		outportb(sb_dma << 1, temp_offset >> 8);
+
+		if(sb_dma == 0) outportb(0x87, temp_page);
+		if(sb_dma == 1) outportb(0x83, temp_page);
+		if(sb_dma == 3) outportb(0x82, temp_page);
+
+		/* Set BLOCKLEN length */
+		outportb((sb_dma << 1) + 1, BLOCKLEN & 0xFF);
+		outportb((sb_dma << 1) + 1, BLOCKLEN >> 8);
+
+		outportb(0x0A, sb_dma);
+
+		/* Set SUBBLOCKLEN length */
+		cwstudio_dsp_write(0x48);
+		cwstudio_dsp_write(SUBBLOCKLEN & 0xFF);
+		cwstudio_dsp_write(SUBBLOCKLEN >> 8);
+
+		/* Start playing */
+		cwstudio_dsp_write(0x1C);
+#endif
 #ifdef HAVE_LIBWINMM
 		wf.wFormatTag = WAVE_FORMAT_PCM;
 		wf.nChannels = 1;
@@ -201,7 +462,7 @@ int cwstudio_play(cw_sample *sample)
 		ossstatus = AudioQueueNewOutput
 			(
 				&fmt,
-				callback,
+				cwstudio_callback,
 				sample->data,
 				CFRunLoopGetCurrent(),
 				kCFRunLoopCommonModes,
@@ -212,7 +473,7 @@ int cwstudio_play(cw_sample *sample)
 		buf = buf_ref;
 		buf->mAudioDataByteSize = BUFSIZE;
 		offsetmax = (sample->bits / 8) * sample->length - 2;
-		callback(sample->data, queue, buf_ref);
+		cwstudio_callback(sample->data, queue, buf_ref);
 		ossstatus = AudioQueueSetParameter(queue, kAudioQueueParam_Volume, 1.0);
 		ossstatus = AudioQueueStart(queue, NULL);
 #else
@@ -243,7 +504,9 @@ int cwstudio_pause()
 {
 	if(status == CWPLAYING)
 	{
-#ifdef HAVE_LIBWINMM
+#ifdef __DJGPP__
+		cwstudio_dsp_write(0xD0);
+#elif HAVE_LIBWINMM
 		waveOutPause(h);
 #elif HAVE_COREAUDIO
 		AudioQueuePause(queue);
@@ -252,7 +515,9 @@ int cwstudio_pause()
 	}
 	else if(status == CWPAUSED)
 	{
-#ifdef HAVE_LIBWINMM
+#ifdef __DJGPP__
+		cwstudio_dsp_write(0xD4);
+#elif HAVE_LIBWINMM
 		waveOutRestart(h);
 #elif HAVE_COREAUDIO
 		AudioQueueStart(queue, NULL);
@@ -270,6 +535,32 @@ int cwstudio_pause()
  */
 int cwstudio_stop()
 {
+#ifdef __DJGPP__
+	cwstudio_dsp_write(0xD0);
+	cwstudio_dsp_write(0xDA);
+
+	if(sb_irq == 2)
+		cwstudio_irq_reset(0x71);
+	else if(sb_irq == 10)
+		cwstudio_irq_reset(0x72);
+	else if(sb_irq == 11)
+		cwstudio_irq_reset(0x73);
+	else
+		cwstudio_irq_reset(8 + sb_irq);
+
+	if(sb_irq == 2)
+		outportb(0xA1, inportb(0xA1) | 2);
+	else if(sb_irq == 10)
+		outportb(0xA1, inportb(0xA1) | 4);
+	else if(sb_irq == 11)
+		outportb(0xA1, inportb(0xA1) | 8);
+	if(sb_irq == 2 || sb_irq == 10 || sb_irq == 11)
+		outportb(0x21, inportb(0x21) | 4);
+	else
+		outportb(0x21, inportb(0x21) | (1 << sb_irq));
+
+	_go32_dpmi_free_dos_memory(&dos_buffer);
+#endif
 #ifdef HAVE_LIBWINMM
 	waveOutReset(h);
 	if(waveOutUnprepareHeader(h, &wh, sizeof(wh)) != MMSYSERR_NOERROR);
@@ -281,6 +572,7 @@ int cwstudio_stop()
 	AudioQueueReset(queue);
 #elif defined HAVE_PULSE_AUDIO
 	pa_simple_flush(pa, &e);
+	pa_simple_free(pa);
 #elif defined HAVE_OSS
 	status = CWSTOPPED;
 
