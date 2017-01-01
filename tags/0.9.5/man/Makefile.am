@@ -1,0 +1,1 @@
+dist_man_MANS = cwstudio.1
