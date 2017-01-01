@@ -1,4 +1,4 @@
-EXTRA_DIST = cwcli.ico cwcurses.ico cwwx.ico BladeMP3EncDLL.h
+EXTRA_DIST = cwcli.svg cwcurses.svg cwwx.svg cwcli.ico cwcurses.ico cwwx.ico BladeMP3EncDLL.h getopt_long_only.c vvv.c
 
 bin_PROGRAMS = cwcli
 
