@@ -141,7 +141,7 @@ void *cwstudio_playthread(void *arg)
 	 * Variables used for loop feeding (place is pointer, counter is how many bytes
 	 * left
 	 */
-	counter = (sample->bits / 8) * sample->length - 2;
+	counter = (sample->bits / 8) * sample->length * sample->channels - 2;
 	place = (char *) sample->data;
 
 #ifdef HAVE_PULSEAUDIO
@@ -151,7 +151,7 @@ void *cwstudio_playthread(void *arg)
 	else
 		pas.format = PA_SAMPLE_S16LE;
 	pas.rate = sample->samplerate;
-	pas.channels = 1;
+	pas.channels = sample->channels;
 	if(!(pa = pa_simple_new(NULL, "cwgen", PA_STREAM_PLAYBACK, NULL, "playback", &pas, NULL, NULL, &e))) {
 		fprintf(stderr, "pa_simple_new() failed: %s\n", pa_strerror(e));
 	}
@@ -432,7 +432,7 @@ int cwstudio_play(cw_sample *sample)
 #endif
 #ifdef HAVE_LIBWINMM
 		wf.wFormatTag = WAVE_FORMAT_PCM;
-		wf.nChannels = 1;
+		wf.nChannels = sample->channels;
 		wf.wBitsPerSample = sample->bits;
 		wf.nSamplesPerSec = sample->samplerate;
 		wf.nBlockAlign = wf.nChannels * wf.wBitsPerSample / 8;

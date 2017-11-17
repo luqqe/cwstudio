@@ -71,6 +71,7 @@ typedef struct
 {
 	unsigned int	samplerate;
 	unsigned int	bits;
+	int	channels;
 	long int		length;
 	void			*data;
 } cw_sample;
@@ -83,6 +84,7 @@ typedef struct
 typedef struct
 {
 	int agc;
+	int channels;
 	int click;
 	int cspaces;
 	int dashlen;

@@ -37,10 +37,12 @@ void cw_initsample(cw_sample *sample, cw_sample *ref)
 	if(ref != NULL) {
 		sample->samplerate = ref->samplerate;
 		sample->bits = ref->bits;
+		sample->channels = ref->channels;
 	}
 	else {
 		sample->samplerate = 44100;
 		sample->bits = 16;
+		sample->channels = 2;
 	}
 
 	sample->length = 0;
@@ -78,6 +80,7 @@ void cw_setalloc(void * (*newmalloc) (size_t), void (*newfree) (void *))
 void cw_initparam(cw_param *param)
 {
 	param->seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
+	param->channels = 2;
 	param->window = 100;
 	param->sweep = 0;
 	param->sweepness = 0;

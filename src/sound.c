@@ -31,15 +31,18 @@ int cw_tone(cw_sample *atone, cw_param param, long int duration, int freq)
 {
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	long int	i, length;
-	int			j, humlength;
-	floating	swp, cl, p, q, x, ev, od, sum;
+	int			ch, j, humlength;
+	floating	swp, cl, p, q, x, y, ev, od, sum;
 	floating	humtable[882];
 	floating	*data;
 
+	ch = param.channels;
+
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-	if((atone->data = cw_malloc(duration * sizeof(floating))) == NULL) return(CWALLOC);
+	if((atone->data = cw_malloc(ch * duration * sizeof(floating))) == NULL) return(CWALLOC);
 	atone->length = duration;
 	atone->bits = 0;
+	atone->channels = param.channels;
 	data = (floating *) atone->data;
 
 	/* If frequency is not given explicitly, take from structure */
@@ -51,8 +54,8 @@ int cw_tone(cw_sample *atone, cw_param param, long int duration, int freq)
 	 * along time
 	 */
 	if(param.sweepness == 0) {
-		for(i = 0; i < length; i++) data[i] = cw_sin(6.283185 * i / length);
-		for(i = length; i < duration; i++) data[i] = data[i % length];
+		for(i = 0; i < length; i++) for (j = 0; j < ch; j++) data[i * ch + j] = cw_sin(6.283185 * i / length);
+		for(i = length; i < duration; i++) for (j = 0; j < ch; j++) data[i * ch + j] = data[(i * ch + j) % (length * ch)];
 	}
 
 	/* otherwise generate full tone with sweeping */
@@ -62,7 +65,8 @@ int cw_tone(cw_sample *atone, cw_param param, long int duration, int freq)
 		q = (p - 1) / swp;
 		for(i = 0; i < duration; i++) {
 			x = (6.283185 * (floating) i / (floating) length);
-			data[i] = cw_sin(x - q * exp(-swp * x));
+			y = cw_sin(x - q * exp(-swp * x));
+			for(j = 0; j < ch; j++) data[i * ch + j] = y;
 		}
 	}
 
@@ -74,7 +78,7 @@ int cw_tone(cw_sample *atone, cw_param param, long int duration, int freq)
 		ev = (floating) param.even * 0.01;
 		od = (floating) param.odd * 0.01;
 		sum = od * 71.0 / 105.0 + ev * 11.0 / 12.0 + 1;
-		for(i = 0; i < atone->length; i++) {
+		for(i = 0; i < atone->length * ch; i++) {
 			p = data[i];
 			q = 1.0;
 			x = p / sum;
@@ -108,18 +112,19 @@ int cw_tone(cw_sample *atone, cw_param param, long int duration, int freq)
 				0.5;
 		}
 
-		for(i = 0; i < atone->length; i++) data[i] *= humtable[i % humlength];
+		for(i = 0; i < atone->length; i++) for(j = 0; j < ch; j++) data[i * ch + j] *= humtable[i % humlength];
 	}
 
 	/* Apply raising sine attack profile */
-	for(i = 0; i <= param.window; i++) data[i] *= cw_sin((floating) i / (floating) param.window * 1.570796);
+	for(i = 0; i <= param.window; i++) for(j = 0; j < ch; j++) data[i * ch + j] *= cw_sin((floating) i / (floating) param.window * 1.570796);
 
 	/* If click, apply decay profile and attenuate sustain part of signal */
 	if(param.click) {
 		cl = 1 / cw_pow(10, (floating) param.click / 10.0);
 		for(i = param.window; i < (3 * param.window); i++) {
 			x = cw_cos((floating) (i - param.window) / (floating) param.window * 1.570796);
-			data[i] *= 0.5 * (x + 1) * (1 - cl) + cl;
+			y = 0.5 * (x + 1) * (1 - cl) + cl;
+			for(j = 0; j < ch; j++) data[i * ch + j] *= y;
 		}
 
 		for(i = 3 * param.window; i < duration; i++) data[i] *= cl;
@@ -140,11 +145,12 @@ int cw_silence(cw_sample *asilence, long int duration)
 	floating	*data;
 
 	/*~~~~~~~~~~~~~~*/
-	if((asilence->data = cw_malloc(duration * sizeof(floating))) == NULL) return(CWALLOC);
+	if((asilence->data = cw_malloc(2 * duration * sizeof(floating))) == NULL) return(CWALLOC); /* !!!!!!!!!!!!!!!!! */
 	asilence->length = duration;
 	asilence->bits = 0;
+	asilence->channels = 2; /* !!!!!!!!!!!!!!!!!!!!!!! */
 	data = (floating *) asilence->data;
-	for(i = 0; i < duration; i++) data[i] = 0;
+	for(i = 0; i < 2 * duration; i++) data[i] = 0;
 	return(CWOK);
 }
 
@@ -157,7 +163,7 @@ int cw_silence(cw_sample *asilence, long int duration)
 void cw_append(cw_sample *sample1, cw_sample *sample2, long int length, int window, floating amplitude)
 {
 	/*~~~~~~~~~~~~~~~~~*/
-	long int	i;
+	long int	i, j;
 	floating	*s1, *s2;
 
 	/*~~~~~~~~~~~~~~~~~*/
@@ -165,14 +171,14 @@ void cw_append(cw_sample *sample1, cw_sample *sample2, long int length, int wind
 	s2 = (floating *) sample2->data;
 	if((length == 0) || (length > sample2->length)) length = sample2->length;
 	if((1 - amplitude) > 0.001)
-		for(i = 0; i < length; i++)
-			s1[sample1->length + i] = s2[i] * amplitude;
+		for(i = 0; i < length * sample1->channels; i++)
+			s1[sample1->length * sample1->channels + i] = s2[i] * amplitude;
 	else
-		for(i = 0; i < length; i++) s1[sample1->length + i] = s2[i];
+		for(i = 0; i < length * sample1->channels; i++) s1[sample1->length * sample1->channels + i] = s2[i];
 	sample1->length += length;
 	if(window)
-		for(i = 0; i < window; i++)
-			s1[sample1->length - i - 1] *= cw_sin((floating) i / (floating) window * 1.570796);
+		for(i = 0; i < window; i++) for(j = 0; j < sample1->channels; j++)
+			s1[sample1->length * sample1->channels - i - j - 1] *= cw_sin((floating) i / (floating) window * 1.570796);
 }
 
 /*
@@ -191,8 +197,8 @@ void cw_mix(cw_sample *sample1, cw_sample *sample2, floating amplitude)
 	s1 = (floating *) sample1->data;
 	s2 = (floating *) sample2->data;
 	c = 1.0 + amplitude;
-	l1 = sample1->length;
-	l2 = sample2->length;
+	l1 = sample1->length * sample1->channels;
+	l2 = sample2->length * sample2->channels;
 	for(i = 0; i < l1; i++) {
 		a = s1[i];
 		b = amplitude * s2[i % l2];
@@ -208,26 +214,27 @@ void cw_mix(cw_sample *sample1, cw_sample *sample2, floating amplitude)
 int cw_add_noise(cw_sample *sample, cw_param param)
 {
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-	long int	i;
+	long int	i,l;
 	floating	a, b, c, amplitude, agc, *rmstable = NULL;
 	floating	*s, *n;
 	cw_sample	pinknoise;
 
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+	l = sample->length * sample->channels;
 	amplitude = ((floating) param.noise) / 100.0;
 	agc = ((floating) param.agc) / 100.0;
 	c = 1.0 + amplitude;
 	cw_initsample(&pinknoise, sample);
-	if((i = cw_noisegen(&pinknoise, NOISELEN, param.lowcut, param.highcut)) != CWOK) return(i);
+	if((i = cw_noisegen(&pinknoise, NOISELEN, param.lowcut / sample->channels, param.highcut / sample->channels)) != CWOK) return(i);
 	s = (floating *) sample->data;
 	n = (floating *) pinknoise.data;
 
 	/* AGC requested - perform compression */
 	if(param.agc) {
-		if((rmstable = cw_rms(sample, 8000 * ((floating) sample->samplerate / 44100.0))) == NULL) return(CWALLOC);
-		for(i = 0; i < sample->length; i++) {
+		if((rmstable = cw_rms(sample, 8000 * sample->channels * ((floating) sample->samplerate / 44100.0))) == NULL) return(CWALLOC);
+		for(i = 0; i < l; i++) {
 			a = s[i];
-			b = amplitude * (1 -*(rmstable + i) * agc) * n[i % NOISELEN];
+			b = amplitude * (1 -*(rmstable + i) * agc) * n[((i % 2) * NOISELEN) + (-(i % 2)*2+1) * (i % NOISELEN)];
 			s[i] = (a + b) / (2.0 -*(rmstable + i) * (floating) agc);
 		}
 
@@ -237,7 +244,7 @@ int cw_add_noise(cw_sample *sample, cw_param param)
 	/* otherwise without compression */
 	else {
 		{
-			for(i = 0; i < sample->length; i++) {
+			for(i = 0; i < l; i++) {
 				a = s[i];
 				b = amplitude * n[i % NOISELEN];
 				s[i] = (a + b) / c;
@@ -263,7 +270,7 @@ floating *cw_rms(cw_sample *sample, int window)
 
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	s = (floating *) sample->data;
-	if((result = cw_malloc(sample->length * sizeof(floating))) == NULL) return(NULL);
+	if((result = cw_malloc(sample->channels * sample->length * sizeof(floating))) == NULL) return(NULL);
 	rms = 0;
 	max = 0;
 	min = 10;
@@ -274,15 +281,15 @@ floating *cw_rms(cw_sample *sample, int window)
 		if(*(result + i) < min) min = *(result + i);
 	}
 
-	for(i = window; i < sample->length; i++) {
+	for(i = window; i < sample->length * sample->channels; i++) {
 		rms += (s[i] * s[i]) / window;
-		rms -= (s[i - window] * s[i - window]) / window;
+		rms -= (s[i - sample->channels * window] * s[i - sample->channels * window]) / window;
 		*(result + i) = rms > 0 ? cw_sqrt(rms) : 0;
 		if(*(result + i) > max) max = *(result + i);
 		if(*(result + i) < min) min = *(result + i);
 	}
 
-	for(i = 0; i < sample->length; i++) {
+	for(i = 0; i < sample->length * sample->channels; i++) {
 		*(result + i) -= min;
 		*(result + i) /= max - min;
 	}
@@ -309,12 +316,13 @@ int cw_convert(cw_sample *input, cw_sample *output, unsigned int bits)
 	output->bits = bits;
 	if((output->data = cw_malloc(input->length * (output->bits / 8))) == NULL) return(CWALLOC);
 	output->length = input->length;
+	output->channels = input->channels;
 	out = (char *) output->data;
 	in = (floating *) input->data;
 
 	/* Conversion loop */
 	if(output->bits == 16) {
-		for(i = 0; i < input->length; i++) {
+		for(i = 0; i < input->length * input->channels; i++) {
 			c = (int) (32767 * (in[i]));
 			l = 2 * i;
 			out[l] = (unsigned char) c & 0xff;
@@ -322,7 +330,7 @@ int cw_convert(cw_sample *input, cw_sample *output, unsigned int bits)
 		}
 	}
 	else {
-		for(i = 0; i < input->length; i++) {
+		for(i = 0; i < input->length * input->channels; i++) {
 			c = (int) (127 * (in[i]) + 127);
 			out[i] = (unsigned char) c;
 		}
@@ -399,7 +407,7 @@ int cw_signal(cw_sample *sound, cw_param param, const char *text)
 	}
 
 	samples += 2 * (2 + param.cspaces) * dotlen;
-	if((sound->data = cw_malloc(samples * sizeof(floating))) == NULL) return(CWALLOC);
+	if((sound->data = cw_malloc(param.channels * samples * sizeof(floating))) == NULL) return(CWALLOC);
 
 	/* Main loop */
 	for(i = 0; i < length; i++) {
