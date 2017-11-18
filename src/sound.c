@@ -145,12 +145,12 @@ int cw_silence(cw_sample *asilence, long int duration)
 	floating	*data;
 
 	/*~~~~~~~~~~~~~~*/
-	if((asilence->data = cw_malloc(2 * duration * sizeof(floating))) == NULL) return(CWALLOC); /* !!!!!!!!!!!!!!!!! */
+	if((asilence->data = cw_malloc(duration * sizeof(floating))) == NULL) return(CWALLOC); /* !!!!!!!!!!!!!!!!! */
 	asilence->length = duration;
 	asilence->bits = 0;
-	asilence->channels = 2; /* !!!!!!!!!!!!!!!!!!!!!!! */
+	asilence->channels = 1; /* !!!!!!!!!!!!!!!!!!!!!!! */
 	data = (floating *) asilence->data;
-	for(i = 0; i < 2 * duration; i++) data[i] = 0;
+	for(i = 0; i < duration; i++) data[i] = 0;
 	return(CWOK);
 }
 
@@ -167,7 +167,8 @@ void cw_append(cw_sample *sample1, cw_sample *sample2, long int length, int wind
 	floating	*s1, *s2;
 
 	/*~~~~~~~~~~~~~~~~~*/
-	s1 = (floating *) sample1->data;
+
+	s1 = (floating *) sample1->data; //printf("%i %i \n",sample1->channels,sample2->channels);
 	s2 = (floating *) sample2->data;
 	if((length == 0) || (length > sample2->length)) length = sample2->length;
 	if((1 - amplitude) > 0.001)
@@ -177,8 +178,8 @@ void cw_append(cw_sample *sample1, cw_sample *sample2, long int length, int wind
 		for(i = 0; i < length * sample1->channels; i++) s1[sample1->length * sample1->channels + i] = s2[i];
 	sample1->length += length;
 	if(window)
-		for(i = 0; i < window; i++) for(j = 0; j < sample1->channels; j++)
-			s1[sample1->length * sample1->channels - i - j - 1] *= cw_sin((floating) i / (floating) window * 1.570796);
+		for(i = 0; i < window && i < length ; i++) for(j = 0; j < sample1->channels; j++)
+			s1[(sample1->length - i - 1) * sample1->channels - j] *= cw_sin((floating) i / (floating) window * 1.570796); 
 }
 
 /*
@@ -225,6 +226,7 @@ int cw_add_noise(cw_sample *sample, cw_param param)
 	agc = ((floating) param.agc) / 100.0;
 	c = 1.0 + amplitude;
 	cw_initsample(&pinknoise, sample);
+	pinknoise.channels = param.channels;
 	if((i = cw_noisegen(&pinknoise, NOISELEN, param.lowcut / sample->channels, param.highcut / sample->channels)) != CWOK) return(i);
 	s = (floating *) sample->data;
 	n = (floating *) pinknoise.data;
@@ -359,6 +361,8 @@ int cw_signal(cw_sample *sound, cw_param param, const char *text)
 	hands = NULL;
 	cw_initsample(&atone, sound);
 	cw_initsample(&asilence, sound);
+	atone.channels = param.channels;
+	asilence.channels = param.channels;
 
 	/* Length of the dot in samples, 12 wpm PARIS should be 100 ms */
 	dotlen = 6 * sound->samplerate / param.tempo;
@@ -378,7 +382,7 @@ int cw_signal(cw_sample *sound, cw_param param, const char *text)
 		for(i = 0; i < length; i++) {
 			hands[i] -= 0.5;
 			hands[i] *= ((floating) param.hand) / 100;
-			hands[i] += 1;
+			hands[i] += 1; 
 		}
 	}
 
@@ -406,7 +410,7 @@ int cw_signal(cw_sample *sound, cw_param param, const char *text)
 			samples += (2 + param.wspaces) * (2 + param.cspaces) * ahand * dotlen;
 	}
 
-	samples += 2 * (2 + param.cspaces) * dotlen;
+	samples += 2 * (2 + param.cspaces) * dotlen; 
 	if((sound->data = cw_malloc(param.channels * samples * sizeof(floating))) == NULL) return(CWALLOC);
 
 	/* Main loop */
@@ -480,6 +484,7 @@ int cw_signals(cw_sample *signals, cw_param param, const char *text)
 
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	cw_initsample(&anothersound, signals);
+	anothersound.channels = param.channels;
 	if((e = cw_signal(signals, param, text)) != CWOK) return(e);
 	if(param.signals > 1) {
 		for(i = 1; i < param.signals; i++) {
