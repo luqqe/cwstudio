@@ -274,14 +274,14 @@ floating *cw_rms(cw_sample *sample, int window)
 	rms = 0;
 	max = 0;
 	min = 10;
-	for(i = 0; i < window; i++) {
+	for(i = 0; i < sample->channels * window; i++) {
 		rms += (s[i] * s[i]) / window;
 		*(result + i) = rms > 0 ? cw_sqrt(rms) : 0;
 		if(*(result + i) > max) max = *(result + i);
 		if(*(result + i) < min) min = *(result + i);
 	}
 
-	for(i = window; i < sample->length * sample->channels; i++) {
+	for(i = sample->channels * window; i < sample->length * sample->channels; i++) {
 		rms += (s[i] * s[i]) / window;
 		rms -= (s[i - sample->channels * window] * s[i - sample->channels * window]) / window;
 		*(result + i) = rms > 0 ? cw_sqrt(rms) : 0;
@@ -314,7 +314,7 @@ int cw_convert(cw_sample *input, cw_sample *output, unsigned int bits)
 
 	/* Allocate buffer for converted sound */
 	output->bits = bits;
-	if((output->data = cw_malloc(input->length * (output->bits / 8))) == NULL) return(CWALLOC);
+	if((output->data = cw_malloc(input->length * input->channels * (output->bits / 8))) == NULL) return(CWALLOC);
 	output->length = input->length;
 	output->channels = input->channels;
 	out = (char *) output->data;
@@ -322,7 +322,7 @@ int cw_convert(cw_sample *input, cw_sample *output, unsigned int bits)
 
 	/* Conversion loop */
 	if(output->bits == 16) {
-		for(i = 0; i < input->length * input->channels; i++) {
+		for(i = 0; i < input->length * input->channels - input->channels; i++) {
 			c = (int) (32767 * (in[i]));
 			l = 2 * i;
 			out[l] = (unsigned char) c & 0xff;
@@ -458,6 +458,9 @@ int cw_signal(cw_sample *sound, cw_param param, const char *text)
 	if(param.detune) cw_free(detunes);
 	if(param.hand) cw_free(hands);
 	if(param.qsb) cw_free(qsbs);
+
+	cw_freesample(&asilence);
+
 	return(CWOK);
 }
 
