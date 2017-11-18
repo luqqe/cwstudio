@@ -190,7 +190,7 @@ void *cwstudio_playthread(void *arg)
 	info.play.encoding = AUDIO_ENCODING_SLINEAR;
 	info.play.sample_rate = sample->samplerate;
 	info.play.precision = sample->bits;
-	info.play.channels = 1;
+	info.play.channels = sample->channels;
 	audio = open("/dev/sound", O_WRONLY, 0);
 	ioctl(audio,AUDIO_SETINFO,&info);
 	ioctl(audio,AUDIO_GETINFO,&info);
@@ -456,7 +456,7 @@ int cwstudio_play(cw_sample *sample)
 		fmt.mFormatID = kAudioFormatLinearPCM;
 		fmt.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
 		fmt.mFramesPerPacket = 1;
-		fmt.mChannelsPerFrame = 1;
+		fmt.mChannelsPerFrame = sample->channels;
 		fmt.mBytesPerPacket = fmt.mBytesPerFrame = 2;
 		fmt.mBitsPerChannel = sample->bits;
 		ossstatus = AudioQueueNewOutput
