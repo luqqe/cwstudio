@@ -90,7 +90,7 @@ int cw_wavout(const char *filename, cw_sample *sound)
 	}
 
 	if(fwrite(header, 1, 44, f) < 44) return(CWFWRITE);
-	if(fwrite(sound->data, (sound->bits / 8), sound->length * sound->channels, f) < sound->length * sound->channels) return(CWFWRITE);
+	if(fwrite(sound->data, (sound->channels * sound->bits / 8), sound->length,  f) < sound->length) return(CWFWRITE);
 	if(filename != NULL) {
 		if(fclose(f)) return(CWFCLOSE);
 	}
