@@ -116,18 +116,18 @@ int cw_tone(cw_sample *atone, cw_param param, long int duration, int freq)
 	}
 
 	/* Apply raising sine attack profile */
-	for(i = 0; i <= param.window; i++) for(j = 0; j < ch; j++) data[i * ch + j] *= cw_sin((floating) i / (floating) param.window * 1.570796);
+	for(i = 0; i < param.window && i < duration; i++) for(j = 0; j < ch; j++) data[i * ch + j] *= cw_sin((floating) i / (floating) param.window * 1.570796);
 
 	/* If click, apply decay profile and attenuate sustain part of signal */
 	if(param.click) {
 		cl = 1 / cw_pow(10, (floating) param.click / 10.0);
-		for(i = param.window; i < (3 * param.window); i++) {
+		for(i = param.window; i < (3 * param.window) && i < duration; i++) {
 			x = cw_cos((floating) (i - param.window) / (floating) param.window * 1.570796);
 			y = 0.5 * (x + 1) * (1 - cl) + cl;
 			for(j = 0; j < ch; j++) data[i * ch + j] *= y;
 		}
 
-		for(i = 3 * param.window; i < duration; i++) data[i] *= cl;
+		if (3 * param.window < duration) for(i = 3 * param.window; i < duration; i++) for(j = 0; j < ch; j++) data[i * ch + j] *= cl;
 	}
 
 	return(CWOK);
