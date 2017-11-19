@@ -156,23 +156,37 @@ int cw_silence(cw_sample *asilence, long int duration)
     the given window. Appended sample is multiplied by given amplitude.
  =======================================================================================================================
  */
-void cw_append(cw_sample *sample1, cw_sample *sample2, long int length, int window, floating amplitude)
+void cw_append(cw_sample *sample1, cw_sample *sample2, long int length, int window, floating amplitude, int pan)
 {
 	/*~~~~~~~~~~~~~~~~~*/
 	long int	i, j;
 	floating	*s1, *s2;
+	int		ch1,ch2;
+	floating	pans[2] = {1,1};
+	
 
 	/*~~~~~~~~~~~~~~~~~*/
 
-	s1 = (floating *) sample1->data; //printf("%i %i \n",sample1->channels,sample2->channels);
+	s1 = (floating *) sample1->data; 
 	s2 = (floating *) sample2->data;
+	ch1 = sample1->channels;
+	ch2 = sample2->channels;
+
 	if((length == 0) || (length > sample2->length)) length = sample2->length;
-	if((1 - amplitude) > 0.001)
-		for(i = 0; i < length * sample1->channels; i++)
-			s1[sample1->length * sample1->channels + i] = s2[i] * amplitude;
+
+	if(ch1 == 2) {
+		pans[0] = cw_cos((pan + 45) * 0.0174532925199433);
+		pans[1] = cw_sin((pan + 45) * 0.0174532925199433);
+	}		
+
+	if((ch1 == 1) && (ch2 == 1))
+		for(i = 0; i < length; i++) s1[sample1->length + i] = s2[i] * amplitude;
 	else
-		for(i = 0; i < length * sample1->channels; i++) s1[sample1->length * sample1->channels + i] = s2[i];
+	if((ch1 == 2) && (ch2 == 1))
+		for(i = 0; i < length; i++) for(j = 0; j < 2; j++) s1[(sample1->length + i) * 2 + j] = pans[j] * s2[i] * amplitude;
+
 	sample1->length += length;
+
 	if(window)
 		for(i = 0; i < window && i < length ; i++) for(j = 0; j < sample1->channels; j++)
 			s1[(sample1->length - i - 1) * sample1->channels - j] *= cw_sin((floating) i / (floating) window * 1.570796); 
@@ -244,7 +258,7 @@ int cw_add_noise(cw_sample *sample, cw_param param)
 		{
 			for(i = 0; i < l; i++) {
 				a = s[i];
-				b = amplitude * n[i % NOISELEN];
+				b = amplitude * n[((i % 2) * NOISELEN) + (-(i % 2)*2+1) * (i % NOISELEN)];
 				s[i] = (a + b) / c;
 			}
 		}
@@ -408,6 +422,7 @@ int cw_signal(cw_sample *sound, cw_param param, const char *text)
 
 	samples += 2 * (2 + param.cspaces) * dotlen; 
 	if((sound->data = cw_malloc(param.channels * samples * sizeof(floating))) == NULL) return(CWALLOC);
+	sound->channels = param.channels;
 
 	/* Main loop */
 	for(i = 0; i < length; i++) {
@@ -429,27 +444,27 @@ int cw_signal(cw_sample *sound, cw_param param, const char *text)
 			amplitude = 1;
 		if(*(text + i) == '-') {
 			if(param.detune) cw_tone(&atone, param, 2 * ldash * dotlen, freq);
-			cw_append(sound, &atone, ldash * ahand * dotlen, param.window, amplitude);
-			cw_append(sound, &asilence, lspace * dotlen, 0, 1);
+			cw_append(sound, &atone, ldash * ahand * dotlen, param.window, amplitude, param.pan);
+			cw_append(sound, &asilence, lspace * dotlen, 0, 1, 0);
 			if(param.detune) cw_freesample(&atone);
 		}
 		else if(*(text + i) == '.') {
 			if(param.detune) cw_tone(&atone, param, 2 * ldash * dotlen, freq);
-			cw_append(sound, &atone, ahand * dotlen, param.window, amplitude);
-			cw_append(sound, &asilence, lspace * dotlen, 0, 1);
+			cw_append(sound, &atone, ahand * dotlen, param.window, amplitude, param.pan);
+			cw_append(sound, &asilence, lspace * dotlen, 0, 1, 0);
 			if(param.detune) cw_freesample(&atone);
 		}
 		else if((*(text + i) == ' ') || (*(text + i) == '\n')) {
-			for(j = 0; j < (2 + param.cspaces); j++) cw_append(sound, &asilence, dotlen * ahand - 1, 0, 1);
+			for(j = 0; j < (2 + param.cspaces); j++) cw_append(sound, &asilence, dotlen * ahand - 1, 0, 1, 0);
 		}
 		else if(*(text + i) == '|') {
 			for(j = 0; j < (2 + param.wspaces) * (2 + param.cspaces); j++)
-				cw_append(sound, &asilence, dotlen * ahand - 1, 0, 1);
+				cw_append(sound, &asilence, dotlen * ahand - 1, 0, 1, 0);
 		}
 	}
 
 	/* Silence at the end */
-	for(j = 0; j < 2 * (2 + param.cspaces); j++) cw_append(sound, &asilence, dotlen, 0, 1);
+	for(j = 0; j < 2 * (2 + param.cspaces); j++) cw_append(sound, &asilence, dotlen, 0, 1, 0);
 
 	/* If only one tone used, release its memory */
 	if(!param.detune) cw_freesample(&atone);
@@ -475,12 +490,14 @@ int cw_signals(cw_sample *signals, cw_param param, const char *text)
 	const floating	fmult[5] = { 1, 0.333, 1.666, 0.5, 1.5 };	/* frequency multipliers */
 	const floating	tmult[5] = { 1, 1.333, 0.666, 1.25, 0.8 };	/* tempo multipliers */
 	const floating	amult[5] = { 1, 0.2, 0.2, 0.5, 0.5 };		/* amplitude multipliers */
+	const int pans[5] = { 0, -80, 80, -45, 45 };
 	int				i, e;
 	cw_sample		anothersound;
 
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	cw_initsample(&anothersound, signals);
 	anothersound.channels = param.channels;
+	param.pan = pans[0];
 	if((e = cw_signal(signals, param, text)) != CWOK) return(e);
 	if(param.signals > 1) {
 		for(i = 1; i < param.signals; i++) {
@@ -488,6 +505,8 @@ int cw_signals(cw_sample *signals, cw_param param, const char *text)
 			param.tempo *= tmult[i];
 			param.freq /= fmult[i - 1];
 			param.freq *= fmult[i];
+			param.pan -= pans[i - 1];
+			param.pan += pans[i];
 			anothersound.length = 0;
 			if((e = cw_signal(&anothersound, param, text)) != CWOK) return(e);
 			cw_mix(signals, &anothersound, amult[i]);

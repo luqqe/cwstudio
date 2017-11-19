@@ -98,6 +98,7 @@ typedef struct
 	int noise;
 	int number;
 	int odd;
+	int pan;
 	int qsb;
 	int seed;
 	int shape;
@@ -143,7 +144,8 @@ extern void				cw_append
 							cw_sample	*sample2,
 							long int	length,
 							int			window,
-							floating	amplitude
+							floating	amplitude,
+							int 		pan
 						);
 extern void				cw_mix(cw_sample *sample1, cw_sample *sample2, floating amplitude);
 extern int				cw_add_noise(cw_sample *sample, cw_param param);

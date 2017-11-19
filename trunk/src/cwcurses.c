@@ -622,7 +622,6 @@ int main(int argc, char **argv)
 
 	/* Initialize parameters */
 	cw_initparam(&param);
-
 	cwstudio_readconfig();
 
 #ifdef __DJGPP__
