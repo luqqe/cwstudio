@@ -42,7 +42,7 @@ void cw_initsample(cw_sample *sample, cw_sample *ref)
 	else {
 		sample->samplerate = 44100;
 		sample->bits = 16;
-		sample->channels = 1;
+		sample->channels = 2;
 	}
 
 	sample->length = 0;
