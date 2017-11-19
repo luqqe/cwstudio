@@ -31,18 +31,16 @@ int cw_tone(cw_sample *atone, cw_param param, long int duration, int freq)
 {
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	long int	i, length;
-	int			ch, j, humlength;
-	floating	swp, cl, p, q, x, y, ev, od, sum;
+	int			j, humlength;
+	floating	swp, cl, p, q, x, ev, od, sum;
 	floating	humtable[882];
 	floating	*data;
 
-	ch = param.channels;
-
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-	if((atone->data = cw_malloc(ch * duration * sizeof(floating))) == NULL) return(CWALLOC);
+	if((atone->data = cw_malloc(duration * sizeof(floating))) == NULL) return(CWALLOC);
 	atone->length = duration;
 	atone->bits = 0;
-	atone->channels = param.channels;
+	atone->channels = 1;
 	data = (floating *) atone->data;
 
 	/* If frequency is not given explicitly, take from structure */
@@ -54,8 +52,8 @@ int cw_tone(cw_sample *atone, cw_param param, long int duration, int freq)
 	 * along time
 	 */
 	if(param.sweepness == 0) {
-		for(i = 0; i < length; i++) for (j = 0; j < ch; j++) data[i * ch + j] = cw_sin(6.283185 * i / length);
-		for(i = length; i < duration; i++) for (j = 0; j < ch; j++) data[i * ch + j] = data[(i * ch + j) % (length * ch)];
+		for(i = 0; i < length; i++) data[i] = cw_sin(6.283185 * i / length);
+		for(i = length; i < duration; i++) data[i] = data[i % length];
 	}
 
 	/* otherwise generate full tone with sweeping */
@@ -65,8 +63,7 @@ int cw_tone(cw_sample *atone, cw_param param, long int duration, int freq)
 		q = (p - 1) / swp;
 		for(i = 0; i < duration; i++) {
 			x = (6.283185 * (floating) i / (floating) length);
-			y = cw_sin(x - q * exp(-swp * x));
-			for(j = 0; j < ch; j++) data[i * ch + j] = y;
+			data[i] = cw_sin(x - q * exp(-swp * x));
 		}
 	}
 
@@ -78,7 +75,7 @@ int cw_tone(cw_sample *atone, cw_param param, long int duration, int freq)
 		ev = (floating) param.even * 0.01;
 		od = (floating) param.odd * 0.01;
 		sum = od * 71.0 / 105.0 + ev * 11.0 / 12.0 + 1;
-		for(i = 0; i < atone->length * ch; i++) {
+		for(i = 0; i < atone->length; i++) {
 			p = data[i];
 			q = 1.0;
 			x = p / sum;
@@ -112,22 +109,21 @@ int cw_tone(cw_sample *atone, cw_param param, long int duration, int freq)
 				0.5;
 		}
 
-		for(i = 0; i < atone->length; i++) for(j = 0; j < ch; j++) data[i * ch + j] *= humtable[i % humlength];
+		for(i = 0; i < atone->length; i++) data[i] *= humtable[i % humlength];
 	}
 
 	/* Apply raising sine attack profile */
-	for(i = 0; i < param.window && i < duration; i++) for(j = 0; j < ch; j++) data[i * ch + j] *= cw_sin((floating) i / (floating) param.window * 1.570796);
+	for(i = 0; i <= param.window; i++) data[i] *= cw_sin((floating) i / (floating) param.window * 1.570796);
 
 	/* If click, apply decay profile and attenuate sustain part of signal */
 	if(param.click) {
 		cl = 1 / cw_pow(10, (floating) param.click / 10.0);
-		for(i = param.window; i < (3 * param.window) && i < duration; i++) {
+		for(i = param.window; i < (3 * param.window); i++) {
 			x = cw_cos((floating) (i - param.window) / (floating) param.window * 1.570796);
-			y = 0.5 * (x + 1) * (1 - cl) + cl;
-			for(j = 0; j < ch; j++) data[i * ch + j] *= y;
+			data[i] *= 0.5 * (x + 1) * (1 - cl) + cl;
 		}
 
-		if (3 * param.window < duration) for(i = 3 * param.window; i < duration; i++) for(j = 0; j < ch; j++) data[i * ch + j] *= cl;
+		for(i = 3 * param.window; i < duration; i++) data[i] *= cl;
 	}
 
 	return(CWOK);
@@ -145,10 +141,10 @@ int cw_silence(cw_sample *asilence, long int duration)
 	floating	*data;
 
 	/*~~~~~~~~~~~~~~*/
-	if((asilence->data = cw_malloc(duration * sizeof(floating))) == NULL) return(CWALLOC); /* !!!!!!!!!!!!!!!!! */
+	if((asilence->data = cw_malloc(duration * sizeof(floating))) == NULL) return(CWALLOC);
 	asilence->length = duration;
 	asilence->bits = 0;
-	asilence->channels = 1; /* !!!!!!!!!!!!!!!!!!!!!!! */
+	asilence->channels = 1;
 	data = (floating *) asilence->data;
 	for(i = 0; i < duration; i++) data[i] = 0;
 	return(CWOK);
