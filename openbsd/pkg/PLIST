@@ -1,0 +1,5 @@
+@comment $OpenBSD$
+@bin bin/cwcli
+@bin bin/cwcurses
+@bin bin/cwwx
+@man man/man1/cwstudio.1

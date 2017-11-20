@@ -189,7 +189,7 @@ void cw_append(cw_sample *sample1, cw_sample *sample2, long int length, int wind
 
 	if(window)
 		for(i = 0; i < window && i < length ; i++) for(j = 0; j < sample1->channels; j++)
-			s1[(sample1->length - i - 1) * sample1->channels - j] *= cw_sin((floating) i / (floating) window * 1.570796); 
+			s1[(sample1->length - i) * sample1->channels - j] *= cw_sin((floating) i / (floating) window * 1.570796); 
 }
 
 /*
@@ -360,7 +360,7 @@ int cw_signal(cw_sample *sound, cw_param param, const char *text)
 {
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	cw_sample	atone, asilence;
-	int			i, j, dotlen, length, freq = 0;
+	int			i, j, dotlen, length, freq = 0, pandash;
 	long int	samples;
 	floating	*detunes, *qsbs, *hands;
 	floating	x, ahand, amplitude, ldash, lspace;
@@ -373,6 +373,11 @@ int cw_signal(cw_sample *sound, cw_param param, const char *text)
 	cw_initsample(&asilence, sound);
 	atone.channels = param.channels;
 	asilence.channels = param.channels;
+
+	param.pan = -90;	
+	if((abs(param.pan) > 90) && (abs(param.pan) < 225)) pandash = -param.pan;
+	else if((abs(param.pan) >= 225)) pandash = param.pan + 90;
+	else pandash = param.pan;
 
 	/* Length of the dot in samples, 12 wpm PARIS should be 100 ms */
 	dotlen = 6 * sound->samplerate / param.tempo;
@@ -425,9 +430,11 @@ int cw_signal(cw_sample *sound, cw_param param, const char *text)
 	sound->channels = param.channels;
 
 	/* Main loop */
-	for(i = 0; i < length; i++) {
+	for(i = 0; i < length; i++) { 
 		ahand = param.hand ? hands[i] : 1;
-
+	if((abs(param.pan) > 90) && (abs(param.pan) < 225)) pandash = -param.pan;
+	else if((abs(param.pan) >= 225)) pandash = param.pan + 90;
+	else pandash = param.pan;
 		/* Frequency of next dash/dot if signal is detuned */
 		if(param.detune) {
 			x = (floating) param.freq;
@@ -444,15 +451,15 @@ int cw_signal(cw_sample *sound, cw_param param, const char *text)
 			amplitude = 1;
 		if(*(text + i) == '-') {
 			if(param.detune) cw_tone(&atone, param, 2 * ldash * dotlen, freq);
-			cw_append(sound, &atone, ldash * ahand * dotlen, param.window, amplitude, param.pan);
+			cw_append(sound, &atone, ldash * ahand * dotlen, param.window, amplitude, pandash);
 			cw_append(sound, &asilence, lspace * dotlen, 0, 1, 0);
-			if(param.detune) cw_freesample(&atone);
+			if(param.detune) cw_freesample(&atone); param.pan++;
 		}
 		else if(*(text + i) == '.') {
 			if(param.detune) cw_tone(&atone, param, 2 * ldash * dotlen, freq);
 			cw_append(sound, &atone, ahand * dotlen, param.window, amplitude, param.pan);
 			cw_append(sound, &asilence, lspace * dotlen, 0, 1, 0);
-			if(param.detune) cw_freesample(&atone);
+			if(param.detune) cw_freesample(&atone); param.pan++;
 		}
 		else if((*(text + i) == ' ') || (*(text + i) == '\n')) {
 			for(j = 0; j < (2 + param.cspaces); j++) cw_append(sound, &asilence, dotlen * ahand - 1, 0, 1, 0);
@@ -490,14 +497,14 @@ int cw_signals(cw_sample *signals, cw_param param, const char *text)
 	const floating	fmult[5] = { 1, 0.333, 1.666, 0.5, 1.5 };	/* frequency multipliers */
 	const floating	tmult[5] = { 1, 1.333, 0.666, 1.25, 0.8 };	/* tempo multipliers */
 	const floating	amult[5] = { 1, 0.2, 0.2, 0.5, 0.5 };		/* amplitude multipliers */
-	const int pans[5] = { 0, -80, 80, -45, 45 };
+	const int pans[5] = { 0, -45, 45, -20, 20 };
 	int				i, e;
 	cw_sample		anothersound;
 
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	cw_initsample(&anothersound, signals);
 	anothersound.channels = param.channels;
-	param.pan = pans[0];
+	param.pan = 0;
 	if((e = cw_signal(signals, param, text)) != CWOK) return(e);
 	if(param.signals > 1) {
 		for(i = 1; i < param.signals; i++) {
