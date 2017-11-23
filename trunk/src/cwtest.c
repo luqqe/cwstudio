@@ -48,7 +48,7 @@ for (i = 0; i < 100; i++)
 	printf("\n\n============== TEST %04i ================\n",i);	
 	printf("\n\nagc %05i \n",param.agc = rand() % 2 * rand() % 101);
 	printf("click %05i \n",param.click = rand() % 2 * rand() % 101);
-	printf("cspaces %05i \n",param.cspaces = rand() % 2 * rand() % 101);
+	printf("cspaces %05i \n",param.cspaces = rand() % 2 * rand() % 10);
 	printf("dashlen %05i \n",param.dashlen = 100 + rand() % 2 * rand() % 901);
 	printf("detune %05i \n",param.detune = rand() % 2 * rand() % 101);
 	printf("even %05i \n",param.even = rand() % 2 * rand() % 101);
@@ -60,14 +60,14 @@ for (i = 0; i < 100; i++)
 	printf("noise %05i \n",param.noise = rand() % 2 * rand() % 101);
 	printf("odd %05i \n",param.odd = rand() % 2 * rand() % 101);
 	printf("qsb %05i \n",param.qsb = rand() % 2 * rand() % 101);
-	printf("channels %05i \n",param.channels = 1 + rand() % 2);
+	printf("channels %05i \n",param.channels = 1 + rand() % 7);
 	printf("signals %05i \n",param.signals = 1 + rand() % 5);
 	printf("spacelen %05i \n",param.spacelen = 20 + rand() % 2 * rand() % 281);
 	printf("sweep %05i \n",param.sweep = rand() % 2 * (-4000 + rand() % 8001));
 	printf("sweepness %05i \n",param.sweepness = rand() % 10000);
 	printf("tempo %05i \n",param.tempo = 50 + rand() % 450);
 	printf("window %05i \n",param.window = rand() % 1001);
-	printf("wspaces %05i \n",param.wspaces = rand() % 2 * rand() % 101);
+	printf("wspaces %05i \n",param.wspaces = rand() % 2 * rand() % 10);
 
 	morsetext = cw_rand_groups(1 + rand() % 50, 0, "abstgjnokqfmzixdrhewlypvcu8219376450?!/=", (((unsigned int) (time(NULL) << 12)) % 32767) + 1);
 
