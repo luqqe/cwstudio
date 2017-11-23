@@ -310,7 +310,7 @@ void cwstudio_repaintwindows()
 {
 	werase(win_param);
 
-	wprintw(win_param, "* %i Hz / %i bits\n", samplerate, bits);
+	wprintw(win_param, "* %i Hz / %i bits/ %i channel(s)\n", samplerate, bits,param.channels);
 
 	switch(mode)
 	{
@@ -434,7 +434,7 @@ void cwstudio_help()
 	wprintw(win_help, "INS/DEL(:\") - signals, Q - hand\n");
 	wprintw(win_help, "F10/0 - exit, S - sweep, C - click\n");
 	wprintw(win_help, "A - AGC, E - even harmonics\n");
-	wprintw(win_help, "H - hum, O - odd harmonics\n");
+	wprintw(win_help, "H - hum, O - odd harmonics, () - chans\n");
 	wprintw(win_help, "Shift-HOME(:) - dash length\n");
 	wprintw(win_help, "Shift-END(') - space length\n");
 	wrefresh(win_help);
@@ -622,7 +622,7 @@ int main(int argc, char **argv)
 
 	/* Initialize parameters */
 	cw_initparam(&param); 
-	cwstudio_readconfig(); param.channels=5;
+	cwstudio_readconfig(); 
 
 #ifdef __DJGPP__
 	cwstudio_sbinit(sbconfig);
@@ -964,6 +964,18 @@ int main(int argc, char **argv)
 		case ',':
 			param.cspaces--;
 			RANGE(cspaces, 0, 100);
+			shouldgenerate = 1;
+			break;
+
+		case ')':
+			param.channels++;
+			RANGE(channels, 1, 7);
+			shouldgenerate = 1;
+			break;
+
+		case '(':
+			param.channels--;
+			RANGE(channels, 1, 7);
 			shouldgenerate = 1;
 			break;
 
