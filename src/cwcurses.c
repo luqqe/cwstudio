@@ -621,8 +621,8 @@ int main(int argc, char **argv)
 	/*~~~~~~~*/
 
 	/* Initialize parameters */
-	cw_initparam(&param);
-	cwstudio_readconfig();
+	cw_initparam(&param); 
+	cwstudio_readconfig(); param.channels=5;
 
 #ifdef __DJGPP__
 	cwstudio_sbinit(sbconfig);
