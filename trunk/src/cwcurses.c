@@ -307,7 +307,7 @@ void cwstudio_resetwindows()
 
 	if(has_colors()) {
 		start_color();
-		init_pair(1, COLOR_RED, COLOR_WHITE);
+		init_pair(1, COLOR_YELLOW, COLOR_WHITE);
 		init_pair(2, COLOR_WHITE, COLOR_BLUE);
 		init_pair(3, COLOR_BLACK, COLOR_WHITE);
 		init_pair(4, COLOR_BLUE, COLOR_WHITE);
@@ -333,10 +333,10 @@ void cwstudio_resetwindows()
 #else
 	mvwprintw(win_title, 2, 1, "(%s%s%s)", CANONICAL_HOST, SOUND_INTERFACE, THREAD_INTERFACE);
 #endif
-	mvwprintw(win_title, 3, 1, "(C) 2009-2016 Lukasz Komsta, SP8QED");
+	mvwprintw(win_title, 3, 1, "(C) 2009-2017 Lukasz Komsta, SP8QED");
 	wrefresh(win_title);
 
-	win_param = newwin(nrow - 9, SPLIT, 5, 0);
+	win_param = newwin(nrow - 10, SPLIT, 5, 0);
 	if(has_colors()) {
 		wattron(win_param, COLOR_PAIR(2));
 		wbkgd(win_param, COLOR_PAIR(2));
@@ -346,7 +346,7 @@ void cwstudio_resetwindows()
 	wrefresh(win_param);
 	delwin(win_param);
 
-	win_param = newwin(nrow - 11, SPLIT - 2, 6, 1);
+	win_param = newwin(nrow - 12, SPLIT - 2, 6, 1);
 	keypad(win_param, TRUE);
 	if(has_colors()) {
 		wattron(win_param, COLOR_PAIR(2));
@@ -355,7 +355,7 @@ void cwstudio_resetwindows()
 
 	keypad(win_param, TRUE);
 
-	win_text = newwin(nrow - 4, ncol - (SPLIT), 0, SPLIT);
+	win_text = newwin(nrow - 5, ncol - (SPLIT), 0, SPLIT);
 	if(has_colors()) {
 		wattron(win_text, COLOR_PAIR(2));
 		wbkgd(win_text, COLOR_PAIR(2));
@@ -365,7 +365,7 @@ void cwstudio_resetwindows()
 	wrefresh(win_text);
 	delwin(win_text);
 
-	win_text = newwin(nrow - 6, ncol - (SPLIT) - 2, 1, SPLIT + 1);
+	win_text = newwin(nrow - 7, ncol - (SPLIT) - 2, 1, SPLIT + 1);
 	if(has_colors()) {
 		wattron(win_text, COLOR_PAIR(2));
 		wbkgd(win_text, COLOR_PAIR(2));
@@ -374,7 +374,7 @@ void cwstudio_resetwindows()
 	keypad(win_text, TRUE);
 	wrefresh(win_text);
 
-	win_bar = newwin(4, ncol, nrow - 4, 0);
+	win_bar = newwin(5, ncol, nrow - 5, 0);
 	if(has_colors()) {
 		wattron(win_bar, COLOR_PAIR(4));
 		wbkgd(win_bar, COLOR_PAIR(4));
@@ -450,6 +450,7 @@ void cwstudio_repaintwindows()
 	mvwprintw(win_bar, 2, 0, "[ Rate ][ Bits ][ WAV  ]                                [ Load ][<<< Groups >>>]");
 #endif
 	mvwprintw(win_bar, 3, 0, "[<<< Tempo  >>>][<<<Signals >>>][<<<Wspaces >>>][<<<Cspaces >>>][<<<Charset >>>]");
+	mvwprintw(win_bar, 4, 0, "                [<<< Chans  >>>][<<<  Pan   >>>][<<<Pandrift>>>]                ");
 	wrefresh(win_bar);
 
 	if(shouldgenerate) cwstudio_writeconfig();
@@ -631,7 +632,7 @@ int main(int argc, char **argv)
 	uclock_t			start;
 	long int			ii;
 #endif
-	const int			buttontable[40] =
+	const int			buttontable[50] =
 	{
 		'5',
 		'6',
@@ -678,7 +679,14 @@ int main(int argc, char **argv)
 		',',
 		'.',
 		'{',
-		'}'
+		'}',
+		0,0,
+		'(',
+		')',
+		'#',
+		'$',
+		'%',
+		'^',0,0
 	};
 #ifdef HAVE_WINDOWS_H
 	HINSTANCE			hDLL = NULL;
@@ -773,7 +781,7 @@ int main(int argc, char **argv)
 			m = getmouse(&event);
 #endif
 			if(m == OK) {
-				i = (event.y - nrow + 4) * 10 + (event.x / 8);
+				i = (event.y - nrow + 5) * 10 + (event.x / 8);
 				ch = buttontable[i];
 			}
 		}
