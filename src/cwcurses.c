@@ -434,7 +434,7 @@ void cwstudio_repaintwindows()
 	if(param.dashlen != 300) wprintw(win_param, "* Dash length: %i%% ", param.dashlen);
 	if(param.spacelen != 100) wprintw(win_param, "* Space length: %i%% ", param.spacelen);
 	if((param.dashlen != 300) || (param.spacelen != 100)) wprintw(win_param, "\n");
-	mvwprintw(win_param, nrow - 12, 0, "* %s", statustext);
+	mvwprintw(win_param, nrow - 13, 0, "* %s", statustext);
 	wrefresh(win_param);
 
 	werase(win_text);
