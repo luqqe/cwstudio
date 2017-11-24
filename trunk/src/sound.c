@@ -456,13 +456,13 @@ int cw_signal(cw_sample *sound, cw_param param, const char *text)
 			if(param.detune) cw_tone(&atone, param, 2 * ldash * dotlen, freq);
 			cw_append(sound, &atone, ldash * ahand * dotlen, param.window, amplitude, pandash);
 			cw_append(sound, &asilence, lspace * dotlen, 0, 1, 0);
-			if(param.detune) cw_freesample(&atone); param.pan +=2;
+			if(param.detune) cw_freesample(&atone); param.pan +=param.pandrift;
 		}
 		else if(*(text + i) == '.') {
 			if(param.detune) cw_tone(&atone, param, 2 * ldash * dotlen, freq);
 			cw_append(sound, &atone, ahand * dotlen, param.window, amplitude, param.pan);
 			cw_append(sound, &asilence, lspace * dotlen, 0, 1, 0);
-			if(param.detune) cw_freesample(&atone); param.pan +=2;
+			if(param.detune) cw_freesample(&atone); param.pan +=param.pandrift;
 		}
 		else if((*(text + i) == ' ') || (*(text + i) == '\n')) {
 			for(j = 0; j < (2 + param.cspaces); j++) cw_append(sound, &asilence, dotlen * ahand - 1, 0, 1, 0);
