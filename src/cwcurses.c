@@ -153,11 +153,11 @@ void cwstudio_writeconfig()
 #endif
 //	sprintf(filename, "%s", CANONICAL_HOST);
 	if((f = fopen(filename, "w")) != NULL) {
-		fprintf(f,"mode = %i\n",mode,f);
-		fprintf(f,"wordset = %i\n",wordset,f);
-		fprintf(f,"chars = %i\n",chars,f);
-		fprintf(f,"bits = %i\n",bits,f);
-		fprintf(f,"samplerate = %i\n",samplerate,f);
+		fprintf(f,"mode = %i\n",mode);
+		fprintf(f,"wordset = %i\n",wordset);
+		fprintf(f,"chars = %i\n",chars);
+		fprintf(f,"bits = %i\n",bits);
+		fprintf(f,"samplerate = %i\n",samplerate);
 		fprintf(f,"agc = %i\n",param.agc);
 		fprintf(f,"channels = %i\n",param.channels);
 		fprintf(f,"click = %i\n",param.click);
@@ -174,6 +174,7 @@ void cwstudio_writeconfig()
 		fprintf(f,"number = %i\n",param.number);
 		fprintf(f,"odd = %i\n",param.odd);
 		fprintf(f,"pan = %i\n",param.pan);
+		fprintf(f,"pandrift = %i\n",param.pandrift);
 		fprintf(f,"qsb = %i\n",param.qsb);
 		fprintf(f,"seed = %i\n",param.seed);
 		fprintf(f,"shape = %i\n",param.shape);
@@ -236,6 +237,7 @@ void cwstudio_readconfig()
 		sscanf(buffer," number = %i",&param.number);
 		sscanf(buffer," odd = %i",&param.odd);
 		sscanf(buffer," pan = %i",&param.pan);
+		sscanf(buffer," pandrift = %i",&param.pandrift);
 		sscanf(buffer," qsb = %i",&param.qsb);
 		sscanf(buffer," seed = %i",&param.seed);
 		sscanf(buffer," shape = %i",&param.shape);
@@ -394,7 +396,8 @@ void cwstudio_repaintwindows()
 {
 	werase(win_param);
 
-	wprintw(win_param, "* %i Hz / %i bits/ %i channel(s)\n", samplerate, bits,param.channels);
+	wprintw(win_param, "* %i Hz / %i bits / %i ch", samplerate, bits,param.channels);
+	if (param.channels > 1) wprintw(win_param, " / pan %i %+i\n",param.pan,param.pandrift); else wprintw(win_param, "\n"); 
 
 	switch(mode)
 	{
@@ -500,7 +503,7 @@ void cwstudio_help()
 #else
 	wprintw(win_help, "F1/1 - help, F2/2 - save to WAV file\n");
 #endif
-	wprintw(win_help, "F3/3 - reset parameters\n");
+	wprintw(win_help, "F3/3 - reset, #$ - pan, %^ - pandrift\n");
 	wprintw(win_help, "F4/4 - regenerate random, SPACE - enter\n");
 #ifdef HAVE_WINDOWS_H
 	wprintw(win_help, "F5/5,ENTER-play, Ctrl-Ins/Del-copy,paste\n");
@@ -1090,6 +1093,31 @@ int main(int argc, char **argv)
 			RANGE(number, 5, 100);
 			if(!filemode) shouldgenerate = 1;
 			break;
+
+		case '#':
+			param.pan = param.pan - 30;
+			RANGE(pan, -720, 720);
+			if(!filemode) shouldgenerate = 1;
+			break;
+
+		case '$':
+			param.pan = param.pan + 30;
+			RANGE(pan, -720, 720);
+			if(!filemode) shouldgenerate = 1;
+			break;
+
+		case '%':
+			param.pandrift = param.pandrift - 1;
+			RANGE(pandrift, -180, 180);
+			if(!filemode) shouldgenerate = 1;
+			break;
+
+		case '^':
+			param.pandrift = param.pandrift + 1;
+			RANGE(pandrift, -180, 180);
+			if(!filemode) shouldgenerate = 1;
+			break;
+
 
 #ifndef __DJGPP__
 		case '/':

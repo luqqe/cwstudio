@@ -96,6 +96,7 @@ void cw_initparam(cw_param *param)
 	param->lowcut = 300;
 	param->highcut = 2400;
 	param->pan = 0;
+	param->pandrift = 0;
 	param->qsb = 0;
 	param->number = 20;
 	param->signals = 3;

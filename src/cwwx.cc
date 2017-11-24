@@ -223,7 +223,7 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	wxString	captions[30];
 
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-	const int	defs[26] =
+	const int	defs[30] =
 	{
 		100,
 		1,
@@ -249,10 +249,10 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 		80,
 		100,
 		100,
-		0
+		0,1,0,0,0,0
 	};
-	const int	mins[26] = { 0, 0, 0, 100, 0, 0, 50, 1, 0, 300, 0, 50, 0, 0, 0, 0, -50, 1, 20, -4000, 0, 5, 0, 0, 0 };
-	const int	maxs[26] =
+	const int	mins[30] = { 0, 0, 0, 100, 0, 0, 50, 1, 0, 300, 0, 50, 0, 0, 0, 0, -50, 1, 20, -4000, 0, 5, 0, 0, 0, 1, -720, -180, 0, 0 };
+	const int	maxs[30] =
 	{
 		100,
 		100,
@@ -278,7 +278,7 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 		500,
 		10000,
 		1000,
-		100
+		100,7,720,180,0,0
 	};
 
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
@@ -307,6 +307,11 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	captions[22] = wxT(" Window");
 	captions[23] = wxT(" Wordset");
 	captions[24] = wxT(" Wspaces");
+	captions[25] = wxT(" Channels");
+	captions[26] = wxT(" Pan");
+	captions[27] = wxT(" Pandrift");
+	captions[28] = wxT(" ");
+	captions[29] = wxT(" ");
 
 	wxString	charsets[21];
 	charsets[0] = wxT("abstgjnokqfmzixdrhewlypvcu8219376450?!/=");
@@ -331,7 +336,7 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	charsets[19] = wxT("abst");
 	charsets[20] = wxT("abs");
 
-	wxString	tooltips[25];
+	wxString	tooltips[30];
 	tooltips[0] = wxT("Simulate AGC response of receiver by varying noise volume along RMS of the signal. Default is 100.");
 	tooltips[1] = wxT("Simulate click by lowering sustain part of tone at given level (in dB) below attack phase. Default is 1 dB.");
 	tooltips[2] = wxT("Set additional spaces (one space has a length of a dot) between chars. Default is 0.");
@@ -357,6 +362,11 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	tooltips[22] = wxT("Raised cosine window width (used to avoid clicks in each tone). Default is 100 samples.");
 	tooltips[23] = wxT("Take only first given number of most common English words.");
 	tooltips[24] = wxT("Set additional spaces between words/groups/calls. Default is zero.");
+	tooltips[25] = wxT("Set channel numbers.");
+	tooltips[26] = wxT("Panning multichannel angle.");
+	tooltips[27] = wxT("Drift of panning after each dot or dash.");
+	tooltips[28] = wxT(" ");
+	tooltips[29] = wxT(" ");
 
 #if defined(__WXMSW__)
 	SetIcon(wxICON(id));
@@ -379,13 +389,13 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	wxBoxSizer	*buttonsizer = new wxBoxSizer(wxHORIZONTAL);
 	wxBoxSizer	*lowbuttonsizer = new wxBoxSizer(wxHORIZONTAL);
 
-	for(int i = 0; i < 5; i++) spinsizers[i] = new wxBoxSizer(wxHORIZONTAL);
+	for(int i = 0; i < 6; i++) spinsizers[i] = new wxBoxSizer(wxHORIZONTAL);
 	textctrl = new wxTextCtrl(panel, ID_Text, wxT("VVV ="), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
 	//textctrl->SetFont(wxFont(14, wxSWISS, wxNORMAL, wxNORMAL, false, wxT("Courier New")));
 	wxFont* tempfont = new wxFont(14,wxMODERN,wxNORMAL,wxNORMAL);
     	textctrl->SetFont(*tempfont);
 	mainsizer->Add(lowbuttonsizer, 0, wxEXPAND, 0);
-	for(int i = 0; i < 5; i++) mainsizer->Add(spinsizers[i], 0, 0, 0);
+	for(int i = 0; i < 6; i++) mainsizer->Add(spinsizers[i], 0, 0, 0);
 	mainsizer->Add(buttonsizer, 0, wxEXPAND, 0);
 
 	mainsizer->Add(textctrl, 1, wxEXPAND, 0);
@@ -405,7 +415,7 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	wxButton	*savebutton = new wxButton(panel, ID_Save, wxT("Save Settings"));
 	wxButton	*resetbutton = new wxButton(panel, ID_Reset, wxT("Reset Settings"));
 
-	for(int j = 0; j < 5; j++)
+	for(int j = 0; j < 6; j++)
 	{
 		for(int i = 0; i < 5; i++)
 		{
@@ -516,6 +526,7 @@ void CWWindow::SaveConfig(const char *filename)
 		fprintf(f,"number = %i\n",param.number);
 		fprintf(f,"odd = %i\n",param.odd);
 		fprintf(f,"pan = %i\n",param.pan);
+		fprintf(f,"pandrift = %i\n",param.pandrift);
 		fprintf(f,"qsb = %i\n",param.qsb);
 		fprintf(f,"seed = %i\n",param.seed);
 		fprintf(f,"shape = %i\n",param.shape);
@@ -558,6 +569,7 @@ void CWWindow::LoadConfig(const char *filename)
 		sscanf(buffer," number = %i",&param.number);
 		sscanf(buffer," odd = %i",&param.odd);
 		sscanf(buffer," pan = %i",&param.pan);
+		sscanf(buffer," pandrift = %i",&param.pandrift);
 		sscanf(buffer," qsb = %i",&param.qsb);
 		sscanf(buffer," seed = %i",&param.seed);
 		sscanf(buffer," shape = %i",&param.shape);
@@ -777,7 +789,9 @@ void CWWindow::Update(wxSpinEvent &WXUNUSED(event))
 	param.window = spins[22]->GetValue();
 	wordset = spins[23]->GetValue();
 	param.wspaces = spins[24]->GetValue();
-
+	param.channels = spins[25]->GetValue();
+	param.pan = spins[26]->GetValue();
+	param.pandrift = spins[27]->GetValue();
 	ShouldGenerate = 1;
 	SetStatusText(wxT(""));
 }
@@ -809,6 +823,9 @@ void CWWindow::ReverseUpdate()
 			spins[22]->SetValue(param.window);
 			spins[23]->SetValue(wordset);
 			spins[24]->SetValue(param.wspaces);
+			spins[25]->SetValue(param.channels);
+			spins[26]->SetValue(param.pan);
+			spins[27]->SetValue(param.pandrift);
 }
 
 /*

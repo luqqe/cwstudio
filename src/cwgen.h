@@ -99,6 +99,7 @@ typedef struct
 	int number;
 	int odd;
 	int pan;
+	int pandrift;
 	int qsb;
 	int seed;
 	int shape;
