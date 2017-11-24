@@ -110,7 +110,10 @@ public:
 	void	Reset(wxCommandEvent &event);
 	void	OnChanged(wxCommandEvent &event);
 	void	GenerateSound();
-	
+	void	ReverseUpdate();
+	void 	SaveConfig(const char*);
+	void 	LoadConfig(const char*);
+
 	DECLARE_EVENT_TABLE()
 	wxTextCtrl		*textctrl;
 	wxSlider		*sliderwords;
@@ -475,47 +478,104 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
 	spins[15]->SetValue(param.seed);
 	Centre();
-	sprintf(filename, "wx-%s", CANONICAL_HOST);
-	if((f = fopen(filename, "r")) != NULL)
-	{
-		fread(&mode, sizeof(int), 1, f);
-		fread(&wordset, sizeof(int), 1, f);
-		fread(&chars, sizeof(int), 1, f);
-		fread(&bits, sizeof(int), 1, f);
-		fread(&samplerate, sizeof(int), 1, f);
-		fread(&param, sizeof(cw_param), 1, f);
-		fgets(charset, 256, f);
-		boxcharset->SetValue(wxString::FromUTF8(charset));
-		fclose(f);
-		spins[0]->SetValue(param.agc);
-		spins[1]->SetValue(param.click);
-		spins[2]->SetValue(param.cspaces);
-		spins[3]->SetValue(param.dashlen);
-		spins[4]->SetValue(param.detune);
-		spins[5]->SetValue(param.even);
-		spins[6]->SetValue(param.freq);
-		spins[7]->SetValue(param.number);
-		spins[8]->SetValue(param.hand);
-		spins[9]->SetValue(param.highcut);
-		spins[10]->SetValue(param.hum);
-		spins[11]->SetValue(param.lowcut);
-		spins[12]->SetValue(param.noise);
-		spins[13]->SetValue(param.odd);
-		spins[14]->SetValue(param.qsb);
-		spins[15]->SetValue(param.seed);
-		spins[16]->SetValue(param.shape);
-		spins[17]->SetValue(param.signals);
-		spins[18]->SetValue(param.spacelen);
-		spins[19]->SetValue(param.sweep);
-		spins[20]->SetValue(param.sweepness);
-		spins[21]->SetValue(param.tempo);
-		spins[22]->SetValue(param.window);
-		spins[23]->SetValue(wordset);
-		spins[24]->SetValue(param.wspaces);
-	}
+#ifdef WIN32
+	sprintf(filename, "%s%s%s",getenv("HOMEDRIVE"),getenv("HOMEPATH"),"\\cwstudio.ini");
+#else
+	char homedir[255];
+	//if ((homedir = getenv("HOME")) == NULL) homedir = getpwuid(getuid())->pw_dir;
+	sprintf(filename, "%s%s",getenv("HOME"),"/.cwstudio");
+#endif
+	LoadConfig(filename);
+	ReverseUpdate();
 	ShouldGenerate = 1;
 	panel->Layout();
 }
+
+void CWWindow::SaveConfig(const char *filename)
+{
+	FILE *f;
+	if((f = fopen(filename, "w")) != NULL) {
+		fprintf(f,"mode = %i\n",mode,f);
+		fprintf(f,"wordset = %i\n",wordset,f);
+		fprintf(f,"chars = %i\n",chars,f);
+		fprintf(f,"bits = %i\n",bits,f);
+		fprintf(f,"samplerate = %i\n",samplerate,f);
+		fprintf(f,"agc = %i\n",param.agc);
+		fprintf(f,"channels = %i\n",param.channels);
+		fprintf(f,"click = %i\n",param.click);
+		fprintf(f,"cspaces = %i\n",param.cspaces);
+		fprintf(f,"dashlen = %i\n",param.dashlen);
+		fprintf(f,"detune = %i\n",param.detune);
+		fprintf(f,"even = %i\n",param.even);
+		fprintf(f,"freq = %i\n",param.freq);
+		fprintf(f,"hand = %i\n",param.hand);
+		fprintf(f,"highcut = %i\n",param.highcut);
+		fprintf(f,"hum = %i\n",param.hum);
+		fprintf(f,"lowcut = %i\n",param.lowcut);
+		fprintf(f,"noise = %i\n",param.noise);
+		fprintf(f,"number = %i\n",param.number);
+		fprintf(f,"odd = %i\n",param.odd);
+		fprintf(f,"pan = %i\n",param.pan);
+		fprintf(f,"qsb = %i\n",param.qsb);
+		fprintf(f,"seed = %i\n",param.seed);
+		fprintf(f,"shape = %i\n",param.shape);
+		fprintf(f,"signals = %i\n",param.signals);
+		fprintf(f,"spacelen = %i\n",param.spacelen);
+		fprintf(f,"sweep = %i\n",param.sweep);
+		fprintf(f,"sweepness = %i\n",param.sweepness);
+		fprintf(f,"tempo = %i\n",param.tempo);
+		fprintf(f,"window = %i\n",param.window);
+		fprintf(f,"wspaces = %i\n",param.wspaces);
+		fprintf(f, "charset = %s\n", (const char *) boxcharset->GetValue().mb_str(wxConvUTF8));
+		fclose(f);
+	}
+}
+
+void CWWindow::LoadConfig(const char *filename)
+{
+	FILE *f;
+	char buffer[256];
+	if((f = fopen(filename, "r")) != NULL) {
+		while(fgets(buffer, 256, f) != NULL) {
+		sscanf(buffer," mode = %i",&mode);
+		sscanf(buffer," wordset = %i",&wordset);
+		sscanf(buffer," chars = %i",&chars);
+		sscanf(buffer," bits = %i",&bits);
+		sscanf(buffer," samplerate = %i",&samplerate);
+		sscanf(buffer," agc = %i",&param.agc);
+		sscanf(buffer," channels = %i",&param.channels);
+		sscanf(buffer," click = %i",&param.click);
+		sscanf(buffer," cspaces = %i ",&param.cspaces);
+		sscanf(buffer," dashlen = %i",&param.dashlen);
+		sscanf(buffer," detune = %i",&param.detune);
+		sscanf(buffer," even = %i",&param.even);
+		sscanf(buffer," freq = %i",&param.freq);
+		sscanf(buffer," hand = %i",&param.hand);
+		sscanf(buffer," highcut = %i",&param.highcut);
+		sscanf(buffer," hum = %i",&param.hum);
+		sscanf(buffer," lowcut = %i",&param.lowcut);
+		sscanf(buffer," noise = %i",&param.noise);
+		sscanf(buffer," number = %i",&param.number);
+		sscanf(buffer," odd = %i",&param.odd);
+		sscanf(buffer," pan = %i",&param.pan);
+		sscanf(buffer," qsb = %i",&param.qsb);
+		sscanf(buffer," seed = %i",&param.seed);
+		sscanf(buffer," shape = %i",&param.shape);
+		sscanf(buffer," signals = %i",&param.signals);
+		sscanf(buffer," spacelen = %i",&param.spacelen);
+		sscanf(buffer," sweep = %i",&param.sweep);
+		sscanf(buffer," sweepness = %i",&param.sweepness);
+		sscanf(buffer," tempo = %i",&param.tempo);
+		sscanf(buffer," window = %i",&param.window);
+		sscanf(buffer," wspaces = %i",&param.wspaces);
+		sscanf(buffer," charset = %s",charset);
+		}
+		fclose(f);
+		boxcharset->SetValue(wxString::FromUTF8(charset));
+}
+}
+
+
 
 /*
  =======================================================================================================================
@@ -529,18 +589,14 @@ void CWWindow::OnQuit(wxCloseEvent &event)
 
 	/*~~~~~~~*/
 	char	filename[255];
-	sprintf(filename, "wx-%s", CANONICAL_HOST);
-	if((f = fopen(filename, "w")) != NULL)
-	{
-		fwrite(&mode, sizeof(int), 1, f);
-		fwrite(&wordset, sizeof(int), 1, f);
-		fwrite(&chars, sizeof(int), 1, f);
-		fwrite(&bits, sizeof(int), 1, f);
-		fwrite(&samplerate, sizeof(int), 1, f);
-		fwrite(&param, sizeof(cw_param), 1, f);
-		fprintf(f, "%s", (const char *) boxcharset->GetValue().mb_str(wxConvUTF8));
-		fclose(f);
-	}
+#ifdef WIN32
+	sprintf(filename, "%s%s%s",getenv("HOMEDRIVE"),getenv("HOMEPATH"),"\\cwstudio.ini");
+#else
+	char homedir[255];
+	//if ((homedir = getenv("HOME")) == NULL) homedir = getpwuid(getuid())->pw_dir;
+	sprintf(filename, "%s%s",getenv("HOME"),"/.cwstudio");
+#endif
+	SaveConfig(filename);
 
 #ifdef HAVE_WINDOWS_H
 	FreeLibrary(hDLL);
@@ -724,6 +780,35 @@ void CWWindow::Update(wxSpinEvent &WXUNUSED(event))
 
 	ShouldGenerate = 1;
 	SetStatusText(wxT(""));
+}
+
+void CWWindow::ReverseUpdate()
+{
+			spins[0]->SetValue(param.agc);
+			spins[1]->SetValue(param.click);
+			spins[2]->SetValue(param.cspaces);
+			spins[3]->SetValue(param.dashlen);
+			spins[4]->SetValue(param.detune);
+			spins[5]->SetValue(param.even);
+			spins[6]->SetValue(param.freq);
+			spins[7]->SetValue(param.number);
+			spins[8]->SetValue(param.hand);
+			spins[9]->SetValue(param.highcut);
+			spins[10]->SetValue(param.hum);
+			spins[11]->SetValue(param.lowcut);
+			spins[12]->SetValue(param.noise);
+			spins[13]->SetValue(param.odd);
+			spins[14]->SetValue(param.qsb);
+			spins[15]->SetValue(param.seed);
+			spins[16]->SetValue(param.shape);
+			spins[17]->SetValue(param.signals);
+			spins[18]->SetValue(param.spacelen);
+			spins[19]->SetValue(param.sweep);
+			spins[20]->SetValue(param.sweepness);
+			spins[21]->SetValue(param.tempo);
+			spins[22]->SetValue(param.window);
+			spins[23]->SetValue(wordset);
+			spins[24]->SetValue(param.wspaces);
 }
 
 /*
@@ -933,47 +1018,9 @@ void CWWindow::Load(wxCommandEvent &WXUNUSED(event))
 	if(savedialog->ShowModal() == wxID_OK)
 	{
 		wxString	filename = savedialog->GetPath();
-		if((f = fopen(filename.mb_str(wxConvUTF8), "r")) != NULL)
-		{
-			fread(&mode, sizeof(int), 1, f);
-			fread(&wordset, sizeof(int), 1, f);
-			fread(&chars, sizeof(int), 1, f);
-			fread(&bits, sizeof(int), 1, f);
-			fread(&samplerate, sizeof(int), 1, f);
-			fread(&param, sizeof(cw_param), 1, f);
-			fgets(charset, 256, f);
-			boxcharset->SetValue(wxString::FromUTF8(charset));
-			fclose(f);
-			spins[0]->SetValue(param.agc);
-			spins[1]->SetValue(param.click);
-			spins[2]->SetValue(param.cspaces);
-			spins[3]->SetValue(param.dashlen);
-			spins[4]->SetValue(param.detune);
-			spins[5]->SetValue(param.even);
-			spins[6]->SetValue(param.freq);
-			spins[7]->SetValue(param.number);
-			spins[8]->SetValue(param.hand);
-			spins[9]->SetValue(param.highcut);
-			spins[10]->SetValue(param.hum);
-			spins[11]->SetValue(param.lowcut);
-			spins[12]->SetValue(param.noise);
-			spins[13]->SetValue(param.odd);
-			spins[14]->SetValue(param.qsb);
-			spins[15]->SetValue(param.seed);
-			spins[16]->SetValue(param.shape);
-			spins[17]->SetValue(param.signals);
-			spins[18]->SetValue(param.spacelen);
-			spins[19]->SetValue(param.sweep);
-			spins[20]->SetValue(param.sweepness);
-			spins[21]->SetValue(param.tempo);
-			spins[22]->SetValue(param.window);
-			spins[23]->SetValue(wordset);
-			spins[24]->SetValue(param.wspaces);
-
-			ShouldGenerate = 1;
-			SetStatusText(wxT("Loaded."));
-
-		}
+		LoadConfig(((const char*)filename.mb_str(wxConvUTF8)));
+		ShouldGenerate = 1;
+		SetStatusText(wxT("Loaded."));
 	}
 }
 
@@ -1001,18 +1048,8 @@ void CWWindow::Save(wxCommandEvent &WXUNUSED(event))
 	if(savedialog->ShowModal() == wxID_OK)
 	{
 		wxString	filename = savedialog->GetPath();
-		if((f = fopen(filename.mb_str(wxConvUTF8), "w")) != NULL)
-		{
-			fwrite(&mode, sizeof(int), 1, f);
-			fwrite(&wordset, sizeof(int), 1, f);
-			fwrite(&chars, sizeof(int), 1, f);
-			fwrite(&bits, sizeof(int), 1, f);
-			fwrite(&samplerate, sizeof(int), 1, f);
-			fwrite(&param, sizeof(cw_param), 1, f);
-			fprintf(f, "%s", (const char *) boxcharset->GetValue().mb_str(wxConvUTF8));
-			fclose(f);
-		}
-			SetStatusText(wxT("Saved."));
+		SaveConfig((const char*)filename.mb_str(wxConvUTF8));
+		SetStatusText(wxT("Saved."));
 
 	}
 }
@@ -1035,33 +1072,7 @@ void CWWindow::Reset(wxCommandEvent &WXUNUSED(event))
 	if(dialog->ShowModal() == wxID_YES)
 	{
 		cw_initparam(&param);
-
-		spins[0]->SetValue(param.agc);
-		spins[1]->SetValue(param.click);
-		spins[2]->SetValue(param.cspaces);
-		spins[3]->SetValue(param.dashlen);
-		spins[4]->SetValue(param.detune);
-		spins[5]->SetValue(param.even);
-		spins[6]->SetValue(param.freq);
-		spins[7]->SetValue(param.number);
-		spins[8]->SetValue(param.hand);
-		spins[9]->SetValue(param.highcut);
-		spins[10]->SetValue(param.hum);
-		spins[11]->SetValue(param.lowcut);
-		spins[12]->SetValue(param.noise);
-		spins[13]->SetValue(param.odd);
-		spins[14]->SetValue(param.qsb);
-		spins[15]->SetValue(param.seed);
-		spins[16]->SetValue(param.shape);
-		spins[17]->SetValue(param.signals);
-		spins[18]->SetValue(param.spacelen);
-		spins[19]->SetValue(param.sweep);
-		spins[20]->SetValue(param.sweepness);
-		spins[21]->SetValue(param.tempo);
-		spins[22]->SetValue(param.window);
-		spins[23]->SetValue(wordset);
-		spins[24]->SetValue(param.wspaces);
-
+		ReverseUpdate();
 		ShouldGenerate = 1;
 		SetStatusText(wxT("Reset done."));
 

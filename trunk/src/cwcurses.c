@@ -142,15 +142,56 @@ void cwstudio_writeconfig()
 {
 	FILE	*f;
 	char	filename[255];
-	sprintf(filename, "%s", CANONICAL_HOST);
+#ifdef WIN32
+	sprintf(filename, "%s%s%s",getenv("HOMEDRIVE"),getenv("HOMEPATH"),"\\cwstudio.ini");
+#elif defined __DJGPP__
+	sprintf(filename, "%s","cwstudio.cfg");
+#else
+	char homedir[255];
+	//if ((homedir = getenv("HOME")) == NULL) homedir = getpwuid(getuid())->pw_dir;
+	sprintf(filename, "%s%s",getenv("HOME"),"/.cwstudio");
+#endif
+//	sprintf(filename, "%s", CANONICAL_HOST);
 	if((f = fopen(filename, "w")) != NULL) {
-		fwrite(&mode, sizeof(int), 1, f);
+		fprintf(f,"mode = %i\n",mode,f);
+		fprintf(f,"wordset = %i\n",wordset,f);
+		fprintf(f,"chars = %i\n",chars,f);
+		fprintf(f,"bits = %i\n",bits,f);
+		fprintf(f,"samplerate = %i\n",samplerate,f);
+		fprintf(f,"agc = %i\n",param.agc);
+		fprintf(f,"channels = %i\n",param.channels);
+		fprintf(f,"click = %i\n",param.click);
+		fprintf(f,"cspaces = %i\n",param.cspaces);
+		fprintf(f,"dashlen = %i\n",param.dashlen);
+		fprintf(f,"detune = %i\n",param.detune);
+		fprintf(f,"even = %i\n",param.even);
+		fprintf(f,"freq = %i\n",param.freq);
+		fprintf(f,"hand = %i\n",param.hand);
+		fprintf(f,"highcut = %i\n",param.highcut);
+		fprintf(f,"hum = %i\n",param.hum);
+		fprintf(f,"lowcut = %i\n",param.lowcut);
+		fprintf(f,"noise = %i\n",param.noise);
+		fprintf(f,"number = %i\n",param.number);
+		fprintf(f,"odd = %i\n",param.odd);
+		fprintf(f,"pan = %i\n",param.pan);
+		fprintf(f,"qsb = %i\n",param.qsb);
+		fprintf(f,"seed = %i\n",param.seed);
+		fprintf(f,"shape = %i\n",param.shape);
+		fprintf(f,"signals = %i\n",param.signals);
+		fprintf(f,"spacelen = %i\n",param.spacelen);
+		fprintf(f,"sweep = %i\n",param.sweep);
+		fprintf(f,"sweepness = %i\n",param.sweepness);
+		fprintf(f,"tempo = %i\n",param.tempo);
+		fprintf(f,"window = %i\n",param.window);
+		fprintf(f,"wspaces = %i\n",param.wspaces);
+		fprintf(f, "charset = %s\n", charset);
+		/*fwrite(&mode, sizeof(int), 1, f);
 		fwrite(&wordset, sizeof(int), 1, f);
 		fwrite(&chars, sizeof(int), 1, f);
 		fwrite(&bits, sizeof(int), 1, f);
 		fwrite(&samplerate, sizeof(int), 1, f);
 		fwrite(&param, sizeof(cw_param), 1, f);
-		fprintf(f, "%s", charset);
+		fprintf(f, "%s", charset); */
 		fclose(f);
 	}
 }
@@ -161,17 +202,60 @@ void cwstudio_writeconfig()
 void cwstudio_readconfig()
 {
 	FILE	*f;
-	char	filename[255];
-	sprintf(filename, "%s", CANONICAL_HOST);
+	int	i;
+	char	filename[255], buffer[256];
+#ifdef WIN32
+	sprintf(filename, "%s%s%s",getenv("HOMEDRIVE"),getenv("HOMEPATH"),"\\cwstudio.ini");
+#elif defined __DJGPP__
+	sprintf(filename, "%s","cwstudio.cfg");
+#else
+	char homedir[255];
+	//if ((homedir = getenv("HOME")) == NULL) homedir = getpwuid(getuid())->pw_dir;
+	sprintf(filename, "%s%s",getenv("HOME"),"/.cwstudio");
+#endif
 	if((f = fopen(filename, "r")) != NULL) {
-		fread(&mode, sizeof(int), 1, f);
+		while(fgets(buffer, 256, f) != NULL) {
+		sscanf(buffer," mode = %i",&mode);
+		sscanf(buffer," wordset = %i",&wordset);
+		sscanf(buffer," chars = %i",&chars);
+		sscanf(buffer," bits = %i",&bits);
+		sscanf(buffer," samplerate = %i",&samplerate);
+		sscanf(buffer," agc = %i",&param.agc);
+		sscanf(buffer," channels = %i",&param.channels);
+		sscanf(buffer," click = %i",&param.click);
+		sscanf(buffer," cspaces = %i ",&param.cspaces);
+		sscanf(buffer," dashlen = %i",&param.dashlen);
+		sscanf(buffer," detune = %i",&param.detune);
+		sscanf(buffer," even = %i",&param.even);
+		sscanf(buffer," freq = %i",&param.freq);
+		sscanf(buffer," hand = %i",&param.hand);
+		sscanf(buffer," highcut = %i",&param.highcut);
+		sscanf(buffer," hum = %i",&param.hum);
+		sscanf(buffer," lowcut = %i",&param.lowcut);
+		sscanf(buffer," noise = %i",&param.noise);
+		sscanf(buffer," number = %i",&param.number);
+		sscanf(buffer," odd = %i",&param.odd);
+		sscanf(buffer," pan = %i",&param.pan);
+		sscanf(buffer," qsb = %i",&param.qsb);
+		sscanf(buffer," seed = %i",&param.seed);
+		sscanf(buffer," shape = %i",&param.shape);
+		sscanf(buffer," signals = %i",&param.signals);
+		sscanf(buffer," spacelen = %i",&param.spacelen);
+		sscanf(buffer," sweep = %i",&param.sweep);
+		sscanf(buffer," sweepness = %i",&param.sweepness);
+		sscanf(buffer," tempo = %i",&param.tempo);
+		sscanf(buffer," window = %i",&param.window);
+		sscanf(buffer," wspaces = %i",&param.wspaces);
+		sscanf(buffer," charset = %s",charset);
+		}
+		fclose(f);
+		/* fread(&mode, sizeof(int), 1, f);
 		fread(&wordset, sizeof(int), 1, f);
 		fread(&chars, sizeof(int), 1, f);
 		fread(&bits, sizeof(int), 1, f);
 		fread(&samplerate, sizeof(int), 1, f);
 		fread(&param, sizeof(cw_param), 1, f);
-		fgets(charset, 256, f);
-		fclose(f);
+		fgets(charset, 256, f); */
 		shouldgenerate = 1;
 	}
 }
