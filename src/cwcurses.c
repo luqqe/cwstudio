@@ -446,6 +446,8 @@ void cwstudio_repaintwindows()
 	mvwprintw(win_bar, 1, 0, "[ AGC  ][Click ][ Dlen ][ SLen ][DetQSB][ Even ][ Odd  ][ Hand ][ Hum  ][Sweep ]");
 #ifdef HAVE_WINDOWS_H
 	mvwprintw(win_bar, 2, 0, "[ Rate ][ Bits ][ WAV  ][ MP3  ][ Copy ][Paste ]        [ Load ][<<< Groups >>>]");
+#elif defined __DJGPP__
+	mvwprintw(win_bar, 2, 0, "[ Rate ][ Bits ][ WAV  ][DOSdev]                        [ Load ][<<< Groups >>>]");
 #else
 	mvwprintw(win_bar, 2, 0, "[ Rate ][ Bits ][ WAV  ]                                [ Load ][<<< Groups >>>]");
 #endif
@@ -661,6 +663,10 @@ int main(int argc, char **argv)
 		'M',
 		CTL_DEL,
 		CTL_INS,
+#elif defined __DJGPP__
+		'`',
+		0,
+		0,
 #else
 		0,
 		0,
@@ -1062,6 +1068,7 @@ int main(int argc, char **argv)
 			shouldgenerate = 1;
 			break;
 
+#ifndef __DJGPP__
 		case ')':
 			param.channels++;
 			RANGE(channels, 1, 7);
@@ -1073,6 +1080,7 @@ int main(int argc, char **argv)
 			RANGE(channels, 1, 7);
 			shouldgenerate = 1;
 			break;
+#endif
 
 		case KEY_SRIGHT:
 		case '>':
@@ -1102,6 +1110,8 @@ int main(int argc, char **argv)
 			if(!filemode) shouldgenerate = 1;
 			break;
 
+#ifndef __DJGPP__
+
 		case '#':
 			param.pan = param.pan - 30;
 			RANGE(pan, -720, 720);
@@ -1126,8 +1136,6 @@ int main(int argc, char **argv)
 			if(!filemode) shouldgenerate = 1;
 			break;
 
-
-#ifndef __DJGPP__
 		case '/':
 			if(samplerate == 8000)
 				samplerate = 11025;
