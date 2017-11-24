@@ -211,7 +211,7 @@ void *cwstudio_playthread(void *arg)
 	else
 		format = AFMT_S16_LE;
 	ioctl(audio, SNDCTL_DSP_SETFMT, &format);
-	stereo = 0;
+	stereo = (sample->channels > 1);
 	ioctl(audio, SNDCTL_DSP_STEREO, &stereo);
 	speed = sample->samplerate;
 	ioctl(audio, SNDCTL_DSP_SPEED, &speed);
