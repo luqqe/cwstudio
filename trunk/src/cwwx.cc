@@ -202,7 +202,6 @@ bool CWStudio::OnInit()
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	frame->Show(TRUE);
 	SetTopWindow(frame);
-	cw_initparam(&param);
 #ifdef HAVE_WINDOWS_H
 	hDLL = LoadLibrary(_T("lame_enc.dll"));
 #endif
@@ -495,6 +494,7 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	//if ((homedir = getenv("HOME")) == NULL) homedir = getpwuid(getuid())->pw_dir;
 	sprintf(filename, "%s%s",getenv("HOME"),"/.cwstudio");
 #endif
+	cw_initparam(&param);
 	LoadConfig(filename);
 	ReverseUpdate();
 	ShouldGenerate = 1;
