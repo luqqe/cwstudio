@@ -43,6 +43,7 @@ long unsigned int			length;
 #endif
 #if HAVE_WINDOWS_H
 #include <windows.h>
+#include <mmreg.h>
 #endif
 #ifdef HAVE_PULSEAUDIO
 #include <pulse/simple.h>
@@ -80,6 +81,7 @@ pthread_attr_t				cwstudio_attr;
 #ifdef HAVE_LIBWINMM
 HWAVEOUT					h;
 WAVEFORMATEX				wf;
+WAVEFORMATEXTENSIBLE			wfe;
 WAVEHDR						wh;
 HANDLE						d;
 #elif HAVE_PULSEAUDIO
@@ -361,6 +363,9 @@ void cwstudio_irq_reset(int irq_vector)
  */
 int cwstudio_play(cw_sample *sample)
 {
+#ifdef WIN32
+	const DWORD spks[7] = {0x4,0x3,0x103,0x33,0x37,0x137,0x337};
+#endif
 #ifdef __DJGPP__
 	unsigned int	temp_page, temp_offset;
 #endif
@@ -431,17 +436,27 @@ int cwstudio_play(cw_sample *sample)
 		cwstudio_dsp_write(0x1C);
 #endif
 #ifdef HAVE_LIBWINMM
-		wf.wFormatTag = WAVE_FORMAT_PCM;
+		/*wf.wFormatTag = WAVE_FORMAT_PCM;
 		wf.nChannels = sample->channels;
 		wf.wBitsPerSample = sample->bits;
 		wf.nSamplesPerSec = sample->samplerate;
 		wf.nBlockAlign = wf.nChannels * wf.wBitsPerSample / 8;
 		wf.nAvgBytesPerSec = wf.nSamplesPerSec * wf.nBlockAlign;
-		wf.cbSize = 0;
+		wf.cbSize = 0; */
+		wfe.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
+		wfe.Format.nChannels = sample->channels;
+		wfe.Format.wBitsPerSample = sample->bits;
+		wfe.Samples.wValidBitsPerSample = sample->bits;
+		wfe.Format.nSamplesPerSec = sample->samplerate;
+		wfe.Format.nBlockAlign = wfe.Format.nChannels * wfe.Format.wBitsPerSample / 8;
+		wfe.Format.nAvgBytesPerSec = wfe.Format.nSamplesPerSec * wfe.Format.nBlockAlign;
+		wfe.Format.cbSize = 22;
+		wfe.dwChannelMask = spks[sample->channels-1]; 
+		wfe.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
 		d = CreateEvent(0, FALSE, FALSE, 0);
-		if(waveOutOpen(&h, 0, &wf, (DWORD_PTR) d, 0, CALLBACK_EVENT) != MMSYSERR_NOERROR);
+		if(waveOutOpen(&h, 0, (LPCWAVEFORMATEX) &wfe, (DWORD_PTR) d, 0, CALLBACK_EVENT) != MMSYSERR_NOERROR);
 		wh.lpData = sample->data;
-		wh.dwBufferLength = (sample->bits / 8) * sample->length - 2;
+		wh.dwBufferLength = sample->channels * (sample->bits / 8) * sample->length - 2;
 		wh.dwFlags = 0;
 		wh.dwLoops = 0;
 		if(waveOutPrepareHeader(h, &wh, sizeof(wh)) != MMSYSERR_NOERROR);

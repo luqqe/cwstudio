@@ -1339,8 +1339,8 @@ int main(int argc, char **argv)
 				||	!beVersion
 				||	!beWriteVBRHeader
 				) sprintf(statustext, "lame_enc.dll error.");
-				else if((bits != 16) || (samplerate != 44100))
-					sprintf(statustext, "Unsupported samplerate/bits.");
+				else if((bits != 16) || (samplerate != 44100) || (param.channels > 2))
+					sprintf(statustext, "Unsupported channels/rate/bits.");
 				else {
 					if(shouldgenerate) {
 						cw_freesample(&asound);
@@ -1371,7 +1371,7 @@ int main(int argc, char **argv)
 					beConfig.format.LHV1.dwStructSize = sizeof(beConfig);
 					beConfig.format.LHV1.dwSampleRate = csound.samplerate;
 					beConfig.format.LHV1.dwReSampleRate = 0;
-					beConfig.format.LHV1.nMode = BE_MP3_MODE_MONO;
+					beConfig.format.LHV1.nMode = param.channels > 1 ? BE_MP3_MODE_JSTEREO : BE_MP3_MODE_MONO;
 					beConfig.format.LHV1.dwBitrate = 128;
 					beConfig.format.LHV1.dwMaxBitrate = 320;
 					beConfig.format.LHV1.nPreset = LQP_NOPRESET;

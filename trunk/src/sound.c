@@ -163,7 +163,7 @@ void cw_append(cw_sample *sample1, cw_sample *sample2, long int length, int wind
 	floating	*s1, *s2;
 	int		ch1,ch2;
 	floating	sum,pans[7] = {1,1,1,1,1,1,1};
-	const int	angles[7][7] = {{0,0,0,0,0,0,0},{-45,45,0,0,0,0,0},{-45,45,180,0,0,0,0},{-45,45,-135,135,0,0,0},{-30,30,0,-130,130,0,0},{-30,30,0,-110,110,180,0},{-30,30,0,-100,100,-140,140}};
+	const int	angles[7][7] = {{0,0,0,0,0,0,0},{-45,45,0,0,0,0,0},{-45,45,180,0,0,0,0},{-45,45,-135,135,0,0,0},{-30,30,0,-130,130,0,0},{-30,30,0,-130,130,180,0},{-30,30,0,-140,140,-100,100}};
 	
 
 	/*~~~~~~~~~~~~~~~~~*/
@@ -180,7 +180,7 @@ void cw_append(cw_sample *sample1, cw_sample *sample2, long int length, int wind
 		pans[1] = cw_sin((0.5 * pan + 45) * 0.0174532925199433);
 	}
 	if(ch1 > 2) {
-		for(i = 0; i < ch1; i++) { pans[i] = cw_cos((pan + angles[ch1-1][i]) * 0.0174532925199433); if(pans[i] < 0) pans[i] = 0; }		
+		for(i = 0; i < ch1; i++) { pans[i] = cw_cos((pan - angles[i][ch1-1]) * 0.0174532925199433); if(pans[i] < 0) pans[i] = 0; }		
 		sum = 0;
 		for(i = 0; i < ch1; i++) sum += pans[i]*pans[i];
 		for(i = 0; i < ch1; i++) pans[i] = cw_sqrt(pans[i]*pans[i]/sum);
@@ -507,7 +507,6 @@ int cw_signals(cw_sample *signals, cw_param param, const char *text)
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	cw_initsample(&anothersound, signals);
 	anothersound.channels = param.channels;
-	param.pan = -90;
 	if((e = cw_signal(signals, param, text)) != CWOK) return(e);
 	if(param.signals > 1) {
 		for(i = 1; i < param.signals; i++) {
