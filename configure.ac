@@ -34,6 +34,7 @@ AM_CONDITIONAL([HAVE_WINDRES], [test "$WINDRES" != "no"])
 # Checks for libraries.
 AC_CHECK_LIB([m],[sinf])
 AC_CHECK_LIB([winmm],[main])
+AC_CHECK_LIB([ksuser],[main])
 AC_CHECK_LIB([ossaudio],[main])
 AC_CHECK_LIB([pulse],[main])
 AC_CHECK_LIB([pulse-simple],[main])
