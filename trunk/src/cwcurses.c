@@ -583,6 +583,33 @@ void cwstudio_input(const char *prompt, char *entered, int length)
 
 /*
  =======================================================================================================================
+    Draw message box (one line) and wait for any key.
+ =======================================================================================================================
+ */
+void cwstudio_messagebox(const char *message)
+{
+	/*~~~~~~~~~~~*/
+	int ncol, nrow;
+
+	/*~~~~~~~~~~~*/
+	getmaxyx(stdscr, nrow, ncol);
+
+	win_prompt = newwin(3, strlen(message)+4, nrow/2 - 1, (ncol - strlen(message) - 4) / 2);
+	if(has_colors()) {
+		wattron(win_prompt, COLOR_PAIR(3));
+		wbkgd(win_prompt, COLOR_PAIR(3));
+	}
+
+	box(win_prompt, 0, 0);
+	mvwprintw(win_prompt, 1, 2, "%s", message);
+	wrefresh(win_prompt);
+	keypad(win_prompt, TRUE);
+	wgetch(win_prompt);
+	delwin(win_prompt);
+	cwstudio_resetwindows();
+}
+/*
+ =======================================================================================================================
     Free text memory and regenerate it.
  =======================================================================================================================
  */
