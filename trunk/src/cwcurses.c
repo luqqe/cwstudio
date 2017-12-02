@@ -48,7 +48,11 @@
 #include <process.h>
 #endif
 #ifdef HAVE_LIBWINMM
+#ifdef WIN9X
 #define SOUND_INTERFACE "/waveout"
+#else
+#define SOUND_INTERFACE "/waveoutex"
+#endif
 #elif defined HAVE_PULSEAUDIO
 #define SOUND_INTERFACE "/pulseaudio"
 #elif defined HAVE_SNDIO
@@ -123,6 +127,7 @@ MEVENT				event;
 /* */
 void cwstudio_initwinconsole()
 {
+#ifndef WIN9X
 	HWND	desktop = GetDesktopWindow();
 	HWND	console = GetConsoleWindow();
 	RECT	r, d;
@@ -130,7 +135,7 @@ void cwstudio_initwinconsole()
 	GetWindowRect(console, &r);
 	GetWindowRect(desktop, &d);
 	MoveWindow(console, (d.right - r.right) / 2, (d.bottom - r.bottom) / 2, r.right, r.bottom, TRUE);
-
+#endif
 	SetConsoleTitle("CWStudio");
 }
 #endif
