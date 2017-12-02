@@ -436,13 +436,16 @@ int cwstudio_play(cw_sample *sample)
 		cwstudio_dsp_write(0x1C);
 #endif
 #ifdef HAVE_LIBWINMM
-		/*wf.wFormatTag = WAVE_FORMAT_PCM;
+#ifdef WIN9X
+		wf.wFormatTag = WAVE_FORMAT_PCM;
 		wf.nChannels = sample->channels;
 		wf.wBitsPerSample = sample->bits;
 		wf.nSamplesPerSec = sample->samplerate;
 		wf.nBlockAlign = wf.nChannels * wf.wBitsPerSample / 8;
 		wf.nAvgBytesPerSec = wf.nSamplesPerSec * wf.nBlockAlign;
-		wf.cbSize = 0; */
+		wf.cbSize = 0; 
+		if(waveOutOpen(&h, 0, &wf, (DWORD_PTR) d, 0, CALLBACK_EVENT) != MMSYSERR_NOERROR);
+#else
 		wfe.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
 		wfe.Format.nChannels = sample->channels;
 		wfe.Format.wBitsPerSample = sample->bits;
@@ -455,6 +458,7 @@ int cwstudio_play(cw_sample *sample)
 		wfe.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
 		d = CreateEvent(0, FALSE, FALSE, 0);
 		if(waveOutOpen(&h, 0, (LPCWAVEFORMATEX) &wfe, (DWORD_PTR) d, 0, CALLBACK_EVENT) != MMSYSERR_NOERROR);
+#endif
 		wh.lpData = sample->data;
 		wh.dwBufferLength = sample->channels * (sample->bits / 8) * sample->length - 2;
 		wh.dwFlags = 0;
