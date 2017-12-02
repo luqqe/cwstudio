@@ -154,9 +154,8 @@ void *cwstudio_playthread(void *arg)
 		pas.format = PA_SAMPLE_S16LE;
 	pas.rate = sample->samplerate;
 	pas.channels = sample->channels;
-	if(!(pa = pa_simple_new(NULL, "cwgen", PA_STREAM_PLAYBACK, NULL, "playback", &pas, NULL, NULL, &e))) {
-		fprintf(stderr, "pa_simple_new() failed: %s\n", pa_strerror(e));
-	}
+	if(!(pa = pa_simple_new(NULL, "cwgen", PA_STREAM_PLAYBACK, NULL, "playback", &pas, NULL, NULL, &e))) 
+		{ status = CWPLAYERROR; return(CWPLAYERROR); }
 
 	while((counter > 0) && (status != CWSTOPPED)) {
 		while(status == CWPAUSED);
@@ -370,7 +369,7 @@ int cwstudio_play(cw_sample *sample)
 	unsigned int	temp_page, temp_offset;
 #endif
 	if(status == CWPLAYING) cwstudio_stop();
-	if(status == CWSTOPPED)
+	if(status == CWSTOPPED || status == CWPLAYERROR)
 	{
 #ifdef __DJGPP__
 		/* The DMA playing code is inspired by Steven H Don's code snippets, adapted and almost rewritten */
@@ -444,7 +443,7 @@ int cwstudio_play(cw_sample *sample)
 		wf.nBlockAlign = wf.nChannels * wf.wBitsPerSample / 8;
 		wf.nAvgBytesPerSec = wf.nSamplesPerSec * wf.nBlockAlign;
 		wf.cbSize = 0; 
-		if(waveOutOpen(&h, 0, &wf, (DWORD_PTR) d, 0, CALLBACK_EVENT) != MMSYSERR_NOERROR);
+		if(waveOutOpen(&h, 0, &wf, (DWORD_PTR) d, 0, CALLBACK_EVENT) != MMSYSERR_NOERROR) { status = CWPLAYERROR; return(CWPLAYERROR); }
 #else
 		wfe.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
 		wfe.Format.nChannels = sample->channels;
@@ -457,15 +456,15 @@ int cwstudio_play(cw_sample *sample)
 		wfe.dwChannelMask = spks[sample->channels-1]; 
 		wfe.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
 		d = CreateEvent(0, FALSE, FALSE, 0);
-		if(waveOutOpen(&h, 0, (LPCWAVEFORMATEX) &wfe, (DWORD_PTR) d, 0, CALLBACK_EVENT) != MMSYSERR_NOERROR);
+		if(waveOutOpen(&h, 0, (LPCWAVEFORMATEX) &wfe, (DWORD_PTR) d, 0, CALLBACK_EVENT) != MMSYSERR_NOERROR) { status = CWPLAYERROR; return(CWPLAYERROR); };
 #endif
 		wh.lpData = sample->data;
 		wh.dwBufferLength = sample->channels * (sample->bits / 8) * sample->length - 2;
 		wh.dwFlags = 0;
 		wh.dwLoops = 0;
-		if(waveOutPrepareHeader(h, &wh, sizeof(wh)) != MMSYSERR_NOERROR);
+		if(waveOutPrepareHeader(h, &wh, sizeof(wh)) != MMSYSERR_NOERROR) { status = CWPLAYERROR; return(CWPLAYERROR); };
 		ResetEvent(d);
-		if(waveOutWrite(h, &wh, sizeof(wh)) != MMSYSERR_NOERROR);
+		if(waveOutWrite(h, &wh, sizeof(wh)) != MMSYSERR_NOERROR) { status = CWPLAYERROR; return(CWPLAYERROR); };
 #elif defined HAVE_COREAUDIO
 		OSStatus					ossstatus;
 		AudioStreamBasicDescription fmt = { 0 };
@@ -582,8 +581,8 @@ int cwstudio_stop()
 #endif
 #ifdef HAVE_LIBWINMM
 	waveOutReset(h);
-	if(waveOutUnprepareHeader(h, &wh, sizeof(wh)) != MMSYSERR_NOERROR);
-	if(waveOutClose(h) != MMSYSERR_NOERROR);
+	if(waveOutUnprepareHeader(h, &wh, sizeof(wh)) != MMSYSERR_NOERROR) { status = CWPLAYERROR; return(CWPLAYERROR); };
+	if(waveOutClose(h) != MMSYSERR_NOERROR) { status = CWPLAYERROR; return(CWPLAYERROR); };
 	CloseHandle(d);
 #elif defined HAVE_COREAUDIO
 	AudioQueueStop(queue, 1);
