@@ -25,6 +25,7 @@
 #define CWSTOPPED	0
 #define CWPLAYING	1
 #define CWPAUSED	2
+#define CWPLAYERROR	3
 
 extern void playsample(cw_sample *sample);
 extern void *threadplay(void *arg);
