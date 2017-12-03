@@ -505,11 +505,11 @@ void CWWindow::SaveConfig(const char *filename)
 {
 	FILE *f;
 	if((f = fopen(filename, "w")) != NULL) {
-		fprintf(f,"mode = %i\n",mode,f);
-		fprintf(f,"wordset = %i\n",wordset,f);
-		fprintf(f,"chars = %i\n",chars,f);
-		fprintf(f,"bits = %i\n",bits,f);
-		fprintf(f,"samplerate = %i\n",samplerate,f);
+		fprintf(f,"mode = %i\n",mode);
+		fprintf(f,"wordset = %i\n",wordset);
+		fprintf(f,"chars = %i\n",chars);
+		fprintf(f,"bits = %i\n",bits);
+		fprintf(f,"samplerate = %i\n",samplerate);
 		fprintf(f,"agc = %i\n",param.agc);
 		fprintf(f,"channels = %i\n",param.channels);
 		fprintf(f,"click = %i\n",param.click);
