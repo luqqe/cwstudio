@@ -155,7 +155,7 @@ void *cwstudio_playthread(void *arg)
 	pas.rate = sample->samplerate;
 	pas.channels = sample->channels;
 	if(!(pa = pa_simple_new(NULL, "cwgen", PA_STREAM_PLAYBACK, NULL, "playback", &pas, NULL, NULL, &e))) 
-		{ status = CWPLAYERROR; return(CWPLAYERROR); }
+		{ status = CWPLAYERROR; }
 
 	while((counter > 0) && (status != CWSTOPPED)) {
 		while(status == CWPAUSED);

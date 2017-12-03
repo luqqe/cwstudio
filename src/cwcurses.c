@@ -312,7 +312,7 @@ void cwstudio_resetwindows()
 
 	if(has_colors()) {
 		start_color();
-		init_pair(1, COLOR_YELLOW, COLOR_WHITE);
+		init_pair(1, COLOR_BLACK, COLOR_YELLOW);
 		init_pair(2, COLOR_WHITE, COLOR_BLUE);
 		init_pair(3, COLOR_BLACK, COLOR_WHITE);
 		init_pair(4, COLOR_BLUE, COLOR_WHITE);
@@ -643,8 +643,8 @@ int cwstudio_regeneratesound()
 	wprintw(win_text, "\n\n *** Please wait *** \n");
 	wattron(win_text, COLOR_PAIR(2));
 	wrefresh(win_text);
-	if((err = cw_signals(&asound, param, morsetext)) != CWOK) return(err);
-	if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
+	if((err = cw_signals(&asound, param, morsetext)) != CWOK) cwstudio_messagebox("cw_signals() failed");
+	if((err = cw_convert(&asound, &csound, bits)) != CWOK) cwstudio_messagebox("cw_convert() failed");
 	shouldgenerate = 0;
 	return(CWOK);
 }
@@ -799,7 +799,7 @@ int main(int argc, char **argv)
 
 	initscr();
 	cwstudio_resetwindows();
-	cwstudio_regeneratetext();
+	if (cwstudio_regeneratetext() != CWOK) cwstudio_messagebox("Memory allocation error");
 	cwstudio_repaintwindows();
 
 #ifdef HAVE_MOUSEMASK
@@ -1471,7 +1471,7 @@ int main(int argc, char **argv)
 
 		/*$2- Regenerate text and refresh screen after each keypress -------------------------------------------------*/
 
-		cwstudio_regeneratetext();
+		if (cwstudio_regeneratetext() != CWOK) cwstudio_messagebox("Memory allocation error");;
 		cwstudio_repaintwindows();
 	}
 #ifdef __DJGPP__
