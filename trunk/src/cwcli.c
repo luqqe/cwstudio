@@ -4,7 +4,7 @@
 
     This file is part of CWStudio.
 
-    Copyright 2008-2016 Lukasz Komsta, SP8QED
+    Copyright 2008-2017 Lukasz Komsta, SP8QED
 
     CWStudio is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -194,6 +194,7 @@ void cwstudio_parseparam(int argc, char **argv)
 			{ "bits", required_argument, NULL, 'b' },
 			{ "click", required_argument, NULL, 'l' },
 			{ "chars", required_argument, NULL, 'c' },
+			{ "channels", required_argument, NULL, 'A' },
 			{ "charset", required_argument, NULL, 'C' },
 			{ "cspaces", required_argument, NULL, 's' },
 			{ "dashlen", required_argument, NULL, 'D' },
@@ -209,6 +210,8 @@ void cwstudio_parseparam(int argc, char **argv)
 			{ "odd", required_argument, NULL, 'O' },
 			{ "output", required_argument, NULL, 'o' },
 			{ "qsb", required_argument, NULL, 'q' },
+			{ "pan", required_argument, NULL, 'Y' },
+			{ "pandrift", required_argument, NULL, 'z' },
 			{ "samplerate", required_argument, NULL, 'B' },
 			{ "seed", required_argument, NULL, 'r' },
 			{ "shape", required_argument, NULL, 'X' },
@@ -228,7 +231,7 @@ void cwstudio_parseparam(int argc, char **argv)
 			(
 				argc + envc,
 				totalv,
-				"a:b:B:c:C:d:D:E:f:g:h:H:l:L:n:o:O:p:P:q:r:s:S:t:v:w:W:x:X:y:",
+				"a:A:b:B:c:C:d:D:E:f:g:h:H:l:L:n:o:O:p:P:q:r:s:S:t:v:w:W:x:X:y:Y:z:",
 				long_options,
 				&option_index
 			);
@@ -238,6 +241,11 @@ void cwstudio_parseparam(int argc, char **argv)
 		case 'a':
 			param.agc = atoi(optarg);
 			RANGE(agc, 0, 100);
+			break;
+
+		case 'A':
+			param.channels = atoi(optarg);
+			RANGE(channels, 1, 7);
 			break;
 
 		case 'b':
@@ -397,6 +405,17 @@ void cwstudio_parseparam(int argc, char **argv)
 			param.highcut = atoi(optarg);
 			RANGE(highcut, 300, 10000);
 			break;
+
+		case 'Y':
+			param.pan = atoi(optarg);
+			RANGE(pan, -720, 720);
+			break;
+
+		case 'z':
+			param.pandrift = atoi(optarg);
+			RANGE(pandrift, -180, 180);
+			break;
+
 		}
 	}
 }
@@ -466,7 +485,7 @@ int main(int argc, char **argv)
 		fprintf
 		(
 			stderr,
-			"CWStudio %s (%s%s%s)\nCopyright 2009-2016 Lukasz Komsta, SP8QED\n",
+			"CWStudio %s (%s%s%s)\nCopyright 2009-2017 Lukasz Komsta, SP8QED\n",
 			VERSION,
 			CANONICAL_HOST,
 			SOUND_INTERFACE,
