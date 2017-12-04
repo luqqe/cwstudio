@@ -54,7 +54,11 @@
 #include <process.h>
 #endif
 #ifdef HAVE_LIBWINMM
+#ifdef WIN9X
 #define SOUND_INTERFACE "/waveout"
+#else
+#define SOUND_INTERFACE "/waveoutex"
+#endif
 #elif defined HAVE_PULSEAUDIO
 #define SOUND_INTERFACE "/pulseaudio"
 #elif defined HAVE_OSS
