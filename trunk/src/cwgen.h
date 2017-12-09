@@ -62,6 +62,15 @@ typedef float	floating;
 #define CWFWRITE	4
 #define CWFCLOSE	5
 
+#ifdef __WATCOMC__
+#define sinf(n) ((float)sin(n))
+#define logf(n) ((float)log(n))
+#define powf(n,m) ((float)pow(n,m))
+#define cosf(n) ((float)cos(n))
+#define sqrtf(n) ((float)sqrt(n))
+#define fabsf(n) ((float)fabs(n))
+#endif
+
 /*
  -----------------------------------------------------------------------------------------------------------------------
     Sound sample types with corresponding length
@@ -117,7 +126,6 @@ extern void				cw_freesample(cw_sample *sample);
 extern void				cw_initparam(cw_param *param);
 
 /* Constants */
-static const long int	NOISELEN = 131072;
 extern const char		*cw_words[1000];
 extern const char		*cw_calls[10][2272];
 

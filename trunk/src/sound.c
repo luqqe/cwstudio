@@ -21,7 +21,7 @@
 
  */
 #include "cwgen.h"
-
+#define	NOISELEN  131072L
 /*
  =======================================================================================================================
     Generate a tone sample for further inserting into final sound

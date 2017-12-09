@@ -5855,87 +5855,10 @@ _ACEOF
 
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lwinmm" >&5
-$as_echo_n "checking for main in -lwinmm... " >&6; }
-if ${ac_cv_lib_winmm_main+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lwinmm  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-
-int
-main ()
-{
-return main ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_winmm_main=yes
-else
-  ac_cv_lib_winmm_main=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_winmm_main" >&5
-$as_echo "$ac_cv_lib_winmm_main" >&6; }
-if test "x$ac_cv_lib_winmm_main" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBWINMM 1
-_ACEOF
-
-  LIBS="-lwinmm $LIBS"
-
-fi
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lksuser" >&5
-$as_echo_n "checking for main in -lksuser... " >&6; }
-if ${ac_cv_lib_ksuser_main+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lksuser  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-
-int
-main ()
-{
-return main ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_ksuser_main=yes
-else
-  ac_cv_lib_ksuser_main=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_ksuser_main" >&5
-$as_echo "$ac_cv_lib_ksuser_main" >&6; }
-if test "x$ac_cv_lib_ksuser_main" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBKSUSER 1
-_ACEOF
-
-  LIBS="-lksuser $LIBS"
-
-fi
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lossaudio" >&5
-$as_echo_n "checking for main in -lossaudio... " >&6; }
-if ${ac_cv_lib_ossaudio_main+:} false; then :
+#AC_CHECK_LIB([ksuser],[main])
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for _oss_ioctl in -lossaudio" >&5
+$as_echo_n "checking for _oss_ioctl in -lossaudio... " >&6; }
+if ${ac_cv_lib_ossaudio__oss_ioctl+:} false; then :
   $as_echo_n "(cached) " >&6
 else
   ac_check_lib_save_LIBS=$LIBS
@@ -5943,27 +5866,33 @@ LIBS="-lossaudio  $LIBS"
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
-
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char _oss_ioctl ();
 int
 main ()
 {
-return main ();
+return _oss_ioctl ();
   ;
   return 0;
 }
 _ACEOF
 if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_ossaudio_main=yes
+  ac_cv_lib_ossaudio__oss_ioctl=yes
 else
-  ac_cv_lib_ossaudio_main=no
+  ac_cv_lib_ossaudio__oss_ioctl=no
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 LIBS=$ac_check_lib_save_LIBS
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_ossaudio_main" >&5
-$as_echo "$ac_cv_lib_ossaudio_main" >&6; }
-if test "x$ac_cv_lib_ossaudio_main" = xyes; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_ossaudio__oss_ioctl" >&5
+$as_echo "$ac_cv_lib_ossaudio__oss_ioctl" >&6; }
+if test "x$ac_cv_lib_ossaudio__oss_ioctl" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_LIBOSSAUDIO 1
 _ACEOF
@@ -5972,9 +5901,9 @@ _ACEOF
 
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lpulse" >&5
-$as_echo_n "checking for main in -lpulse... " >&6; }
-if ${ac_cv_lib_pulse_main+:} false; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for pa_simple_new in -lpulse" >&5
+$as_echo_n "checking for pa_simple_new in -lpulse... " >&6; }
+if ${ac_cv_lib_pulse_pa_simple_new+:} false; then :
   $as_echo_n "(cached) " >&6
 else
   ac_check_lib_save_LIBS=$LIBS
@@ -5982,27 +5911,33 @@ LIBS="-lpulse  $LIBS"
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
-
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char pa_simple_new ();
 int
 main ()
 {
-return main ();
+return pa_simple_new ();
   ;
   return 0;
 }
 _ACEOF
 if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_pulse_main=yes
+  ac_cv_lib_pulse_pa_simple_new=yes
 else
-  ac_cv_lib_pulse_main=no
+  ac_cv_lib_pulse_pa_simple_new=no
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 LIBS=$ac_check_lib_save_LIBS
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_pulse_main" >&5
-$as_echo "$ac_cv_lib_pulse_main" >&6; }
-if test "x$ac_cv_lib_pulse_main" = xyes; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_pulse_pa_simple_new" >&5
+$as_echo "$ac_cv_lib_pulse_pa_simple_new" >&6; }
+if test "x$ac_cv_lib_pulse_pa_simple_new" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_LIBPULSE 1
 _ACEOF
@@ -6011,9 +5946,9 @@ _ACEOF
 
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lpulse-simple" >&5
-$as_echo_n "checking for main in -lpulse-simple... " >&6; }
-if ${ac_cv_lib_pulse_simple_main+:} false; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for pa_simple_new in -lpulse-simple" >&5
+$as_echo_n "checking for pa_simple_new in -lpulse-simple... " >&6; }
+if ${ac_cv_lib_pulse_simple_pa_simple_new+:} false; then :
   $as_echo_n "(cached) " >&6
 else
   ac_check_lib_save_LIBS=$LIBS
@@ -6021,27 +5956,33 @@ LIBS="-lpulse-simple  $LIBS"
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
-
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char pa_simple_new ();
 int
 main ()
 {
-return main ();
+return pa_simple_new ();
   ;
   return 0;
 }
 _ACEOF
 if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_pulse_simple_main=yes
+  ac_cv_lib_pulse_simple_pa_simple_new=yes
 else
-  ac_cv_lib_pulse_simple_main=no
+  ac_cv_lib_pulse_simple_pa_simple_new=no
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 LIBS=$ac_check_lib_save_LIBS
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_pulse_simple_main" >&5
-$as_echo "$ac_cv_lib_pulse_simple_main" >&6; }
-if test "x$ac_cv_lib_pulse_simple_main" = xyes; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_pulse_simple_pa_simple_new" >&5
+$as_echo "$ac_cv_lib_pulse_simple_pa_simple_new" >&6; }
+if test "x$ac_cv_lib_pulse_simple_pa_simple_new" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_LIBPULSE_SIMPLE 1
 _ACEOF
@@ -6050,9 +5991,9 @@ _ACEOF
 
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lpthread" >&5
-$as_echo_n "checking for main in -lpthread... " >&6; }
-if ${ac_cv_lib_pthread_main+:} false; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for pthread_create in -lpthread" >&5
+$as_echo_n "checking for pthread_create in -lpthread... " >&6; }
+if ${ac_cv_lib_pthread_pthread_create+:} false; then :
   $as_echo_n "(cached) " >&6
 else
   ac_check_lib_save_LIBS=$LIBS
@@ -6060,27 +6001,33 @@ LIBS="-lpthread  $LIBS"
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
-
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char pthread_create ();
 int
 main ()
 {
-return main ();
+return pthread_create ();
   ;
   return 0;
 }
 _ACEOF
 if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_pthread_main=yes
+  ac_cv_lib_pthread_pthread_create=yes
 else
-  ac_cv_lib_pthread_main=no
+  ac_cv_lib_pthread_pthread_create=no
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 LIBS=$ac_check_lib_save_LIBS
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_pthread_main" >&5
-$as_echo "$ac_cv_lib_pthread_main" >&6; }
-if test "x$ac_cv_lib_pthread_main" = xyes; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_pthread_pthread_create" >&5
+$as_echo "$ac_cv_lib_pthread_pthread_create" >&6; }
+if test "x$ac_cv_lib_pthread_pthread_create" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_LIBPTHREAD 1
 _ACEOF
@@ -6089,9 +6036,9 @@ _ACEOF
 
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lsndio" >&5
-$as_echo_n "checking for main in -lsndio... " >&6; }
-if ${ac_cv_lib_sndio_main+:} false; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for sio_open in -lsndio" >&5
+$as_echo_n "checking for sio_open in -lsndio... " >&6; }
+if ${ac_cv_lib_sndio_sio_open+:} false; then :
   $as_echo_n "(cached) " >&6
 else
   ac_check_lib_save_LIBS=$LIBS
@@ -6099,27 +6046,33 @@ LIBS="-lsndio  $LIBS"
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
-
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char sio_open ();
 int
 main ()
 {
-return main ();
+return sio_open ();
   ;
   return 0;
 }
 _ACEOF
 if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_sndio_main=yes
+  ac_cv_lib_sndio_sio_open=yes
 else
-  ac_cv_lib_sndio_main=no
+  ac_cv_lib_sndio_sio_open=no
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 LIBS=$ac_check_lib_save_LIBS
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_sndio_main" >&5
-$as_echo "$ac_cv_lib_sndio_main" >&6; }
-if test "x$ac_cv_lib_sndio_main" = xyes; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_sndio_sio_open" >&5
+$as_echo "$ac_cv_lib_sndio_sio_open" >&6; }
+if test "x$ac_cv_lib_sndio_sio_open" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_LIBSNDIO 1
 _ACEOF
@@ -6128,6 +6081,36 @@ _ACEOF
 
 fi
 
+
+# WinMM complex test (previous failed with OpenWATCOM)
+OLDLIBS=$LIBS
+LIBS="$LIBS -lwinmm -lksuser"
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for WinMM library" >&5
+$as_echo_n "checking for WinMM library... " >&6; }
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <windows.h>
+int
+main ()
+{
+waveOutClose(0);
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+  TEST_LIBS="$TEST_LIBS -lwinmm -lksuser" $as_echo "#define HAVE_LIBWINMM 1" >>confdefs.h
+
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+  LIBS="$OLDLIBS"
+
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
 
 # wxWidgets
 #AC_CHECK_PROG(HAVE_WXCONFIG, wx-config, "yes", "no")
