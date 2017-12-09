@@ -54,11 +54,7 @@
 #include <process.h>
 #endif
 #ifdef HAVE_LIBWINMM
-#ifdef WIN9X
 #define SOUND_INTERFACE "/waveout"
-#else
-#define SOUND_INTERFACE "/waveoutex"
-#endif
 #elif defined HAVE_PULSEAUDIO
 #define SOUND_INTERFACE "/pulseaudio"
 #elif defined HAVE_OSS
@@ -75,7 +71,7 @@
 #else
 #define THREAD_INTERFACE	""
 #endif
-#if defined HAVE_TERMIOS_H
+#if defined HAVE_TERMIOS_H && !defined __DOS__
 #include <termios.h>
 
 /*
@@ -101,7 +97,7 @@ int getch()
 	return ch;
 }
 
-#elif defined WIN32
+#elif defined WIN32 
 #include <conio.h>
 #define getch	_getch
 #else
