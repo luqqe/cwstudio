@@ -147,7 +147,7 @@ void cwstudio_writeconfig()
 {
 	FILE	*f;
 	char	filename[255];
-#ifdef WIN32
+#if defined WIN32 && !defined __CYGWIN__
 	sprintf(filename, "%s%s%s",getenv("HOMEDRIVE"),getenv("HOMEPATH"),"\\cwstudio.ini");
 #elif defined __DJGPP__
 	sprintf(filename, "%s","cwstudio.cfg");
@@ -210,7 +210,7 @@ void cwstudio_readconfig()
 	FILE	*f;
 	int	i;
 	char	filename[255], buffer[256];
-#ifdef WIN32
+#if defined WIN32 && !defined __CYGWIN__
 	sprintf(filename, "%s%s%s",getenv("HOMEDRIVE"),getenv("HOMEPATH"),"\\cwstudio.ini");
 #elif defined __DJGPP__
 	sprintf(filename, "%s","cwstudio.cfg");
@@ -449,7 +449,7 @@ void cwstudio_repaintwindows()
 	werase(win_bar);
 	mvwprintw(win_bar, 0, 0, "[ Play ][ Stop ][Pause ][Random][ Mode ][ Freq ][Noise ][Reset ][ Help ][Shape ]");
 	mvwprintw(win_bar, 1, 0, "[ AGC  ][Click ][ Dlen ][ SLen ][DetQSB][ Even ][ Odd  ][ Hand ][ Hum  ][Sweep ]");
-#ifdef HAVE_WINDOWS_H
+#if defined HAVE_WINDOWS_H && !defined __CYGWIN__
 	mvwprintw(win_bar, 2, 0, "[ Rate ][ Bits ][ WAV  ][ MP3  ][ Copy ][Paste ]        [ Load ][<<< Groups >>>]");
 #elif defined __DJGPP__
 	mvwprintw(win_bar, 2, 0, "[ Rate ][ Bits ][ WAV  ][DOSdev]                        [ Load ][<<< Groups >>>]");
@@ -691,7 +691,7 @@ int main(int argc, char **argv)
 		'/',
 		'?',
 		'2',
-#ifdef HAVE_WINDOWS_H
+#if defined HAVE_WINDOWS_H && !defined __CYGWIN__
 		'M',
 		CTL_DEL,
 		CTL_INS,
@@ -1313,7 +1313,7 @@ int main(int argc, char **argv)
 			cwstudio_resetwindows();
 			break;
 #endif
-#ifdef HAVE_WINDOWS_H
+#if defined HAVE_WINDOWS_H && !defined __CYGWIN__
 
 		case CTL_INS:
 			OpenClipboard(NULL);
