@@ -1,4 +1,4 @@
-/*$T /wav.c GC 1.150 2016-12-26 17:33:58 */
+/*$T /wav.c GC 1.150 2017-12-22 21:30:33 */
 
 /*$I0 
 
@@ -34,7 +34,9 @@ int cw_wavout(const char *filename, cw_sample *sound)
 
 	/* WAV header */
 	unsigned char		header[45] =
-		{"\x52\x49\x46\x46\x00\x00\x00\x00\x57\x41\x56\x45\x66\x6d\x74\x20\x10\x00\x00\x00\x01\x00\x01\x00\x44\xac\x00\x00\x88\x58\x01\x00\x02\x00\x10\x00\x64\x61\x74\x61\x00\x00\x00\x00"};
+	{
+		"\x52\x49\x46\x46\x00\x00\x00\x00\x57\x41\x56\x45\x66\x6d\x74\x20\x10\x00\x00\x00\x01\x00\x01\x00\x44\xac\x00\x00\x88\x58\x01\x00\x02\x00\x10\x00\x64\x61\x74\x61\x00\x00\x00\x00"
+	};
 	FILE				*f;
 
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
@@ -76,8 +78,10 @@ int cw_wavout(const char *filename, cw_sample *sound)
 	header[30] = (unsigned char) (l >> 16) & 0xff;
 	header[31] = (unsigned char) (l >> 24) & 0xff;
 
-	if(filename != NULL) {
-		if((f = fopen(filename, "wb+")) == NULL) {
+	if(filename != NULL)
+	{
+		if((f = fopen(filename, "wb+")) == NULL)
+		{
 			return(CWFOPEN);
 		}
 	}
@@ -90,11 +94,13 @@ int cw_wavout(const char *filename, cw_sample *sound)
 	}
 
 	if(fwrite(header, 1, 44, f) < 44) return(CWFWRITE);
-	if(fwrite(sound->data, (sound->channels * sound->bits / 8), sound->length,  f) < sound->length) return(CWFWRITE);
-	if(filename != NULL) {
+	if(fwrite(sound->data, (sound->channels * sound->bits / 8), sound->length, f) < sound->length) return(CWFWRITE);
+	if(filename != NULL)
+	{
 		if(fclose(f)) return(CWFCLOSE);
 	}
-	else {
+	else
+	{
 		fflush(stdout);
 #if _WIN32
 		_setmode(_fileno(stdout), _O_TEXT);

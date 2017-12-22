@@ -1,4 +1,4 @@
-/*$T /init.c GC 1.150 2016-12-26 17:33:58 */
+/*$T /init.c GC 1.150 2017-12-22 21:30:01 */
 
 /*$I0 
 
@@ -34,12 +34,14 @@ void (*cw_free) (void *) = free;
  */
 void cw_initsample(cw_sample *sample, cw_sample *ref)
 {
-	if(ref != NULL) {
+	if(ref != NULL)
+	{
 		sample->samplerate = ref->samplerate;
 		sample->bits = ref->bits;
 		sample->channels = ref->channels;
 	}
-	else {
+	else
+	{
 		sample->samplerate = 44100;
 		sample->bits = 16;
 		sample->channels = 1;

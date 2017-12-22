@@ -1,4 +1,4 @@
-/*$T /cwcli.c GC 1.150 2016-12-26 17:33:58 */
+/*$T /cwcli.c GC 1.150 2017-12-22 21:29:33 */
 
 /*$I0 
 
@@ -27,11 +27,9 @@
 #else
 #include "getopt_long_only.c"
 #endif
-
 #ifdef __NetBSD__
 #include "getopt_long_only.c"
 #endif
-
 #ifdef HAVE_CTYPE_H
 #include <ctype.h>
 #endif
@@ -97,7 +95,7 @@ int getch()
 	return ch;
 }
 
-#elif defined WIN32 
+#elif defined WIN32
 #include <conio.h>
 #define getch	_getch
 #else
@@ -117,11 +115,13 @@ int separg(char *options, char *argv[], int size)
 	int		i, argc = 0;
 
 	/*~~~~~~~~~~~~~~~~~~~*/
-	for(i = 0; i < size; i++) {
+	for(i = 0; i < size; i++)
+	{
 		while(isspace((int) *str)) str++;
 		if(*str != '\0')
 			argv[argc++] = str;
-		else {
+		else
+		{
 			argv[argc] = 0;
 			break;
 		}
@@ -163,9 +163,11 @@ void cwstudio_parseparam(int argc, char **argv)
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 	/* If environmental variable is set, parse it */
-	if((envs = getenv("CWPARAM")) != NULL) {
+	if((envs = getenv("CWPARAM")) != NULL)
+	{
 		envc = separg(envs, envv, 20);
-		if(envc > 0) {
+		if(envc > 0)
+		{
 			totalv[0] = argv[0];
 			for(i = 0; i < envc; i++) totalv[i + 1] = envv[i];
 			for(i = envc; i < (envc + argc); i++) totalv[i + 1] = argv[i - envc + 1];
@@ -177,8 +179,8 @@ void cwstudio_parseparam(int argc, char **argv)
 		for(i = 0; i < argc; i++) totalv[i] = argv[i];
 
 	/* Parse command line parameters */
-	while(1) {
-
+	while(1)
+	{
 		/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 		int						option_index = 0;
 		static struct option	long_options[] =
@@ -415,7 +417,6 @@ void cwstudio_parseparam(int argc, char **argv)
 			param.pandrift = atoi(optarg);
 			RANGE(pandrift, -180, 180);
 			break;
-
 		}
 	}
 }
@@ -468,10 +469,12 @@ int main(int argc, char **argv)
 #endif
 
 	/* If stdin is injected via pipe, read it. Otherwise, generate random group */
-	if(isatty(STDIN_FILENO)) {
+	if(isatty(STDIN_FILENO))
+	{
 		if((text = cwstudio_generate_text()) == NULL) return(CWALLOC);
 	}
-	else {
+	else
+	{
 		if((text = malloc(2048 * sizeof(char))) == NULL) return(CWALLOC);
 		(void) fgets(text, 2048, stdin);
 	}
@@ -480,7 +483,8 @@ int main(int argc, char **argv)
 	if((morsetext = cw_encode(text)) == NULL) return(CWALLOC);
 
 	/* output */
-	if(output) {
+	if(output)
+	{
 		fprintf(stderr, "\n----------------------------------------------------\n");
 		fprintf
 		(
@@ -494,7 +498,8 @@ int main(int argc, char **argv)
 		fprintf(stderr, "----------------------------------------------------\n");
 		fprintf(stderr, "* Working at %i Hz, %i bits\n", samplerate, bits);
 
-		if(isatty(STDIN_FILENO)) {
+		if(isatty(STDIN_FILENO))
+		{
 			switch(mode)
 			{
 			case 0: fprintf(stderr, "* Charset: %s\n\n", charset); break;
@@ -502,7 +507,8 @@ int main(int argc, char **argv)
 			case 2: fprintf(stderr, "* %i calls\n\n", param.number); break;
 			}
 		}
-		else {
+		else
+		{
 			fprintf(stderr, "* Getting text from stdin\n\n");
 		}
 
@@ -529,7 +535,8 @@ int main(int argc, char **argv)
 			fprintf(stderr, "\n");
 		if(param.signals > 1) fprintf(stderr, "* Mixing %i signals ", param.signals);
 		fprintf(stderr, "\n");
-		if(param.noise) {
+		if(param.noise)
+		{
 			fprintf(stderr, "* Adding %i%% noise, %i - %i Hz ", param.noise, param.lowcut, param.highcut);
 			if(param.agc) fprintf(stderr, "* %i%% AGC ", param.agc);
 			fprintf(stderr, "\n");
@@ -556,7 +563,8 @@ int main(int argc, char **argv)
 	if((err = cw_convert(&asound, &csound, bits)) != CWOK) return(err);
 
 	/* If stdout is redirected somewhere, feed generated WAV file there. */
-	if(isatty(STDOUT_FILENO)) {
+	if(isatty(STDOUT_FILENO))
+	{
 		i = (int) time(NULL);
 		sprintf(filename, "%x.wav", i);
 		if((err = cw_wavout(filename, &csound)) != CWOK) return(i);
@@ -565,7 +573,8 @@ int main(int argc, char **argv)
 		fputs(text, f);
 		fclose(f);
 	}
-	else {
+	else
+	{
 		fprintf(stderr, "* Redirecting sound to stdout\n\n");
 		if((i = cw_wavout(NULL, &csound)) != CWOK) return(i);
 	}
@@ -574,9 +583,11 @@ int main(int argc, char **argv)
 
 #if defined(HAVE_OSS) || defined(HAVE_PULSEAUDIO) || defined(HAVE_LIBWINMM) || defined(HAVE_COREAUDIO)
 	/* Play if needed */
-	if(play) {
+	if(play)
+	{
 		printf("<5> - PLAY, <6> - STOP, <7> - PAUSE, Ctrl-C - EXIT\n");
-		while((ch = getch()) != 3) {
+		while((ch = getch()) != 3)
+		{
 			switch(ch)
 			{
 			case '5':	cwstudio_play(&csound); break;
