@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.60])
-AC_INIT(cwstudio, 0.9.5)
+AC_INIT(cwstudio, 0.9.6)
 AC_CONFIG_SRCDIR([src/cwcli.c])
 m4_include([m4/ax_with_curses.m4])
 
@@ -33,12 +33,25 @@ AM_CONDITIONAL([HAVE_WINDRES], [test "$WINDRES" != "no"])
 
 # Checks for libraries.
 AC_CHECK_LIB([m],[sinf])
-AC_CHECK_LIB([winmm],[main])
-AC_CHECK_LIB([ossaudio],[main])
-AC_CHECK_LIB([pulse],[main])
-AC_CHECK_LIB([pulse-simple],[main])
-AC_CHECK_LIB([pthread],[main])
-AC_CHECK_LIB([sndio],[main])
+#AC_CHECK_LIB([ksuser],[main])
+AC_CHECK_LIB([ossaudio],[_oss_ioctl])
+AC_CHECK_LIB([pulse],[pa_simple_new])
+AC_CHECK_LIB([pulse-simple],[pa_simple_new])
+AC_CHECK_LIB([pthread],[pthread_create])
+AC_CHECK_LIB([sndio],[sio_open])
+
+# WinMM complex test (previous failed with OpenWATCOM)
+OLDLIBS=$LIBS
+LIBS="$LIBS -lwinmm -lksuser"
+AC_MSG_CHECKING([for WinMM library])
+AC_LINK_IFELSE(
+  [AC_LANG_PROGRAM([#include <windows.h>],
+    [waveOutClose(0);])],
+  AC_MSG_RESULT([yes])
+  [TEST_LIBS="$TEST_LIBS -lwinmm -lksuser"] AC_DEFINE([HAVE_LIBWINMM],[1],[]),
+  AC_MSG_RESULT([no])
+  [LIBS="$OLDLIBS"]
+  )
 
 # wxWidgets
 #AC_CHECK_PROG(HAVE_WXCONFIG, wx-config, "yes", "no")

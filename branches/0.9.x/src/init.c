@@ -1,4 +1,4 @@
-/*$T /init.c GC 1.150 2016-12-26 17:33:58 */
+/*$T /init.c GC 1.150 2017-12-22 21:30:01 */
 
 /*$I0 
 
@@ -34,13 +34,17 @@ void (*cw_free) (void *) = free;
  */
 void cw_initsample(cw_sample *sample, cw_sample *ref)
 {
-	if(ref != NULL) {
+	if(ref != NULL)
+	{
 		sample->samplerate = ref->samplerate;
 		sample->bits = ref->bits;
+		sample->channels = ref->channels;
 	}
-	else {
+	else
+	{
 		sample->samplerate = 44100;
 		sample->bits = 16;
+		sample->channels = 1;
 	}
 
 	sample->length = 0;
@@ -78,6 +82,7 @@ void cw_setalloc(void * (*newmalloc) (size_t), void (*newfree) (void *))
 void cw_initparam(cw_param *param)
 {
 	param->seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
+	param->channels = 1;
 	param->window = 100;
 	param->sweep = 0;
 	param->sweepness = 0;
@@ -92,6 +97,8 @@ void cw_initparam(cw_param *param)
 	param->noise = 100;
 	param->lowcut = 300;
 	param->highcut = 2400;
+	param->pan = 0;
+	param->pandrift = 0;
 	param->qsb = 0;
 	param->number = 20;
 	param->signals = 3;

@@ -1,4 +1,4 @@
-/*$T /morse.c GC 1.150 2016-12-26 17:33:58 */
+/*$T /morse.c GC 1.150 2017-12-22 21:30:10 */
 
 /*$I0 
 
@@ -38,7 +38,8 @@ char *cw_encode(const char *text)
 	if((decoded = (char *) cw_malloc(10 * length * sizeof(char))) == NULL) return(NULL);
 	strncpy(decoded, "\0", 1);
 	strcat(decoded, "   ");
-	for(i = 0; i < length; i++) {
+	for(i = 0; i < length; i++)
+	{
 		switch((char) *(text + i))
 		{
 

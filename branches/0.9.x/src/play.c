@@ -1,4 +1,4 @@
-/*$T /play.c GC 1.150 2016-12-26 17:33:58 */
+/*$T /play.c GC 1.150 2017-12-22 21:30:27 */
 
 /*$I0 
 
@@ -43,6 +43,7 @@ long unsigned int			length;
 #endif
 #if HAVE_WINDOWS_H
 #include <windows.h>
+#include <mmreg.h>
 #endif
 #ifdef HAVE_PULSEAUDIO
 #include <pulse/simple.h>
@@ -67,8 +68,7 @@ long unsigned int			length;
 #ifdef HAVE_SNDIO
 #include <sndio.h>
 #endif
-
-volatile int					status = CWSTOPPED;
+volatile int				status = CWSTOPPED;
 long int					counter;
 char						*place;
 
@@ -80,17 +80,18 @@ pthread_attr_t				cwstudio_attr;
 #ifdef HAVE_LIBWINMM
 HWAVEOUT					h;
 WAVEFORMATEX				wf;
+WAVEFORMATEXTENSIBLE		wfe;
 WAVEHDR						wh;
 HANDLE						d;
 #elif HAVE_PULSEAUDIO
 static pa_sample_spec		pas;
 pa_simple					*pa = NULL;
-int						e;
+int							e;
 #elif defined HAVE_SNDIO
-struct sio_hdl					*h;
-struct sio_par					p;
+struct sio_hdl				*h;
+struct sio_par				p;
 #elif defined HAVE_AUDIOIO
-int				audio;
+int							audio;
 struct audio_info			info;
 #elif defined HAVE_OSS
 int							audio;
@@ -110,12 +111,14 @@ void cwstudio_callback(void *data, AudioQueueRef queue, AudioQueueBufferRef buf_
 	int					nsamp = buf->mAudioDataByteSize;
 	short				*samp = buf->mAudioData;
 
-	if(offsetmax > offset) {
+	if(offsetmax > offset)
+	{
 		memcpy(samp, ((char *) data) + offset, nsamp);
 		offset += nsamp;
 		ossstatus = AudioQueueEnqueueBuffer(queue, buf_ref, 0, NULL);
 	}
-	else {
+	else
+	{
 		cwstudio_stop();
 	}
 }
@@ -141,7 +144,7 @@ void *cwstudio_playthread(void *arg)
 	 * Variables used for loop feeding (place is pointer, counter is how many bytes
 	 * left
 	 */
-	counter = (sample->bits / 8) * sample->length - 2;
+	counter = (sample->bits / 8) * sample->length * sample->channels - 2;
 	place = (char *) sample->data;
 
 #ifdef HAVE_PULSEAUDIO
@@ -151,12 +154,14 @@ void *cwstudio_playthread(void *arg)
 	else
 		pas.format = PA_SAMPLE_S16LE;
 	pas.rate = sample->samplerate;
-	pas.channels = 1;
-	if(!(pa = pa_simple_new(NULL, "cwgen", PA_STREAM_PLAYBACK, NULL, "playback", &pas, NULL, NULL, &e))) {
-		fprintf(stderr, "pa_simple_new() failed: %s\n", pa_strerror(e));
+	pas.channels = sample->channels;
+	if(!(pa = pa_simple_new(NULL, "cwgen", PA_STREAM_PLAYBACK, NULL, "playback", &pas, NULL, NULL, &e)))
+	{
+		status = CWPLAYERROR;
 	}
 
-	while((counter > 0) && (status != CWSTOPPED)) {
+	while((counter > 0) && (status != CWSTOPPED))
+	{
 		while(status == CWPAUSED);
 		if(counter < BUFSIZE)
 			pa_simple_write(pa, place, counter, &e);
@@ -169,20 +174,22 @@ void *cwstudio_playthread(void *arg)
 	pa_simple_drain(pa, &e);
 	pa_simple_free(pa);
 #elif defined HAVE_SNDIO
-	h = sio_open(NULL,SIO_PLAY,0);
+	h = sio_open(NULL, SIO_PLAY, 0);
 	sio_initpar(&p);
 	p.rate = sample->samplerate;
 	p.pchan = 1;
 	p.bits = sample->bits;
-	sio_setpar(h,&p);
+	sio_setpar(h, &p);
 	sio_start(h);
 	status = CWPLAYING;
-	while((counter > 128) && (status != CWSTOPPED)) {
+	while((counter > 128) && (status != CWSTOPPED))
+	{
 		while(status == CWPAUSED);
-		sio_write(h,place,128);
+		sio_write(h, place, 128);
 		place = place + 128;
 		counter = counter - 128;
 	}
+
 	sio_close(h);
 #elif defined HAVE_AUDIOIO
 	AUDIO_INITINFO(&info);
@@ -190,17 +197,19 @@ void *cwstudio_playthread(void *arg)
 	info.play.encoding = AUDIO_ENCODING_SLINEAR;
 	info.play.sample_rate = sample->samplerate;
 	info.play.precision = sample->bits;
-	info.play.channels = 1;
+	info.play.channels = sample->channels;
 	audio = open("/dev/sound", O_WRONLY, 0);
-	ioctl(audio,AUDIO_SETINFO,&info);
-	ioctl(audio,AUDIO_GETINFO,&info);
+	ioctl(audio, AUDIO_SETINFO, &info);
+	ioctl(audio, AUDIO_GETINFO, &info);
 	status = CWPLAYING;
-	while((counter > 0) && (status != CWSTOPPED)) {
+	while((counter > 0) && (status != CWSTOPPED))
+	{
 		while(status == CWPAUSED);
 		write(audio, place, 2);
 		place = place + 2;
 		counter = counter - 2;
 	}
+
 	close(audio);
 #elif defined HAVE_OSS
 	audio = open("/dev/dsp", O_WRONLY, 0);
@@ -209,12 +218,13 @@ void *cwstudio_playthread(void *arg)
 	else
 		format = AFMT_S16_LE;
 	ioctl(audio, SNDCTL_DSP_SETFMT, &format);
-	stereo = 0;
+	stereo = (sample->channels > 1);
 	ioctl(audio, SNDCTL_DSP_STEREO, &stereo);
 	speed = sample->samplerate;
 	ioctl(audio, SNDCTL_DSP_SPEED, &speed);
 	status = CWPLAYING;
-	while((counter > 0) && (status != CWSTOPPED)) {
+	while((counter > 0) && (status != CWSTOPPED))
+	{
 		while(status == CWPAUSED);
 		write(audio, place, 2);
 		place = place + 2;
@@ -243,7 +253,8 @@ void cwstudio_sbinit(char *sbconfig)
 	sb_irq = 7;
 	sb_dma = 1;
 
-	while(env && *env) {
+	while(env && *env)
+	{
 		while((*env == ' ') || (*env == '\t')) env++;
 		if(!*env) break;
 		switch(*env++)
@@ -284,7 +295,8 @@ void cwstudio_allocate_dos(int size)
 {
 	_go32_dpmi_seginfo	tmp1, tmp2;
 	dos_offset = 65535;
-	while((dos_offset >> 16) != ((dos_offset + size - 1) >> 16)) {
+	while((dos_offset >> 16) != ((dos_offset + size - 1) >> 16))
+	{
 		_go32_dpmi_free_dos_memory(&tmp2);
 		tmp2 = tmp1;
 		tmp1.size = size / 16;
@@ -322,10 +334,12 @@ void cwstudio_dosplay_irq()
 	dos_counter++;
 	dos_counter &= 3;
 
-	if(playcounter <= (length - BLOCKLEN + 2 * SUBBLOCKLEN)) {
+	if(playcounter <= (length - BLOCKLEN + 2 * SUBBLOCKLEN))
+	{
 		dosmemput(buffer + playcounter + BLOCKLEN, SUBBLOCKLEN, dos_offset + (SUBBLOCKLEN * dos_counter));
 	}
-	else {
+	else
+	{
 		cwstudio_stop();
 	}
 }
@@ -361,11 +375,14 @@ void cwstudio_irq_reset(int irq_vector)
  */
 int cwstudio_play(cw_sample *sample)
 {
+#ifdef WIN32
+	const DWORD		spks[7] = { 0x4, 0x3, 0x103, 0x33, 0x37, 0x137, 0x337 };
+#endif
 #ifdef __DJGPP__
 	unsigned int	temp_page, temp_offset;
 #endif
 	if(status == CWPLAYING) cwstudio_stop();
-	if(status == CWSTOPPED)
+	if(status == CWSTOPPED || status == CWPLAYERROR)
 	{
 #ifdef __DJGPP__
 		/* The DMA playing code is inspired by Steven H Don's code snippets, adapted and almost rewritten */
@@ -431,22 +448,53 @@ int cwstudio_play(cw_sample *sample)
 		cwstudio_dsp_write(0x1C);
 #endif
 #ifdef HAVE_LIBWINMM
+#ifdef WIN9X
 		wf.wFormatTag = WAVE_FORMAT_PCM;
-		wf.nChannels = 1;
+		wf.nChannels = sample->channels;
 		wf.wBitsPerSample = sample->bits;
 		wf.nSamplesPerSec = sample->samplerate;
 		wf.nBlockAlign = wf.nChannels * wf.wBitsPerSample / 8;
 		wf.nAvgBytesPerSec = wf.nSamplesPerSec * wf.nBlockAlign;
 		wf.cbSize = 0;
+		if(waveOutOpen(&h, 0, &wf, (DWORD_PTR) d, 0, CALLBACK_EVENT) != MMSYSERR_NOERROR)
+		{
+			status = CWPLAYERROR;
+			return(CWPLAYERROR);
+		}
+
+#else
+		wfe.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
+		wfe.Format.nChannels = sample->channels;
+		wfe.Format.wBitsPerSample = sample->bits;
+		wfe.Samples.wValidBitsPerSample = sample->bits;
+		wfe.Format.nSamplesPerSec = sample->samplerate;
+		wfe.Format.nBlockAlign = wfe.Format.nChannels * wfe.Format.wBitsPerSample / 8;
+		wfe.Format.nAvgBytesPerSec = wfe.Format.nSamplesPerSec * wfe.Format.nBlockAlign;
+		wfe.Format.cbSize = 22;
+		wfe.dwChannelMask = spks[sample->channels - 1];
+		wfe.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
 		d = CreateEvent(0, FALSE, FALSE, 0);
-		if(waveOutOpen(&h, 0, &wf, (DWORD_PTR) d, 0, CALLBACK_EVENT) != MMSYSERR_NOERROR);
+		if(waveOutOpen(&h, 0, (LPCWAVEFORMATEX) & wfe, (DWORD_PTR) d, 0, CALLBACK_EVENT) != MMSYSERR_NOERROR)
+		{
+			status = CWPLAYERROR;
+			return(CWPLAYERROR);
+		};
+#endif
 		wh.lpData = sample->data;
-		wh.dwBufferLength = (sample->bits / 8) * sample->length - 2;
+		wh.dwBufferLength = sample->channels * (sample->bits / 8) * sample->length - 2;
 		wh.dwFlags = 0;
 		wh.dwLoops = 0;
-		if(waveOutPrepareHeader(h, &wh, sizeof(wh)) != MMSYSERR_NOERROR);
+		if(waveOutPrepareHeader(h, &wh, sizeof(wh)) != MMSYSERR_NOERROR)
+		{
+			status = CWPLAYERROR;
+			return(CWPLAYERROR);
+		};
 		ResetEvent(d);
-		if(waveOutWrite(h, &wh, sizeof(wh)) != MMSYSERR_NOERROR);
+		if(waveOutWrite(h, &wh, sizeof(wh)) != MMSYSERR_NOERROR)
+		{
+			status = CWPLAYERROR;
+			return(CWPLAYERROR);
+		};
 #elif defined HAVE_COREAUDIO
 		OSStatus					ossstatus;
 		AudioStreamBasicDescription fmt = { 0 };
@@ -456,7 +504,7 @@ int cwstudio_play(cw_sample *sample)
 		fmt.mFormatID = kAudioFormatLinearPCM;
 		fmt.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
 		fmt.mFramesPerPacket = 1;
-		fmt.mChannelsPerFrame = 1;
+		fmt.mChannelsPerFrame = sample->channels;
 		fmt.mBytesPerPacket = fmt.mBytesPerFrame = 2;
 		fmt.mBitsPerChannel = sample->bits;
 		ossstatus = AudioQueueNewOutput
@@ -563,8 +611,16 @@ int cwstudio_stop()
 #endif
 #ifdef HAVE_LIBWINMM
 	waveOutReset(h);
-	if(waveOutUnprepareHeader(h, &wh, sizeof(wh)) != MMSYSERR_NOERROR);
-	if(waveOutClose(h) != MMSYSERR_NOERROR);
+	if(waveOutUnprepareHeader(h, &wh, sizeof(wh)) != MMSYSERR_NOERROR)
+	{
+		status = CWPLAYERROR;
+		return(CWPLAYERROR);
+	};
+	if(waveOutClose(h) != MMSYSERR_NOERROR)
+	{
+		status = CWPLAYERROR;
+		return(CWPLAYERROR);
+	};
 	CloseHandle(d);
 #elif defined HAVE_COREAUDIO
 	AudioQueueStop(queue, 1);

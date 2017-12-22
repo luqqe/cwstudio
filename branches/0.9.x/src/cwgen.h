@@ -62,6 +62,15 @@ typedef float	floating;
 #define CWFWRITE	4
 #define CWFCLOSE	5
 
+#ifdef __WATCOMC__
+#define sinf(n) ((float)sin(n))
+#define logf(n) ((float)log(n))
+#define powf(n,m) ((float)pow(n,m))
+#define cosf(n) ((float)cos(n))
+#define sqrtf(n) ((float)sqrt(n))
+#define fabsf(n) ((float)fabs(n))
+#endif
+
 /*
  -----------------------------------------------------------------------------------------------------------------------
     Sound sample types with corresponding length
@@ -71,6 +80,7 @@ typedef struct
 {
 	unsigned int	samplerate;
 	unsigned int	bits;
+	int	channels;
 	long int		length;
 	void			*data;
 } cw_sample;
@@ -83,6 +93,7 @@ typedef struct
 typedef struct
 {
 	int agc;
+	int channels;
 	int click;
 	int cspaces;
 	int dashlen;
@@ -96,6 +107,8 @@ typedef struct
 	int noise;
 	int number;
 	int odd;
+	int pan;
+	int pandrift;
 	int qsb;
 	int seed;
 	int shape;
@@ -113,7 +126,6 @@ extern void				cw_freesample(cw_sample *sample);
 extern void				cw_initparam(cw_param *param);
 
 /* Constants */
-static const long int	NOISELEN = 131072;
 extern const char		*cw_words[1000];
 extern const char		*cw_calls[10][2272];
 
@@ -141,7 +153,8 @@ extern void				cw_append
 							cw_sample	*sample2,
 							long int	length,
 							int			window,
-							floating	amplitude
+							floating	amplitude,
+							int 		pan
 						);
 extern void				cw_mix(cw_sample *sample1, cw_sample *sample2, floating amplitude);
 extern int				cw_add_noise(cw_sample *sample, cw_param param);
