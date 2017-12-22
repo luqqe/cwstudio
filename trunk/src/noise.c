@@ -1,4 +1,4 @@
-/*$T /noise.c GC 1.150 2016-12-26 17:33:58 */
+/*$T /noise.c GC 1.150 2017-12-22 21:30:13 */
 
 /*$I0 
 
@@ -62,7 +62,8 @@ int cw_noisegen(cw_sample *anoise, long int duration, int low, int high)
 	) return(CWALLOC);
 
 	/* Time domain imaginary ones (and others) are zeroed */
-	for(i = 0; i < duration; i++) {
+	for(i = 0; i < duration; i++)
+	{
 		ti[i] = 0;
 		fr[i] = 0;
 		fi[i] = 0;
@@ -77,7 +78,8 @@ int cw_noisegen(cw_sample *anoise, long int duration, int low, int high)
 	high = n2 * ((float) high) / (float) anoise->samplerate * 2.0;
 
 	/* High pass filtering */
-	for(i = 0; i < low; i++) {
+	for(i = 0; i < low; i++)
+	{
 		fr[i] = 0;
 		fr[duration - 1 - i] = 0;
 		fi[i] = 0;
@@ -85,7 +87,8 @@ int cw_noisegen(cw_sample *anoise, long int duration, int low, int high)
 	}
 
 	/* Low pass filtering */
-	for(i = 0; i < (n2 - high); i++) {
+	for(i = 0; i < (n2 - high); i++)
+	{
 		fr[n2 + i] = 0;
 		fr[n2 - i] = 0;
 		fi[n2 + i] = 0;
@@ -98,13 +101,15 @@ int cw_noisegen(cw_sample *anoise, long int duration, int low, int high)
 	/* Get maximum and minimum values of obtained stuff */
 	max = -1e10;
 	min = 1e10;
-	for(i = 0; i < duration; i++) {
+	for(i = 0; i < duration; i++)
+	{
 		if(tr[i] < min) min = tr[i];
 		if(tr[i] > max) max = tr[i];
 	}
 
 	/* Normalize to (-1,1) range */
-	for(i = 0; i < duration; i++) {
+	for(i = 0; i < duration; i++)
+	{
 		tr[i] = (tr[i] - min) / (max - min);
 		tr[i] -= 0.5;
 		tr[i] += tr[i];
