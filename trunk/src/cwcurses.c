@@ -4,7 +4,7 @@
 
     This file is part of CWStudio.
 
-    Copyright 2008-2016 Lukasz Komsta, SP8QED
+    Copyright 2008-2017 Lukasz Komsta, SP8QED
 
     CWStudio is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -22,6 +22,9 @@
  */
 #include "cwstudio.h"
 
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
 #endif
@@ -147,16 +150,8 @@ void cwstudio_writeconfig()
 {
 	FILE	*f;
 	char	filename[255];
-#if defined WIN32 && !defined __CYGWIN__
-	sprintf(filename, "%s%s%s", getenv("HOMEDRIVE"), getenv("HOMEPATH"), "\\cwstudio.ini");
-#elif defined __DJGPP__
-	sprintf(filename, "%s", "cwstudio.cfg");
-#else
-	char	homedir[255];
 
-	//if ((homedir = getenv("HOME")) == NULL) homedir = getpwuid(getuid())->pw_dir;
-	sprintf(filename, "%s%s", getenv("HOME"), "/.cwstudio");
-#endif
+	cwstudio_getconfigfile(filename);
 
 	//	sprintf(filename, "%s", CANONICAL_HOST);
 	if((f = fopen(filename, "w")) != NULL)
@@ -214,16 +209,9 @@ void cwstudio_readconfig()
 	FILE	*f;
 	int		i;
 	char	filename[255], buffer[256];
-#if defined WIN32 && !defined __CYGWIN__
-	sprintf(filename, "%s%s%s", getenv("HOMEDRIVE"), getenv("HOMEPATH"), "\\cwstudio.ini");
-#elif defined __DJGPP__
-	sprintf(filename, "%s", "cwstudio.cfg");
-#else
-	char	homedir[255];
 
-	//if ((homedir = getenv("HOME")) == NULL) homedir = getpwuid(getuid())->pw_dir;
-	sprintf(filename, "%s%s", getenv("HOME"), "/.cwstudio");
-#endif
+	cwstudio_getconfigfile(filename);
+
 	if((f = fopen(filename, "r")) != NULL)
 	{
 		while(fgets(buffer, 256, f) != NULL)

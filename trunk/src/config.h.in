@@ -60,7 +60,7 @@
 /* Define to 1 if you have the `sndio' library (-lsndio). */
 #undef HAVE_LIBSNDIO
 
-/* Define to 1 if you have the `winmm' library (-lwinmm). */
+/* WinMM Library */
 #undef HAVE_LIBWINMM
 
 /* Define to 1 if you have the <machine/soundcard.h> header file. */
@@ -119,6 +119,9 @@
 
 /* Define to 1 if you have the <pulse/simple.h> header file. */
 #undef HAVE_PULSE_SIMPLE_H
+
+/* Define to 1 if you have the <pwd.h> header file. */
+#undef HAVE_PWD_H
 
 /* Define to 1 if you have the <signal.h> header file. */
 #undef HAVE_SIGNAL_H

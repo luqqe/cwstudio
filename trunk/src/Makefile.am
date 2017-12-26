@@ -4,7 +4,7 @@ bin_PROGRAMS = cwcli
 
 if COMPILE_CURSES
 bin_PROGRAMS += cwcurses
-cwcurses_SOURCES = cwcurses.c play.c cwstudio.h
+cwcurses_SOURCES = cwcurses.c play.c conf.c cwstudio.h
 cwcurses_LDADD = libcwgen.a $(PTHREAD_LIBS) $(CURSES_LIB)
 if HAVE_WINDRES
 cwcurses_SOURCES += cwcurses-res.rc
@@ -15,7 +15,7 @@ if COMPILE_WX
 bin_PROGRAMS += cwwx
 cwwx_SOURCES = cwwx.cc
 cwwx_CPPFLAGS = $(WX_CPPFLAGS)
-cwwx_LDADD = play.o libcwgen.a $(WX_LIBS)
+cwwx_LDADD = play.o conf.o libcwgen.a $(WX_LIBS)
 if HAVE_WINDRES
 cwwx_SOURCES += cwwx-res.rc
 endif
