@@ -491,13 +491,8 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
 	spins[15]->SetValue(param.seed);
 	Centre();
-#ifdef WIN32
-	sprintf(filename, "%s%s%s",getenv("HOMEDRIVE"),getenv("HOMEPATH"),"\\cwstudio.ini");
-#else
-	char homedir[255];
-	//if ((homedir = getenv("HOME")) == NULL) homedir = getpwuid(getuid())->pw_dir;
-	sprintf(filename, "%s%s",getenv("HOME"),"/.cwstudio");
-#endif
+
+	cwstudio_getconfigfile(filename);
 	cw_initparam(&param);
 	LoadConfig(filename);
 	ReverseUpdate();

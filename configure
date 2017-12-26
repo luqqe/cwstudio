@@ -6101,7 +6101,8 @@ _ACEOF
 if ac_fn_c_try_link "$LINENO"; then :
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
-  TEST_LIBS="$TEST_LIBS -lwinmm -lksuser" $as_echo "#define HAVE_LIBWINMM 1" >>confdefs.h
+  TEST_LIBS="$TEST_LIBS -lwinmm -lksuser"
+$as_echo "#define HAVE_LIBWINMM 1" >>confdefs.h
 
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
@@ -7227,7 +7228,7 @@ LIBS="$ac_save_LIBS"
 
 
 # Checks for header files.
-for ac_header in ctype.h getopt.h math.h stdlib.h string.h unistd.h fcntl.h sys/ioctl.h sys/time.h time.h windows.h process.h signal.h termios.h
+for ac_header in ctype.h getopt.h math.h stdlib.h string.h unistd.h fcntl.h sys/ioctl.h sys/time.h time.h windows.h process.h signal.h pwd.h termios.h sys/types.h
 do :
   as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
 ac_fn_c_check_header_mongrel "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default"

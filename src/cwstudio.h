@@ -4,7 +4,7 @@
 
     This file is part of CWStudio.
 
-    Copyright 2008-2013 Lukasz Komsta, SP8QED
+    Copyright 2008-2017 Lukasz Komsta, SP8QED
 
     CWStudio is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -26,6 +26,8 @@
 #define CWPLAYING	1
 #define CWPAUSED	2
 #define CWPLAYERROR	3
+
+extern void cwstudio_getconfigfile(char* filename);
 
 extern void playsample(cw_sample *sample);
 extern void *threadplay(void *arg);

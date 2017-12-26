@@ -48,7 +48,7 @@ AC_LINK_IFELSE(
   [AC_LANG_PROGRAM([#include <windows.h>],
     [waveOutClose(0);])],
   AC_MSG_RESULT([yes])
-  [TEST_LIBS="$TEST_LIBS -lwinmm -lksuser"] AC_DEFINE([HAVE_LIBWINMM],[1],[]),
+  [TEST_LIBS="$TEST_LIBS -lwinmm -lksuser"] AC_DEFINE([HAVE_LIBWINMM],[1],[WinMM Library]),
   AC_MSG_RESULT([no])
   [LIBS="$OLDLIBS"]
   )
@@ -84,7 +84,7 @@ LIBS="$ac_save_LIBS"
 
 
 # Checks for header files.
-AC_CHECK_HEADERS([ctype.h getopt.h math.h stdlib.h string.h unistd.h fcntl.h sys/ioctl.h sys/time.h time.h windows.h process.h signal.h termios.h])
+AC_CHECK_HEADERS([ctype.h getopt.h math.h stdlib.h string.h unistd.h fcntl.h sys/ioctl.h sys/time.h time.h windows.h process.h signal.h pwd.h termios.h sys/types.h])
 AC_CHECK_HEADERS([sys/soundcard.h soundcard.h machine/soundcard.h],
                      [AC_DEFINE([HAVE_OSS], 1,
                         [Define to 1 if you have OSS.])],
@@ -119,7 +119,5 @@ AC_TYPE_SIZE_T
 #AC_FUNC_MALLOC
 AC_CHECK_FUNCS([pow sqrt])
 
-AC_CONFIG_FILES([Makefile
-				 man/Makefile
-                 src/Makefile])
+AC_CONFIG_FILES([Makefile man/Makefile src/Makefile])
 AC_OUTPUT
