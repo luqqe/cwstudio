@@ -12,7 +12,7 @@ AC_USE_SYSTEM_EXTENSIONS
 AC_DEFINE_UNQUOTED([CANONICAL_TARGET], "$target", [Canonical target])
 AC_DEFINE_UNQUOTED([CANONICAL_HOST], "$host", [Canoncal host])
 
-# 
+#
 AM_INIT_AUTOMAKE(no-dependencies)
 AM_CONFIG_HEADER([src/config.h])
 AM_MAINTAINER_MODE
@@ -118,6 +118,12 @@ AC_TYPE_SIZE_T
 # Checks for library functions.
 #AC_FUNC_MALLOC
 AC_CHECK_FUNCS([pow sqrt])
+
+case $host_os in
+    *darwin*)
+    LIBS+="-framework CoreServices -framework AudioToolbox"
+    ;;
+esac
 
 AC_CONFIG_FILES([Makefile man/Makefile src/Makefile])
 AC_OUTPUT
