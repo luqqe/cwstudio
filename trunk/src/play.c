@@ -1,6 +1,6 @@
 /*$T /play.c GC 1.150 2017-12-22 21:30:27 */
 
-/*$I0 
+/*$I0
 
     This file is part of CWStudio.
 
@@ -98,8 +98,8 @@ int							audio;
 int							format, stereo;
 int							speed;
 #elif defined HAVE_COREAUDIO
-#define BUFSIZE 10240
-volatile static long int	offset = 0, offsetmax = 0;
+#define BUFSIZE 81920
+volatile long int	offset = 0, offsetmax = 0;
 AudioQueueRef				queue;
 
 /*$3- Callback function for coreaudio - copy another part of buffer ==================================================*/
@@ -108,12 +108,12 @@ void cwstudio_callback(void *data, AudioQueueRef queue, AudioQueueBufferRef buf_
 {
 	OSStatus			ossstatus;
 	AudioQueueBuffer	*buf = buf_ref;
-	int					nsamp = buf->mAudioDataByteSize;
-	short				*samp = buf->mAudioData;
+	size_t					nsamp = buf->mAudioDataByteSize;
+	char				*samp = buf->mAudioData;
 
 	if(offsetmax > offset)
 	{
-		memcpy(samp, ((char *) data) + offset, nsamp);
+		memcpy(samp, ((char *) data) + offset, ((offsetmax - offset) < nsamp) ? (offsetmax - offset) : nsamp);
 		offset += nsamp;
 		ossstatus = AudioQueueEnqueueBuffer(queue, buf_ref, 0, NULL);
 	}
@@ -238,10 +238,10 @@ void *cwstudio_playthread(void *arg)
 #endif
 #ifdef __DJGPP__
 
-/* 
+/*
  =======================================================================================================================
 	Parse "BLASTER" environment variable and set SB address, IRQ number and DMA Channel.
-	Based on parsing function in libmikmod, by Andrew Zabolotny 
+	Based on parsing function in libmikmod, by Andrew Zabolotny
  =======================================================================================================================
 */
 void cwstudio_sbinit(char *sbconfig)
@@ -286,7 +286,7 @@ void cwstudio_sbinit(char *sbconfig)
 		strcat(sbconfig, "");
 }
 
-/* 
+/*
  =======================================================================================================================
 	Allocate DOS memory of a given size, ensuring that all allocated memory lies in the same segment.
  =======================================================================================================================
@@ -308,7 +308,7 @@ void cwstudio_allocate_dos(int size)
 	dos_offset = dos_buffer.rm_segment << 4;
 }
 
-/* 
+/*
  =======================================================================================================================
 	Write a byte to the DSP port of Sound Blaster
  =======================================================================================================================
@@ -319,7 +319,7 @@ void cwstudio_dsp_write(unsigned char Value)
 	outportb(sb_base + 0xC, Value);
 }
 
-/* 
+/*
  =======================================================================================================================
 	IRQ (callback) function for dos playing. Called every played SUBBLOCKLEN samples, copies another part of the
 	sound to the proper part of the DOS DMA buffer.
@@ -344,7 +344,7 @@ void cwstudio_dosplay_irq()
 	}
 }
 
-/* 
+/*
  =======================================================================================================================
 	Set given DOS IRQ to a "cwstudio_dosplay_irq" function,
  =======================================================================================================================
@@ -357,7 +357,7 @@ void cwstudio_irq_set(int irq_vector)
 	_go32_dpmi_chain_protected_mode_interrupt_vector(irq_vector, &irq);
 }
 
-/* 
+/*
  =======================================================================================================================
 	Reset given IRQ to the original pointer.
  =======================================================================================================================
@@ -498,16 +498,17 @@ int cwstudio_play(cw_sample *sample)
 #elif defined HAVE_COREAUDIO
 		OSStatus					ossstatus;
 		AudioStreamBasicDescription fmt = { 0 };
-		AudioQueueBufferRef			buf_ref;
+		AudioQueueBufferRef			buf_ref, buf_ref2;
 		AudioQueueBuffer			*buf;
 		fmt.mSampleRate = sample->samplerate;
 		fmt.mFormatID = kAudioFormatLinearPCM;
 		fmt.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
 		fmt.mFramesPerPacket = 1;
 		fmt.mChannelsPerFrame = sample->channels;
-		fmt.mBytesPerPacket = fmt.mBytesPerFrame = 2;
+		fmt.mBytesPerPacket = fmt.mBytesPerFrame = (sample->bits / 8) * sample->channels;
 		fmt.mBitsPerChannel = sample->bits;
-		ossstatus = AudioQueueNewOutput
+		AudioQueueReset(queue);
+    ossstatus = AudioQueueNewOutput
 			(
 				&fmt,
 				cwstudio_callback,
@@ -517,11 +518,18 @@ int cwstudio_play(cw_sample *sample)
 				0,
 				&queue
 			);
+
 		ossstatus = AudioQueueAllocateBuffer(queue, BUFSIZE, &buf_ref);
 		buf = buf_ref;
 		buf->mAudioDataByteSize = BUFSIZE;
-		offsetmax = (sample->bits / 8) * sample->length - 2;
 		cwstudio_callback(sample->data, queue, buf_ref);
+
+		ossstatus = AudioQueueAllocateBuffer(queue, BUFSIZE, &buf_ref2);
+		buf = buf_ref2;
+		buf->mAudioDataByteSize = BUFSIZE;
+		cwstudio_callback(sample->data, queue, buf_ref2);
+
+		offsetmax = sample->channels * (sample->bits / 8) * sample->length - 2;
 		ossstatus = AudioQueueSetParameter(queue, kAudioQueueParam_Volume, 1.0);
 		ossstatus = AudioQueueStart(queue, NULL);
 #else
