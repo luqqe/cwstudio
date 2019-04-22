@@ -531,7 +531,7 @@ int cwstudio_play(cw_sample *sample)
 
 		offsetmax = sample->channels * (sample->bits / 8) * sample->length - 2;
 		ossstatus = AudioQueueSetParameter(queue, kAudioQueueParam_Volume, 1.0);
-		ossstatus = AudioQueueStart(queue, NULL);
+    ossstatus = AudioQueueStart(queue, NULL);
 #else
 		/*
 		 * If not WIN32, start new thread with pthread, or (if no pthread available) call
