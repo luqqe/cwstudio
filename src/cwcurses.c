@@ -1,6 +1,6 @@
 /*$T /cwcurses.c GC 1.150 2017-12-22 21:29:44 */
 
-/*$I0 
+/*$I0
 
     This file is part of CWStudio.
 
@@ -310,7 +310,7 @@ void cwstudio_resetwindows()
 	if(has_colors())
 	{
 		start_color();
-		init_pair(1, COLOR_BLACK, COLOR_YELLOW);
+		init_pair(1, COLOR_YELLOW, COLOR_RED);
 		init_pair(2, COLOR_WHITE, COLOR_BLUE);
 		init_pair(3, COLOR_BLACK, COLOR_WHITE);
 		init_pair(4, COLOR_BLUE, COLOR_WHITE);
