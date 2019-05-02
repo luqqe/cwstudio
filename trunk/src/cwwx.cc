@@ -195,7 +195,7 @@ IMPLEMENT_APP(CWStudio)
 
 /*
  =======================================================================================================================
- OnInit event 
+ OnInit event
  =======================================================================================================================
  */
 bool CWStudio::OnInit()
@@ -376,7 +376,7 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 #endif
 
 	wxPanel		*panel = new wxPanel(this, wxID_ANY);
-	
+
 	CreateStatusBar();
 
 	/*
@@ -878,7 +878,7 @@ void CWWindow::MP3(wxCommandEvent &WXUNUSED(event))
 	PBYTE				pMP3Buffer = NULL;
 	PSHORT				pWAVBuffer = NULL;
 
-	
+
 	if((bits != 16) || (samplerate != 44100) || (param.channels > 2))
 	{
 		wxMessageBox(_T("Unsupported channels/rate/bits!"), _T("MP3 Export"), wxOK | wxICON_ERROR);
@@ -1010,7 +1010,7 @@ void CWWindow::MP3(wxCommandEvent &WXUNUSED(event))
 		fclose(pFileOut);
 
 		SetStatusText(wxT("MP3 file written."));
-		
+
 		//beWriteVBRHeader(filename.mb_str(wxConvUTF8));
 	}
 #endif

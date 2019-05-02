@@ -519,6 +519,11 @@ int cwstudio_play(cw_sample *sample)
 				&queue
 			);
 
+  	offsetmax = sample->channels * (sample->bits / 8) * sample->length - 2;
+		ossstatus = AudioQueueSetParameter(queue, kAudioQueueParam_Volume, 1.0);
+	  ossstatus = AudioQueueStart(queue, NULL);
+
+		offset = 0;
 		ossstatus = AudioQueueAllocateBuffer(queue, BUFSIZE, &buf_ref);
 		buf = buf_ref;
 		buf->mAudioDataByteSize = BUFSIZE;
@@ -528,10 +533,6 @@ int cwstudio_play(cw_sample *sample)
 		buf = buf_ref2;
 		buf->mAudioDataByteSize = BUFSIZE;
 		cwstudio_callback(sample->data, queue, buf_ref2);
-
-		offsetmax = sample->channels * (sample->bits / 8) * sample->length - 2;
-		ossstatus = AudioQueueSetParameter(queue, kAudioQueueParam_Volume, 1.0);
-    ossstatus = AudioQueueStart(queue, NULL);
 #else
 		/*
 		 * If not WIN32, start new thread with pthread, or (if no pthread available) call
