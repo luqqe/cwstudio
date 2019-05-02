@@ -111,6 +111,7 @@ void cwstudio_callback(void *data, AudioQueueRef queue, AudioQueueBufferRef buf_
 	size_t					nsamp = buf->mAudioDataByteSize;
 	char				*samp = buf->mAudioData;
 
+  //fprintf(stderr,"CALLED\n");
 	if(offsetmax > offset)
 	{
 		memcpy(samp, ((char *) data) + offset, ((offsetmax - offset) < nsamp) ? (offsetmax - offset) : nsamp);
@@ -232,8 +233,54 @@ void *cwstudio_playthread(void *arg)
 	}
 
 	close(audio);
-#endif
+#elif defined HAVE_COREAUDIO
+		OSStatus					ossstatus;
+		AudioStreamBasicDescription fmt = { 0 };
+		AudioQueueBufferRef			buf_ref, buf_ref2;
+		AudioQueueBuffer			*buf;
+		fmt.mSampleRate = sample->samplerate;
+		fmt.mFormatID = kAudioFormatLinearPCM;
+		fmt.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
+		fmt.mFramesPerPacket = 1;
+		fmt.mChannelsPerFrame = sample->channels;
+		fmt.mBytesPerPacket = fmt.mBytesPerFrame = (sample->bits / 8) * sample->channels;
+		fmt.mBitsPerChannel = sample->bits;
+		AudioQueueReset(queue);
+    ossstatus = AudioQueueNewOutput
+			(
+				&fmt,
+				cwstudio_callback,
+				sample->data,
+				CFRunLoopGetCurrent(),
+//				CFRunLoopGetMain(),
+				kCFRunLoopCommonModes,
+				0,
+				&queue
+			);
+
+  	offsetmax = sample->channels * (sample->bits / 8) * sample->length - 2;
+		ossstatus = AudioQueueSetParameter(queue, kAudioQueueParam_Volume, 1.0);
+	  ossstatus = AudioQueueStart(queue, NULL);
+
+		offset = 0;
+		ossstatus = AudioQueueAllocateBuffer(queue, BUFSIZE, &buf_ref);
+		buf = buf_ref;
+		buf->mAudioDataByteSize = BUFSIZE;
+		cwstudio_callback(sample->data, queue, buf_ref);
+
+		ossstatus = AudioQueueAllocateBuffer(queue, BUFSIZE, &buf_ref2);
+		buf = buf_ref2;
+		buf->mAudioDataByteSize = BUFSIZE;
+		cwstudio_callback(sample->data, queue, buf_ref2);
+
+		while (offset < offsetmax) CFRunLoopRunInMode (kCFRunLoopDefaultMode,1,false);
+		AudioQueueStop(queue, 1);
+		offset = 0;
+		AudioQueueReset(queue);
+return(NULL);
+#else
 	return(NULL);
+#endif
 }
 #endif
 #ifdef __DJGPP__
@@ -495,45 +542,6 @@ int cwstudio_play(cw_sample *sample)
 			status = CWPLAYERROR;
 			return(CWPLAYERROR);
 		};
-#elif defined HAVE_COREAUDIO
-		OSStatus					ossstatus;
-		AudioStreamBasicDescription fmt = { 0 };
-		AudioQueueBufferRef			buf_ref, buf_ref2;
-		AudioQueueBuffer			*buf;
-		fmt.mSampleRate = sample->samplerate;
-		fmt.mFormatID = kAudioFormatLinearPCM;
-		fmt.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
-		fmt.mFramesPerPacket = 1;
-		fmt.mChannelsPerFrame = sample->channels;
-		fmt.mBytesPerPacket = fmt.mBytesPerFrame = (sample->bits / 8) * sample->channels;
-		fmt.mBitsPerChannel = sample->bits;
-		AudioQueueReset(queue);
-    ossstatus = AudioQueueNewOutput
-			(
-				&fmt,
-				cwstudio_callback,
-				sample->data,
-				CFRunLoopGetCurrent(),
-				kCFRunLoopCommonModes,
-				0,
-				&queue
-			);
-
-  	offsetmax = sample->channels * (sample->bits / 8) * sample->length - 2;
-		ossstatus = AudioQueueSetParameter(queue, kAudioQueueParam_Volume, 1.0);
-	  ossstatus = AudioQueueStart(queue, NULL);
-
-		offset = 0;
-		ossstatus = AudioQueueAllocateBuffer(queue, BUFSIZE, &buf_ref);
-		buf = buf_ref;
-		buf->mAudioDataByteSize = BUFSIZE;
-		cwstudio_callback(sample->data, queue, buf_ref);
-
-		ossstatus = AudioQueueAllocateBuffer(queue, BUFSIZE, &buf_ref2);
-		buf = buf_ref2;
-		buf->mAudioDataByteSize = BUFSIZE;
-		cwstudio_callback(sample->data, queue, buf_ref2);
-#else
 		/*
 		 * If not WIN32, start new thread with pthread, or (if no pthread available) call
 		 * function directly
@@ -545,6 +553,10 @@ int cwstudio_play(cw_sample *sample)
 #else
 		cwstudio_playthread(sample);
 #endif
+#elif defined HAVE_COREAUDIO
+pthread_attr_init(&cwstudio_attr);
+pthread_attr_setdetachstate(&cwstudio_attr, PTHREAD_CREATE_JOINABLE);
+pthread_create(&cwstudio_thread, NULL, &cwstudio_playthread, sample);
 #endif
 		status = CWPLAYING;
 	}
