@@ -126,8 +126,13 @@ public:
 	wxStaticText	*txts[30];
 	wxBoxSizer		*spinsizers[10];
 	wxComboBox		*boxcharset;
+	wxComboBox		*boxsamplerate;
+	wxComboBox		*boxbits;
 
 	char			charset[256];
+
+	int sampleratetable[9] = { 8000, 11025, 22050, 44100, 16000, 24000, 48000, 96000, 19200 } ;
+	int bitstable[3] = { 8, 16, 32 } ;
 
 	int ShouldGenerate;
 
@@ -313,8 +318,8 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	captions[25] = wxT(" Channels");
 	captions[26] = wxT(" Pan");
 	captions[27] = wxT(" Pandrift");
-	captions[28] = wxT(" ");
-	captions[29] = wxT(" ");
+	captions[28] = wxT(" Bits");
+	captions[29] = wxT(" Samplerate");
 
 	wxString	charsets[21];
 	charsets[0] = wxT("abstgjnokqfmzixdrhewlypvcu8219376450?!/=");
@@ -338,6 +343,22 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	charsets[18] = wxT("abstg");
 	charsets[19] = wxT("abst");
 	charsets[20] = wxT("abs");
+
+	wxString	samplerates[9];
+	samplerates[0] = wxT("8000");
+	samplerates[1] = wxT("11025");
+	samplerates[2] = wxT("22050");
+	samplerates[3] = wxT("44100");
+	samplerates[4] = wxT("16000");
+	samplerates[5] = wxT("24000");
+	samplerates[6] = wxT("48000");
+	samplerates[7] = wxT("96000");
+	samplerates[8] = wxT("192000");
+
+	wxString	bitvalues[3];
+	bitvalues[0] = wxT("8");
+	bitvalues[1] = wxT("16");
+	bitvalues[2] = wxT("32");
 
 	wxString	tooltips[30];
 	tooltips[0] = wxT("Simulate AGC response of receiver by varying noise volume along RMS of the signal. Default is 100.");
@@ -418,11 +439,16 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	wxButton	*savebutton = new wxButton(panel, ID_Save, wxT("Save Settings"));
 	wxButton	*resetbutton = new wxButton(panel, ID_Reset, wxT("Reset Settings"));
 
+	boxsamplerate = new wxComboBox(panel,ID_Update,wxT("44100"),wxDefaultPosition,wxDefaultSize,9,samplerates,0,wxDefaultValidator,wxT("x"));
+	boxbits = new wxComboBox(panel,ID_Update,wxT("16"),wxDefaultPosition,wxDefaultSize,3,bitvalues,0,wxDefaultValidator,wxT("x"));
+
 	for(int j = 0; j < 6; j++)
 	{
 		for(int i = 0; i < 5; i++)
 		{
-			spins[5 * j + i] = new wxSpinCtrl
+			if ((j<5) || ((j==5) && (i<3)))
+			{
+				spins[5 * j + i] = new wxSpinCtrl
 				(
 					panel,
 					ID_Update,
@@ -436,6 +462,7 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 					wxT("wxSpinCtrl")
 				);
 			spins[5 * j + i]->SetToolTip(tooltips[5 * j + i]);
+			}
 
 			//spins[5 * j + i]->Bind(wxEVT_COMMAND_SPINCTRL_UPDATED, &CWWindow::Update, this);
 			txts[5 * j + i] = new wxStaticText
@@ -449,6 +476,10 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 					wxT("staticText")
 				);
 			spinsizers[j]->Add(txts[5 * j + i], 1, wxEXPAND, 0);
+			if ((j==5) && (i==3)) spinsizers[j]->Add(boxbits, 1, wxEXPAND, 0);
+			else
+			if ((j==5) && (i==4)) spinsizers[j]->Add(boxsamplerate, 1, wxEXPAND, 0);
+			else
 			spinsizers[j]->Add(spins[5 * j + i], 1, wxEXPAND, 0);
 		}
 	}
@@ -486,7 +517,7 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	/*
 	 * SetMenuBar(menuBar);
 	 */
-	SetStatusText(wxT("(C) 2008 - 2017 Lukasz Komsta SP8QED. http://cwstudio.sf.net/"));
+	SetStatusText(wxT("(C) 2008 - 2019 Lukasz Komsta SP8QED. http://cwstudio.sf.net/"));
 	SetTitle(wxString(wxT("CWStudio ")) + wxString(wxT(VERSION)) + wxString(wxT(" (")) + wxString(wxT(CANONICAL_HOST)) + wxString(wxT(WXGUI)) + wxString(wxT(SOUND_INTERFACE)) + wxString(wxT(")")));
 	param.seed = (((unsigned int) (time(NULL) << 12)) % 32767) + 1;
 	spins[15]->SetValue(param.seed);
@@ -791,6 +822,8 @@ void CWWindow::Update(wxSpinEvent &WXUNUSED(event))
 	param.channels = spins[25]->GetValue();
 	param.pan = spins[26]->GetValue();
 	param.pandrift = spins[27]->GetValue();
+  bits = bitstable[boxbits->GetSelection()];
+	samplerate = sampleratetable[boxsamplerate->GetSelection()];
 	ShouldGenerate = 1;
 	SetStatusText(wxT(""));
 }
@@ -825,6 +858,8 @@ void CWWindow::ReverseUpdate()
 			spins[25]->SetValue(param.channels);
 			spins[26]->SetValue(param.pan);
 			spins[27]->SetValue(param.pandrift);
+			boxsamplerate->SetValue(wxString::Format(wxT("%i"),samplerate));
+			boxbits->SetValue(wxString::Format(wxT("%i"),bits));
 }
 
 /*
