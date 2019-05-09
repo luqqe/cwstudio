@@ -1,6 +1,6 @@
-# generated automatically by aclocal 1.16.1 -*- Autoconf -*-
+# generated automatically by aclocal 1.15 -*- Autoconf -*-
 
-# Copyright (C) 1996-2018 Free Software Foundation, Inc.
+# Copyright (C) 1996-2014 Free Software Foundation, Inc.
 
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
@@ -232,8 +232,8 @@ AC_DEFUN([WX_CONFIG_CHECK],
       AC_MSG_CHECKING([for wxWidgets version >= $min_wx_version ($5)])
     fi
 
-    dnl don't add the libraries (4th argument) to this variable as this would
-    dnl result in an error when it's used with --version below
+    dnl don't add the libraries ($4) to this variable as this would result in
+    dnl an error when it's used with --version below
     WX_CONFIG_WITH_ARGS="$WX_CONFIG_PATH $wx_config_args $5"
 
     WX_VERSION=`$WX_CONFIG_WITH_ARGS --version 2>/dev/null`
@@ -541,7 +541,7 @@ AC_DEFUN([WX_ARG_ENABLE_YESNOAUTO],
                 $2=0
             elif test "$enableval" = "auto" ; then
                 AC_MSG_RESULT([will be automatically detected])
-                $2=""
+                $2="auto"
             else
                 AC_MSG_ERROR([
     Unrecognized option value (allowed values: yes, no, auto)
@@ -567,7 +567,7 @@ AC_DEFUN([WX_ARG_WITH_YESNOAUTO],
                 $2=0
             elif test "$withval" = "auto" ; then
                 AC_MSG_RESULT([will be automatically detected])
-                $2=""
+                $2="auto"
             else
                 AC_MSG_ERROR([
     Unrecognized option value (allowed values: yes, auto)
@@ -619,17 +619,17 @@ AC_DEFUN([WX_STANDARD_OPTIONS],
                 AC_MSG_CHECKING([for the --with-toolkit option])
                 if test "$withval" = "auto" ; then
                     AC_MSG_RESULT([will be automatically detected])
-                    TOOLKIT=""
+                    TOOLKIT="auto"
                 else
                     TOOLKIT="$withval"
 
                     dnl PORT must be one of the allowed values
-                    if test "$TOOLKIT" != "gtk1" -a "$TOOLKIT" != "gtk2" -a "$TOOLKIT" != "gtk3" -a \
+                    if test "$TOOLKIT" != "gtk1" -a "$TOOLKIT" != "gtk2" -a \
                             "$TOOLKIT" != "msw" -a "$TOOLKIT" != "motif" -a \
                             "$TOOLKIT" != "osx_carbon" -a "$TOOLKIT" != "osx_cocoa" -a \
-                            "$TOOLKIT" != "dfb" -a "$TOOLKIT" != "x11" -a "$TOOLKIT" != "base"; then
+                            "$TOOLKIT" != "dfb" -a "$TOOLKIT" != "x11"; then
                         AC_MSG_ERROR([
-    Unrecognized option value (allowed values: auto, gtk1, gtk2, gtk3, msw, motif, osx_carbon, osx_cocoa, dfb, x11, base)
+    Unrecognized option value (allowed values: auto, gtk1, gtk2, msw, motif, osx_carbon, osx_cocoa, dfb, x11)
                         ])
                     fi
 
@@ -693,7 +693,7 @@ AC_DEFUN([WX_STANDARD_OPTIONS],
                 AC_MSG_CHECKING([for the --with-wxversion option])
                 if test "$withval" = "auto" ; then
                     AC_MSG_RESULT([will be automatically detected])
-                    WX_RELEASE=""
+                    WX_RELEASE="auto"
                 else
 
                     wx_requested_major_version=`echo $withval | \
@@ -728,7 +728,7 @@ dnl ---------------------------------------------------------------------------
 dnl WX_CONVERT_STANDARD_OPTIONS_TO_WXCONFIG_FLAGS
 dnl
 dnl Sets the WXCONFIG_FLAGS string using the SHARED,DEBUG,UNICODE variable values
-dnl which were specified.
+dnl which are different from "auto".
 dnl Thus this macro needs to be called only once all options have been set.
 dnl ---------------------------------------------------------------------------
 AC_DEFUN([WX_CONVERT_STANDARD_OPTIONS_TO_WXCONFIG_FLAGS],
@@ -752,11 +752,11 @@ AC_DEFUN([WX_CONVERT_STANDARD_OPTIONS_TO_WXCONFIG_FLAGS],
             WXCONFIG_FLAGS="$WXCONFIG_FLAGS""--unicode=no "
         fi
 
-        if test -n "$TOOLKIT" ; then
+        if test "$TOOLKIT" != "auto" ; then
             WXCONFIG_FLAGS="$WXCONFIG_FLAGS""--toolkit=$TOOLKIT "
         fi
 
-        if test -n "$WX_RELEASE" ; then
+        if test "$WX_RELEASE" != "auto" ; then
             WXCONFIG_FLAGS="$WXCONFIG_FLAGS""--version=$WX_RELEASE "
         fi
 
@@ -770,16 +770,16 @@ AC_DEFUN([WX_CONVERT_STANDARD_OPTIONS_TO_WXCONFIG_FLAGS],
 
 
 dnl ---------------------------------------------------------------------------
-dnl _WX_SELECTEDCONFIG_CHECKFOR([RESULTVAR], [STRING], [MSG])
+dnl _WX_SELECTEDCONFIG_CHECKFOR([RESULTVAR], [STRING], [MSG]
+dnl                             [, ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]])
 dnl
-dnl Sets WX_$RESULTVAR to the value of $RESULTVAR if it's defined. Otherwise,
-dnl auto-detect the value by checking for the presence of STRING in
-dnl $WX_SELECTEDCONFIG (which is supposed to be set by caller) and set
-dnl WX_$RESULTVAR to either 0 or 1, also outputting "yes" or "no" after MSG.
+dnl Outputs the given MSG. Then searches the given STRING in the wxWidgets
+dnl additional CPP flags and put the result of the search in WX_$RESULTVAR
+dnl also adding the "yes" or "no" message result to MSG.
 dnl ---------------------------------------------------------------------------
 AC_DEFUN([_WX_SELECTEDCONFIG_CHECKFOR],
         [
-        if test -z "$$1" ; then
+        if test "$$1" = "auto" ; then
 
             dnl The user does not have particular preferences for this option;
             dnl so we will detect the wxWidgets relative build setting and use it
@@ -794,9 +794,11 @@ AC_DEFUN([_WX_SELECTEDCONFIG_CHECKFOR],
             if test "$WX_$1" != "0"; then
                 WX_$1=1
                 AC_MSG_RESULT([yes])
+                ifelse([$4], , :, [$4])
             else
                 WX_$1=0
                 AC_MSG_RESULT([no])
+                ifelse([$5], , :, [$5])
             fi
         else
 
@@ -843,16 +845,19 @@ AC_DEFUN([WX_DETECT_STANDARD_OPTION_VALUES],
             echo "[[dbg]] WX_SELECTEDCONFIG: $WX_SELECTEDCONFIG"
         fi
 
+
         dnl we could test directly for WX_SHARED with a line like:
         dnl    _WX_SELECTEDCONFIG_CHECKFOR([SHARED], [shared],
         dnl                                [if wxWidgets was built in SHARED mode])
         dnl but wx-config --selected-config DOES NOT outputs the 'shared'
         dnl word when wx was built in shared mode; it rather outputs the
         dnl 'static' word when built in static mode.
-        if test "$WX_SHARED" = "1"; then
+        if test $WX_SHARED = "1"; then
             STATIC=0
-        elif test "$WX_SHARED" = "0"; then
+        elif test $WX_SHARED = "0"; then
             STATIC=1
+        elif test $WX_SHARED = "auto"; then
+            STATIC="auto"
         fi
 
         dnl Now set the WX_UNICODE, WX_DEBUG, WX_STATIC variables
@@ -875,7 +880,7 @@ AC_DEFUN([WX_DETECT_STANDARD_OPTION_VALUES],
         AC_SUBST(WX_SHARED)
 
         dnl detect the WX_PORT to use
-        if test -z "$TOOLKIT" ; then
+        if test "$TOOLKIT" = "auto" ; then
 
             dnl The user does not have particular preferences for this option;
             dnl so we will detect the wxWidgets relative build setting and use it
@@ -883,26 +888,22 @@ AC_DEFUN([WX_DETECT_STANDARD_OPTION_VALUES],
 
             WX_GTKPORT1=$(expr "$WX_SELECTEDCONFIG" : ".*gtk1.*")
             WX_GTKPORT2=$(expr "$WX_SELECTEDCONFIG" : ".*gtk2.*")
-            WX_GTKPORT3=$(expr "$WX_SELECTEDCONFIG" : ".*gtk3.*")
             WX_MSWPORT=$(expr "$WX_SELECTEDCONFIG" : ".*msw.*")
             WX_MOTIFPORT=$(expr "$WX_SELECTEDCONFIG" : ".*motif.*")
             WX_OSXCOCOAPORT=$(expr "$WX_SELECTEDCONFIG" : ".*osx_cocoa.*")
             WX_OSXCARBONPORT=$(expr "$WX_SELECTEDCONFIG" : ".*osx_carbon.*")
             WX_X11PORT=$(expr "$WX_SELECTEDCONFIG" : ".*x11.*")
             WX_DFBPORT=$(expr "$WX_SELECTEDCONFIG" : ".*dfb.*")
-            WX_BASEPORT=$(expr "$WX_SELECTEDCONFIG" : ".*base.*")
 
             WX_PORT="unknown"
             if test "$WX_GTKPORT1" != "0"; then WX_PORT="gtk1"; fi
             if test "$WX_GTKPORT2" != "0"; then WX_PORT="gtk2"; fi
-            if test "$WX_GTKPORT3" != "0"; then WX_PORT="gtk3"; fi
             if test "$WX_MSWPORT" != "0"; then WX_PORT="msw"; fi
             if test "$WX_MOTIFPORT" != "0"; then WX_PORT="motif"; fi
             if test "$WX_OSXCOCOAPORT" != "0"; then WX_PORT="osx_cocoa"; fi
             if test "$WX_OSXCARBONPORT" != "0"; then WX_PORT="osx_carbon"; fi
             if test "$WX_X11PORT" != "0"; then WX_PORT="x11"; fi
             if test "$WX_DFBPORT" != "0"; then WX_PORT="dfb"; fi
-            if test "$WX_BASEPORT" != "0"; then WX_PORT="base"; fi
 
             dnl NOTE: backward-compatible check for wx2.8; in wx2.9 the mac
             dnl       ports are called 'osx_cocoa' and 'osx_carbon' (see above)
@@ -920,8 +921,14 @@ AC_DEFUN([WX_DETECT_STANDARD_OPTION_VALUES],
 
             AC_MSG_RESULT([$WX_PORT])
         else
+
             dnl Use the setting given by the user
-            WX_PORT=$TOOLKIT
+            if test -z "$TOOLKIT" ; then
+                WX_PORT=$TOOLKIT
+            else
+                dnl try with PORT
+                WX_PORT=$PORT
+            fi
         fi
 
         AC_SUBST(WX_PORT)
@@ -952,29 +959,35 @@ AC_DEFUN([WX_DETECT_STANDARD_OPTION_VALUES],
                          ])
         fi
 
-        dnl now we can finally update the options to their final values if they
-        dnl were not already set
-        if test -z "$UNICODE" ; then
+        dnl now we can finally update the DEBUG,UNICODE,SHARED options
+        dnl to their final values if they were set to 'auto'
+        if test "$DEBUG" = "auto"; then
+            DEBUG=$WX_DEBUG
+        fi
+        if test "$UNICODE" = "auto"; then
             UNICODE=$WX_UNICODE
         fi
-        if test -z "$SHARED" ; then
+        if test "$SHARED" = "auto"; then
             SHARED=$WX_SHARED
         fi
-        if test -z "$TOOLKIT" ; then
+        if test "$TOOLKIT" = "auto"; then
             TOOLKIT=$WX_PORT
         fi
 
-        dnl respect the DEBUG variable adding the optimize/debug flags and also
-        dnl define a BUILD variable in case the user wants to use it
-        dnl
+        dnl in case the user needs a BUILD=debug/release var...
+        if test "$DEBUG" = "1"; then
+            BUILD="debug"
+        elif test "$DEBUG" = "0" -o "$DEBUG" = ""; then
+            BUILD="release"
+        fi
+
+        dnl respect the DEBUG variable adding the optimize/debug flags
         dnl NOTE: the CXXFLAGS are merged together with the CPPFLAGS so we
         dnl       don't need to set them, too
         if test "$DEBUG" = "1"; then
-            BUILD="debug"
             CXXFLAGS="$CXXFLAGS -g -O0"
             CFLAGS="$CFLAGS -g -O0"
-        elif test "$DEBUG" = "0"; then
-            BUILD="release"
+        else
             CXXFLAGS="$CXXFLAGS -O2"
             CFLAGS="$CFLAGS -O2"
         fi
@@ -1067,7 +1080,7 @@ AC_DEFUN([AM_PATH_WXCONFIG], [
 ])
 AC_DEFUN([AM_PATH_WXRC], [WXRC_CHECK([$1],[$2])])
 
-# Copyright (C) 2002-2018 Free Software Foundation, Inc.
+# Copyright (C) 2002-2014 Free Software Foundation, Inc.
 #
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
@@ -1079,10 +1092,10 @@ AC_DEFUN([AM_PATH_WXRC], [WXRC_CHECK([$1],[$2])])
 # generated from the m4 files accompanying Automake X.Y.
 # (This private macro should not be called outside this file.)
 AC_DEFUN([AM_AUTOMAKE_VERSION],
-[am__api_version='1.16'
+[am__api_version='1.15'
 dnl Some users find AM_AUTOMAKE_VERSION and mistake it for a way to
 dnl require some minimum version.  Point them to the right macro.
-m4_if([$1], [1.16.1], [],
+m4_if([$1], [1.15], [],
       [AC_FATAL([Do not call $0, use AM_INIT_AUTOMAKE([$1]).])])dnl
 ])
 
@@ -1098,12 +1111,12 @@ m4_define([_AM_AUTOCONF_VERSION], [])
 # Call AM_AUTOMAKE_VERSION and AM_AUTOMAKE_VERSION so they can be traced.
 # This function is AC_REQUIREd by AM_INIT_AUTOMAKE.
 AC_DEFUN([AM_SET_CURRENT_AUTOMAKE_VERSION],
-[AM_AUTOMAKE_VERSION([1.16.1])dnl
+[AM_AUTOMAKE_VERSION([1.15])dnl
 m4_ifndef([AC_AUTOCONF_VERSION],
   [m4_copy([m4_PACKAGE_VERSION], [AC_AUTOCONF_VERSION])])dnl
 _AM_AUTOCONF_VERSION(m4_defn([AC_AUTOCONF_VERSION]))])
 
-# Copyright (C) 2011-2018 Free Software Foundation, Inc.
+# Copyright (C) 2011-2014 Free Software Foundation, Inc.
 #
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
@@ -1165,7 +1178,7 @@ AC_SUBST([AR])dnl
 
 # AM_AUX_DIR_EXPAND                                         -*- Autoconf -*-
 
-# Copyright (C) 2001-2018 Free Software Foundation, Inc.
+# Copyright (C) 2001-2014 Free Software Foundation, Inc.
 #
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
@@ -1217,7 +1230,7 @@ am_aux_dir=`cd "$ac_aux_dir" && pwd`
 
 # AM_CONDITIONAL                                            -*- Autoconf -*-
 
-# Copyright (C) 1997-2018 Free Software Foundation, Inc.
+# Copyright (C) 1997-2014 Free Software Foundation, Inc.
 #
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
@@ -1250,7 +1263,7 @@ fi])])
 
 # Do all the work for Automake.                             -*- Autoconf -*-
 
-# Copyright (C) 1996-2018 Free Software Foundation, Inc.
+# Copyright (C) 1996-2014 Free Software Foundation, Inc.
 #
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
@@ -1337,8 +1350,8 @@ AC_REQUIRE([AM_PROG_INSTALL_STRIP])dnl
 AC_REQUIRE([AC_PROG_MKDIR_P])dnl
 # For better backward compatibility.  To be removed once Automake 1.9.x
 # dies out for good.  For more background, see:
-# <https://lists.gnu.org/archive/html/automake/2012-07/msg00001.html>
-# <https://lists.gnu.org/archive/html/automake/2012-07/msg00014.html>
+# <http://lists.gnu.org/archive/html/automake/2012-07/msg00001.html>
+# <http://lists.gnu.org/archive/html/automake/2012-07/msg00014.html>
 AC_SUBST([mkdir_p], ['$(MKDIR_P)'])
 # We need awk for the "check" target (and possibly the TAP driver).  The
 # system "awk" is bad on some platforms.
@@ -1405,7 +1418,7 @@ END
 Aborting the configuration process, to ensure you take notice of the issue.
 
 You can download and install GNU coreutils to get an 'rm' implementation
-that behaves properly: <https://www.gnu.org/software/coreutils/>.
+that behaves properly: <http://www.gnu.org/software/coreutils/>.
 
 If you want to complete the configuration process using your problematic
 'rm' anyway, export the environment variable ACCEPT_INFERIOR_RM_PROGRAM
@@ -1447,7 +1460,7 @@ for _am_header in $config_headers :; do
 done
 echo "timestamp for $_am_arg" >`AS_DIRNAME(["$_am_arg"])`/stamp-h[]$_am_stamp_count])
 
-# Copyright (C) 2001-2018 Free Software Foundation, Inc.
+# Copyright (C) 2001-2014 Free Software Foundation, Inc.
 #
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
@@ -1468,7 +1481,7 @@ if test x"${install_sh+set}" != xset; then
 fi
 AC_SUBST([install_sh])])
 
-# Copyright (C) 2003-2018 Free Software Foundation, Inc.
+# Copyright (C) 2003-2014 Free Software Foundation, Inc.
 #
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
@@ -1490,7 +1503,7 @@ AC_SUBST([am__leading_dot])])
 # Add --enable-maintainer-mode option to configure.         -*- Autoconf -*-
 # From Jim Meyering
 
-# Copyright (C) 1996-2018 Free Software Foundation, Inc.
+# Copyright (C) 1996-2014 Free Software Foundation, Inc.
 #
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
@@ -1525,7 +1538,7 @@ AC_MSG_CHECKING([whether to enable maintainer-specific portions of Makefiles])
 
 # Fake the existence of programs that GNU maintainers use.  -*- Autoconf -*-
 
-# Copyright (C) 1997-2018 Free Software Foundation, Inc.
+# Copyright (C) 1997-2014 Free Software Foundation, Inc.
 #
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
@@ -1566,7 +1579,7 @@ fi
 # Obsolete and "removed" macros, that must however still report explicit
 # error messages when used, to smooth transition.
 #
-# Copyright (C) 1996-2018 Free Software Foundation, Inc.
+# Copyright (C) 1996-2014 Free Software Foundation, Inc.
 #
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
@@ -1593,7 +1606,7 @@ AU_DEFUN([fp_C_PROTOTYPES], [AM_C_PROTOTYPES])
 
 # Helper functions for option handling.                     -*- Autoconf -*-
 
-# Copyright (C) 2001-2018 Free Software Foundation, Inc.
+# Copyright (C) 2001-2014 Free Software Foundation, Inc.
 #
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
@@ -1622,7 +1635,7 @@ AC_DEFUN([_AM_SET_OPTIONS],
 AC_DEFUN([_AM_IF_OPTION],
 [m4_ifset(_AM_MANGLE_OPTION([$1]), [$2], [$3])])
 
-# Copyright (C) 1999-2018 Free Software Foundation, Inc.
+# Copyright (C) 1999-2014 Free Software Foundation, Inc.
 #
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
@@ -1669,7 +1682,7 @@ AC_LANG_POP([C])])
 # For backward compatibility.
 AC_DEFUN_ONCE([AM_PROG_CC_C_O], [AC_REQUIRE([AC_PROG_CC])])
 
-# Copyright (C) 2001-2018 Free Software Foundation, Inc.
+# Copyright (C) 2001-2014 Free Software Foundation, Inc.
 #
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
@@ -1688,7 +1701,7 @@ AC_DEFUN([AM_RUN_LOG],
 
 # Check to make sure that the build environment is sane.    -*- Autoconf -*-
 
-# Copyright (C) 1996-2018 Free Software Foundation, Inc.
+# Copyright (C) 1996-2014 Free Software Foundation, Inc.
 #
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
@@ -1769,7 +1782,7 @@ AC_CONFIG_COMMANDS_PRE(
 rm -f conftest.file
 ])
 
-# Copyright (C) 2009-2018 Free Software Foundation, Inc.
+# Copyright (C) 2009-2014 Free Software Foundation, Inc.
 #
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
@@ -1829,7 +1842,7 @@ AC_SUBST([AM_BACKSLASH])dnl
 _AM_SUBST_NOTMAKE([AM_BACKSLASH])dnl
 ])
 
-# Copyright (C) 2001-2018 Free Software Foundation, Inc.
+# Copyright (C) 2001-2014 Free Software Foundation, Inc.
 #
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
@@ -1857,7 +1870,7 @@ fi
 INSTALL_STRIP_PROGRAM="\$(install_sh) -c -s"
 AC_SUBST([INSTALL_STRIP_PROGRAM])])
 
-# Copyright (C) 2006-2018 Free Software Foundation, Inc.
+# Copyright (C) 2006-2014 Free Software Foundation, Inc.
 #
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
@@ -1876,7 +1889,7 @@ AC_DEFUN([AM_SUBST_NOTMAKE], [_AM_SUBST_NOTMAKE($@)])
 
 # Check how to create a tarball.                            -*- Autoconf -*-
 
-# Copyright (C) 2004-2018 Free Software Foundation, Inc.
+# Copyright (C) 2004-2014 Free Software Foundation, Inc.
 #
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
