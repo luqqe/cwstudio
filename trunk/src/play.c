@@ -546,17 +546,13 @@ int cwstudio_play(cw_sample *sample)
 		 * If not WIN32, start new thread with pthread, or (if no pthread available) call
 		 * function directly
 		 */
+#endif
 #ifdef HAVE_PTHREAD
 		pthread_attr_init(&cwstudio_attr);
 		pthread_attr_setdetachstate(&cwstudio_attr, PTHREAD_CREATE_JOINABLE);
 		pthread_create(&cwstudio_thread, NULL, &cwstudio_playthread, sample);
 #else
 		cwstudio_playthread(sample);
-#endif
-#elif defined HAVE_COREAUDIO
-pthread_attr_init(&cwstudio_attr);
-pthread_attr_setdetachstate(&cwstudio_attr, PTHREAD_CREATE_JOINABLE);
-pthread_create(&cwstudio_thread, NULL, &cwstudio_playthread, sample);
 #endif
 		status = CWPLAYING;
 	}
