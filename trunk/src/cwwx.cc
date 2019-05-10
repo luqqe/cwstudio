@@ -106,7 +106,8 @@ public:
 	void	Play(wxCommandEvent &event);
 	void	Stop(wxCommandEvent &event);
 	void	Pause(wxCommandEvent &event);
-	void	Update(wxSpinEvent &event);
+	void	UpdateSpins(wxSpinEvent &event);
+	void  UpdateComboboxes(wxCommandEvent &event);
 	void	WAV(wxCommandEvent &event);
 	void	MP3(wxCommandEvent &event);
 	void	Load(wxCommandEvent &event);
@@ -172,6 +173,7 @@ enum
 	ID_Words,
 	ID_Calls,
 	ID_Update,
+	ID_Combo,
 	ID_WAV,
 	ID_MP3,
 	ID_Load,
@@ -193,7 +195,8 @@ EVT_BUTTON(ID_Words, CWWindow::GenerateWords)
 EVT_BUTTON(ID_Load, CWWindow::Load)
 EVT_BUTTON(ID_Save, CWWindow::Save)
 EVT_BUTTON(ID_Reset, CWWindow::Reset)
-EVT_SPINCTRL(ID_Update, CWWindow::Update)
+EVT_SPINCTRL(ID_Update, CWWindow::UpdateSpins)
+EVT_COMBOBOX(ID_Combo, CWWindow::UpdateComboboxes)
 EVT_TEXT(ID_Text, CWWindow::OnChanged)
 END_EVENT_TABLE()
 IMPLEMENT_APP(CWStudio)
@@ -439,8 +442,8 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	wxButton	*savebutton = new wxButton(panel, ID_Save, wxT("Save Settings"));
 	wxButton	*resetbutton = new wxButton(panel, ID_Reset, wxT("Reset Settings"));
 
-	boxsamplerate = new wxComboBox(panel,ID_Update,wxT("44100"),wxDefaultPosition,wxDefaultSize,9,samplerates,0,wxDefaultValidator,wxT("x"));
-	boxbits = new wxComboBox(panel,ID_Update,wxT("16"),wxDefaultPosition,wxDefaultSize,3,bitvalues,0,wxDefaultValidator,wxT("x"));
+	boxsamplerate = new wxComboBox(panel,ID_Combo,wxT("44100"),wxDefaultPosition,wxDefaultSize,9,samplerates,0,wxDefaultValidator,wxT("x"));
+	boxbits = new wxComboBox(panel,ID_Combo,wxT("16"),wxDefaultPosition,wxDefaultSize,3,bitvalues,0,wxDefaultValidator,wxT("x"));
 
 	for(int j = 0; j < 6; j++)
 	{
@@ -792,7 +795,7 @@ void CWWindow::Pause(wxCommandEvent &WXUNUSED(event))
  Update internal variables (after change of any wxSpinCtrl value)
  =======================================================================================================================
  */
-void CWWindow::Update(wxSpinEvent &WXUNUSED(event))
+void CWWindow::UpdateSpins(wxSpinEvent &WXUNUSED(event))
 {
 	param.agc = spins[0]->GetValue();
 	param.click = spins[1]->GetValue();
@@ -822,7 +825,18 @@ void CWWindow::Update(wxSpinEvent &WXUNUSED(event))
 	param.channels = spins[25]->GetValue();
 	param.pan = spins[26]->GetValue();
 	param.pandrift = spins[27]->GetValue();
-  bits = bitstable[boxbits->GetSelection()];
+	ShouldGenerate = 1;
+	SetStatusText(wxT(""));
+}
+
+/*
+ =======================================================================================================================
+ Update samplerate and bits
+ =======================================================================================================================
+ */
+void CWWindow::UpdateComboboxes(wxCommandEvent &WXUNUSED(event))
+{
+	bits = bitstable[boxbits->GetSelection()];
 	samplerate = sampleratetable[boxsamplerate->GetSelection()];
 	ShouldGenerate = 1;
 	SetStatusText(wxT(""));
