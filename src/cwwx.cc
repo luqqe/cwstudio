@@ -1143,6 +1143,8 @@ void CWWindow::Reset(wxCommandEvent &WXUNUSED(event))
 	if(dialog->ShowModal() == wxID_YES)
 	{
 		cw_initparam(&param);
+		samplerate = 44100;
+		bits = 16;
 		ReverseUpdate();
 		ShouldGenerate = 1;
 		SetStatusText(wxT("Reset done."));
