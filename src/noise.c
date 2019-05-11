@@ -1,6 +1,6 @@
 /*$T /noise.c GC 1.150 2017-12-22 21:30:13 */
 
-/*$I0 
+/*$I0
 
     This file is part of CWStudio.
 
@@ -60,6 +60,8 @@ int cw_noisegen(cw_sample *anoise, long int duration, int low, int high)
 	||	(fr = cw_malloc(duration * sizeof(floating))) == NULL
 	||	(fi = cw_malloc(duration * sizeof(floating))) == NULL
 	) return(CWALLOC);
+
+  //printf("%i DURATION, %i SAMPLERATE\n",duration,anoise->samplerate);
 
 	/* Time domain imaginary ones (and others) are zeroed */
 	for(i = 0; i < duration; i++)

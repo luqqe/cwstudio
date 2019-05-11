@@ -1,6 +1,6 @@
 /*$T /wav.c GC 1.150 2017-12-22 21:30:33 */
 
-/*$I0 
+/*$I0
 
     This file is part of CWStudio.
 
@@ -31,6 +31,7 @@ int cw_wavout(const char *filename, cw_sample *sound)
 {
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	unsigned long int	l;
+	int bits;
 
 	/* WAV header */
 	unsigned char		header[45] =
@@ -39,6 +40,8 @@ int cw_wavout(const char *filename, cw_sample *sound)
 	};
 	FILE				*f;
 
+  bits = sound->bits;
+
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	l = sound->samplerate;
 	header[24] = (unsigned char) l & 0xff;
@@ -46,33 +49,43 @@ int cw_wavout(const char *filename, cw_sample *sound)
 	header[26] = (unsigned char) (l >> 16) & 0xff;
 	header[27] = (unsigned char) (l >> 24) & 0xff;
 
-	l = sound->bits;
-	header[34] = (unsigned char) l & 0xff;
-	header[35] = (unsigned char) (l >> 8) & 0xff;
+	l = bits;
+	if (l == 0)
+	{
+		header[20] = 0x03; // WAVE_FORMAT_IEEE_FLOAT
+		header[34] = 32;
+		header[35] = 0;
+		bits = 32;
+	}
+	else
+	{
+		header[34] = (unsigned char) l & 0xff;
+		header[35] = (unsigned char) (l >> 8) & 0xff;
+	}
 
 	l = sound->channels;
 	header[22] = (unsigned char) l & 0xff;
 	header[23] = (unsigned char) (l >> 8) & 0xff;
 
-	l = sound->channels * (sound->bits / 8);
+	l = sound->channels * (bits / 8);
 	header[32] = (unsigned char) l & 0xff;
 	header[33] = (unsigned char) (l >> 8) & 0xff;
 
 	/* Store length of the sound sample in the header */
-	l = (sound->bits / 8) * sound->length * sound->channels + 36;
+	l = (bits / 8) * sound->length * sound->channels + 36;
 	header[4] = (unsigned char) l & 0xff;
 	header[5] = (unsigned char) (l >> 8) & 0xff;
 	header[6] = (unsigned char) (l >> 16) & 0xff;
 	header[7] = (unsigned char) (l >> 24) & 0xff;
 
-	l = (sound->bits / 8) * sound->channels * sound->length;
+	l = (bits / 8) * sound->channels * sound->length;
 	header[40] = (unsigned char) l & 0xff;
 	header[41] = (unsigned char) (l >> 8) & 0xff;
 	header[42] = (unsigned char) (l >> 16) & 0xff;
 	header[43] = (unsigned char) (l >> 24) & 0xff;
 
 	/* Bitrate (bug fixed since 0.9.5) */
-	l = sound->samplerate * sound->channels * (sound->bits / 8);
+	l = sound->samplerate * sound->channels * (bits / 8);
 	header[28] = (unsigned char) l & 0xff;
 	header[29] = (unsigned char) (l >> 8) & 0xff;
 	header[30] = (unsigned char) (l >> 16) & 0xff;
@@ -94,7 +107,7 @@ int cw_wavout(const char *filename, cw_sample *sound)
 	}
 
 	if(fwrite(header, 1, 44, f) < 44) return(CWFWRITE);
-	if(fwrite(sound->data, (sound->channels * sound->bits / 8), sound->length, f) < sound->length) return(CWFWRITE);
+	if(fwrite(sound->data, (sound->channels * bits / 8), sound->length, f) < sound->length) return(CWFWRITE);
 	if(filename != NULL)
 	{
 		if(fclose(f)) return(CWFCLOSE);

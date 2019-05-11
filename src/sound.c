@@ -359,7 +359,7 @@ floating *cw_rms(cw_sample *sample, int window)
 
 /*
  =======================================================================================================================
-    Generate a complex morse signal, consisting of several morse signals and optional noise.
+    Convert from FLOATING to any other format. SAMPLERATE must be the same (no resampling!)
  =======================================================================================================================
  */
 int cw_convert(cw_sample *input, cw_sample *output, unsigned int bits)
@@ -369,20 +369,39 @@ int cw_convert(cw_sample *input, cw_sample *output, unsigned int bits)
 	int					c;
 	floating			*in;
 	char				*out;
+	float f, *outf;
 
 	/*~~~~~~~~~~~~~~~~~~~~~*/
 
 	/* Allocate buffer for converted sound */
 	output->bits = bits;
-	if((output->data = cw_malloc(input->length * input->channels * (output->bits / 8))) == NULL) return(CWALLOC);
+	if (output->bits)
+	{
+		if((output->data = cw_malloc(input->length * input->channels * (output->bits / 8))) == NULL) return(CWALLOC);
+	}
+	else if((output->data = cw_malloc(input->length * input->channels * 4)) == NULL) return(CWALLOC);
 	output->length = input->length;
 	output->channels = input->channels;
 	out = (char *) output->data;
+	outf = (float *) output->data;
 	in = (floating *) input->data;
 
-	/* Conversion loop */
-	if(output->bits == 16)
+	switch(output->bits)
 	{
+	case 0:
+		for(i = 0; i < input->length * input->channels; i++)
+		{
+			outf[i] = (float) in[i];
+		}
+		break;
+	case 8:
+		for(i = 0; i < input->length * input->channels; i++)
+		{
+			c = (int) (127 * (in[i]) + 127);
+			out[i] = (unsigned char) c;
+		}
+		break;
+  case 16:
 		for(i = 0; i < input->length * input->channels - input->channels; i++)
 		{
 			c = (int) (32767 * (in[i]));
@@ -390,14 +409,28 @@ int cw_convert(cw_sample *input, cw_sample *output, unsigned int bits)
 			out[l] = (unsigned char) c & 0xff;
 			out[l + 1] = (unsigned char) (c >> 8) & 0xff;
 		}
-	}
-	else
-	{
-		for(i = 0; i < input->length * input->channels; i++)
+		break;
+	case 24:
+		for(i = 0; i < input->length * input->channels - input->channels; i++)
 		{
-			c = (int) (127 * (in[i]) + 127);
-			out[i] = (unsigned char) c;
+			c = (int) (8388607 * (in[i]));
+			l = 3 * i;
+			out[l] = (unsigned char) c & 0xff;
+			out[l + 1] = (unsigned char) (c >> 8) & 0xff;
+			out[l + 2] = (unsigned char) (c >> 16) & 0xff;
 		}
+		break;
+	case 32:
+		for(i = 0; i < input->length * input->channels - input->channels; i++)
+		{
+			c = (int) (2147483647 * (in[i]));
+			l = 4 * i;
+			out[l] = (unsigned char) c & 0xff;
+			out[l + 1] = (unsigned char) (c >> 8) & 0xff;
+			out[l + 2] = (unsigned char) (c >> 16) & 0xff;
+			out[l + 3] = (unsigned char) (c >> 24) & 0xff;
+		}
+		break;
 	}
 
 	return(CWOK);
