@@ -228,13 +228,27 @@ void *cwstudio_playthread(void *arg)
 	close(audio);
 #elif defined HAVE_OSS
 	audio = open("/dev/dsp", O_WRONLY, 0);
-	if(sample->bits == 8)
-		format = AFMT_U8;
-	else
-		format = AFMT_S16_LE;
+	switch(sample->bits)
+	{
+		case 0:
+			format = AFMT_FLOAT;
+			break;
+		case 8:
+			format = AFMT_U8;
+			break;
+		case 16:
+			format = AFMT_S16_LE;
+			break;
+		case 24:
+			format = AFMT_S24_LE;
+			break;
+		case 32:
+			format = AFMT_S32_LE;
+			break;
+	}
 	ioctl(audio, SNDCTL_DSP_SETFMT, &format);
-	stereo = (sample->channels > 1);
-	ioctl(audio, SNDCTL_DSP_STEREO, &stereo);
+//	stereo = (sample->channels > 1);
+	ioctl(audio, SNDCTL_DSP_CHANNELS, &(sample->channels));
 	speed = sample->samplerate;
 	ioctl(audio, SNDCTL_DSP_SPEED, &speed);
 	status = CWPLAYING;
@@ -254,11 +268,22 @@ void *cwstudio_playthread(void *arg)
 		AudioQueueBuffer			*buf;
 		fmt.mSampleRate = sample->samplerate;
 		fmt.mFormatID = kAudioFormatLinearPCM;
-		fmt.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
 		fmt.mFramesPerPacket = 1;
 		fmt.mChannelsPerFrame = sample->channels;
-		fmt.mBytesPerPacket = fmt.mBytesPerFrame = (sample->bits / 8) * sample->channels;
-		fmt.mBitsPerChannel = sample->bits;
+		if (sample->bits)
+		{
+			fmt.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
+			fmt.mBytesPerPacket = fmt.mBytesPerFrame = (sample->bits / 8) * sample->channels;
+			fmt.mBitsPerChannel = sample->bits;
+			offsetmax = sample->channels * (sample->bits / 8) * sample->length - 2;
+		}
+		else
+		{
+			fmt.mFormatFlags = kAudioFormatFlagIsFloat | kAudioFormatFlagIsPacked;
+			fmt.mBytesPerPacket = fmt.mBytesPerFrame = 4 * sample->channels;
+			fmt.mBitsPerChannel = 32;
+			offsetmax = sample->channels * 4 * sample->length - 2;
+		}
 		AudioQueueReset(queue);
     ossstatus = AudioQueueNewOutput
 			(
@@ -272,7 +297,6 @@ void *cwstudio_playthread(void *arg)
 				&queue
 			);
 
-  	offsetmax = sample->channels * (sample->bits / 8) * sample->length - 2;
 		ossstatus = AudioQueueSetParameter(queue, kAudioQueueParam_Volume, 1.0);
 	  ossstatus = AudioQueueStart(queue, NULL);
 
@@ -510,9 +534,17 @@ int cwstudio_play(cw_sample *sample)
 #endif
 #ifdef HAVE_LIBWINMM
 #ifdef WIN9X
-		wf.wFormatTag = WAVE_FORMAT_PCM;
+		if (sample->bits)
+		{
+			wf.wFormatTag = WAVE_FORMAT_PCM;
+			wf.wBitsPerSample = sample->bits;
+		}
+		else
+		{
+			wf.wFormatTag = WAVE_FORMAT_IEEE_FLOAT;
+			wf.wBitsPerSample = 32;
+		}
 		wf.nChannels = sample->channels;
-		wf.wBitsPerSample = sample->bits;
 		wf.nSamplesPerSec = sample->samplerate;
 		wf.nBlockAlign = wf.nChannels * wf.wBitsPerSample / 8;
 		wf.nAvgBytesPerSec = wf.nSamplesPerSec * wf.nBlockAlign;
@@ -526,14 +558,23 @@ int cwstudio_play(cw_sample *sample)
 #else
 		wfe.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
 		wfe.Format.nChannels = sample->channels;
-		wfe.Format.wBitsPerSample = sample->bits;
-		wfe.Samples.wValidBitsPerSample = sample->bits;
 		wfe.Format.nSamplesPerSec = sample->samplerate;
+		if (sample->bits)
+		{
+			wfe.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
+			wfe.Format.wBitsPerSample = sample->bits;
+			wfe.Samples.wValidBitsPerSample = sample->bits;
+		}
+		else
+		{
+			wfe.SubFormat = KSDATAFORMAT_SUBTYPE_IEEE_FLOAT;
+			wfe.Format.wBitsPerSample = 32;
+			wfe.Samples.wValidBitsPerSample = 32;
+		}
 		wfe.Format.nBlockAlign = wfe.Format.nChannels * wfe.Format.wBitsPerSample / 8;
 		wfe.Format.nAvgBytesPerSec = wfe.Format.nSamplesPerSec * wfe.Format.nBlockAlign;
 		wfe.Format.cbSize = 22;
 		wfe.dwChannelMask = spks[sample->channels - 1];
-		wfe.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
 		d = CreateEvent(0, FALSE, FALSE, 0);
 		if(waveOutOpen(&h, 0, (LPCWAVEFORMATEX) & wfe, (DWORD_PTR) d, 0, CALLBACK_EVENT) != MMSYSERR_NOERROR)
 		{
@@ -542,7 +583,8 @@ int cwstudio_play(cw_sample *sample)
 		};
 #endif
 		wh.lpData = sample->data;
-		wh.dwBufferLength = sample->channels * (sample->bits / 8) * sample->length - 2;
+		if (sample->bits) wh.dwBufferLength = sample->channels * (sample->bits / 8) * sample->length - 2;
+		else wh.dwBufferLength = sample->channels * 4 * sample->length - 2;
 		wh.dwFlags = 0;
 		wh.dwLoops = 0;
 		if(waveOutPrepareHeader(h, &wh, sizeof(wh)) != MMSYSERR_NOERROR)
@@ -560,13 +602,14 @@ int cwstudio_play(cw_sample *sample)
 		 * If not WIN32, start new thread with pthread, or (if no pthread available) call
 		 * function directly
 		 */
-#endif
+#else
 #ifdef HAVE_PTHREAD
 		pthread_attr_init(&cwstudio_attr);
 		pthread_attr_setdetachstate(&cwstudio_attr, PTHREAD_CREATE_JOINABLE);
 		pthread_create(&cwstudio_thread, NULL, &cwstudio_playthread, sample);
 #else
 		cwstudio_playthread(sample);
+#endif
 #endif
 		status = CWPLAYING;
 	}
