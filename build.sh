@@ -20,7 +20,7 @@ do
 	i686-w64-mingw32-strip binaries/${file}-win32.exe
 done
 make clean
-make CFLAGS="-g -O2 -static-libgcc" CXXFLAGS="-g -O2 -static-libgcc -static-libstdc++ -DWIN9X"
+make CFLAGS="-g -O2 -static-libgcc -DWIN9X" CXXFLAGS="-g -O2 -static-libgcc -static-libstdc++ -DWIN9X"
 for file in cwcli cwcurses cwwx
 do
 	cp src/${file}.exe binaries/${file}-win32-legacy.exe
