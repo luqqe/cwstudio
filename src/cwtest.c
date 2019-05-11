@@ -1,10 +1,10 @@
 /*$T /cwtest.c GC 1.150 2017-12-22 21:29:50 */
 
-/*$I0 
+/*$I0
 
     This file is part of CWStudio.
 
-    Copyright 2008-2017 Lukasz Komsta, SP8QED
+    Copyright 2008-2019 Lukasz Komsta, SP8QED
 
     CWStudio is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@ int main()
 	char		*morsetext, *encoded;
 	cw_sample	asound, csound;
 	cw_param	param;
+  int samplerates[9] = { 8000, 11025, 22050, 44100, 16000, 24000, 48000, 96000, 192000 };
 
 	/*~~~~~~~~~~~~~~~~~~~~~~~*/
 	cw_initparam(&param);
@@ -43,7 +44,7 @@ int main()
 
 	srand(time(0));
 
-	for(i = 0; i < 100; i++)
+	for(i = 0; i < 200; i++)
 	{
 		printf("\n\n============== TEST %04i ================\n", i);
 		printf("\n\nagc %05i \n", param.agc = rand() % 2 * rand() % 101);
@@ -77,15 +78,18 @@ int main()
 				(((unsigned int) (time(NULL) << 12)) % 32767) + 1
 			);
 
-		printf("\n\n%s\n", morsetext);
-
 		encoded = cw_encode(morsetext);
 
 		cw_initsample(&asound, NULL);
+		printf("samplerate %05i \n", asound.samplerate = samplerates[rand() % 9]);
+
 		cw_initsample(&csound, &asound);
-		csound.bits = 8 + 8 * rand() % 2;
+
+		printf("bits %05i \n", csound.bits = 8 + 8 * (rand() % 2));
+		printf("\n\n%s\n", morsetext);
+
 		cw_signals(&asound, param, encoded);
-		cw_convert(&asound, &csound, 16);
+		cw_convert(&asound, &csound, csound.bits);
 
 		//	cw_wavout("test.wav", &csound);
 		cw_freesample(&asound);
