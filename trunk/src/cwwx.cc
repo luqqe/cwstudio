@@ -132,7 +132,7 @@ public:
 
 	char			charset[256];
 
-	int sampleratetable[9] = { 8000, 11025, 22050, 44100, 16000, 24000, 48000, 96000, 19200 } ;
+	int sampleratetable[9] = { 8000, 11025, 22050, 44100, 16000, 24000, 48000, 96000, 192000 } ;
 	int bitstable[3] = { 8, 16, 32 } ;
 
 	int ShouldGenerate;

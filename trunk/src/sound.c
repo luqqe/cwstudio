@@ -1,6 +1,6 @@
 /*$T /sound.c GC 1.150 2017-12-22 21:30:29 */
 
-/*$I0 
+/*$I0
 
     This file is part of CWStudio.
 
@@ -34,7 +34,7 @@ int cw_tone(cw_sample *atone, cw_param param, long int duration, int freq)
 	long int	i, length;
 	int			j, humlength;
 	floating	swp, cl, p, q, x, ev, od, sum;
-	floating	humtable[882];
+	floating	humtable[3840];
 	floating	*data;
 
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
