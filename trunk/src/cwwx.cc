@@ -133,7 +133,7 @@ public:
 	char			charset[256];
 
 	int sampleratetable[9] = { 8000, 11025, 22050, 44100, 16000, 24000, 48000, 96000, 192000 } ;
-	int bitstable[3] = { 8, 16, 32 } ;
+	int bitstable[5] = { 0, 8, 16, 24, 32 } ;
 
 	int ShouldGenerate;
 
@@ -358,10 +358,12 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	samplerates[7] = wxT("96000");
 	samplerates[8] = wxT("192000");
 
-	wxString	bitvalues[3];
-	bitvalues[0] = wxT("8");
-	bitvalues[1] = wxT("16");
-	bitvalues[2] = wxT("32");
+	wxString	bitvalues[5];
+	bitvalues[0] = wxT("0");
+	bitvalues[1] = wxT("8");
+	bitvalues[2] = wxT("16");
+	bitvalues[3] = wxT("24");
+	bitvalues[4] = wxT("32");
 
 	wxString	tooltips[30];
 	tooltips[0] = wxT("Simulate AGC response of receiver by varying noise volume along RMS of the signal. Default is 100.");
@@ -443,7 +445,7 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	wxButton	*resetbutton = new wxButton(panel, ID_Reset, wxT("Reset Settings"));
 
 	boxsamplerate = new wxComboBox(panel,ID_Combo,wxT("44100"),wxDefaultPosition,wxDefaultSize,9,samplerates,0,wxDefaultValidator,wxT("x"));
-	boxbits = new wxComboBox(panel,ID_Combo,wxT("16"),wxDefaultPosition,wxDefaultSize,3,bitvalues,0,wxDefaultValidator,wxT("x"));
+	boxbits = new wxComboBox(panel,ID_Combo,wxT("16"),wxDefaultPosition,wxDefaultSize,5,bitvalues,0,wxDefaultValidator,wxT("x"));
 
 	for(int j = 0; j < 6; j++)
 	{
@@ -836,8 +838,10 @@ void CWWindow::UpdateSpins(wxSpinEvent &WXUNUSED(event))
  */
 void CWWindow::UpdateComboboxes(wxCommandEvent &WXUNUSED(event))
 {
-	bits = bitstable[boxbits->GetSelection()];
-	samplerate = sampleratetable[boxsamplerate->GetSelection()];
+	int s;
+
+	if ((s = boxbits->GetSelection()) == wxNOT_FOUND) bits = 16; else bits = bitstable[s];
+	if ((s = boxsamplerate->GetSelection()) == wxNOT_FOUND) samplerate = 44100; else samplerate = sampleratetable[s];
 	ShouldGenerate = 1;
 	SetStatusText(wxT(""));
 }

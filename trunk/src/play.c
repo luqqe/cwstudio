@@ -150,10 +150,24 @@ void *cwstudio_playthread(void *arg)
 
 #ifdef HAVE_PULSEAUDIO
 #define BUFSIZE 512
-	if((sample->bits == 8))
-		pas.format = PA_SAMPLE_U8;
-	else
-		pas.format = PA_SAMPLE_S16LE;
+  switch(sample->bits)
+	{
+		case 0:
+			pas.format = PA_SAMPLE_FLOAT32LE;
+			break;
+		case 8:
+			pas.format = PA_SAMPLE_U8;
+			break;
+		case 16:
+			pas.format = PA_SAMPLE_S16LE;
+			break;
+		case 24:
+			pas.format = PA_SAMPLE_S24LE;
+			break;
+		case 32:
+			pas.format = PA_SAMPLE_S32LE;
+			break;
+	}
 	pas.rate = sample->samplerate;
 	pas.channels = sample->channels;
 	if(!(pa = pa_simple_new(NULL, "cwgen", PA_STREAM_PLAYBACK, NULL, "playback", &pas, NULL, NULL, &e)))

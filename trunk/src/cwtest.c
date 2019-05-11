@@ -85,7 +85,7 @@ int main()
 
 		cw_initsample(&csound, &asound);
 
-		printf("bits %05i \n", csound.bits = 8 + 8 * (rand() % 2));
+		printf("bits %05i \n", csound.bits = 8 + 8 * (rand() % 4));
 		printf("\n\n%s\n", morsetext);
 
 		cw_signals(&asound, param, encoded);
