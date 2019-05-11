@@ -20,19 +20,19 @@ do
 	i686-w64-mingw32-strip binaries/${file}-win32.exe
 done
 make clean
-make CFLAGS="${CFLAGS} -DWIN9X"
+make CFLAGS="-g -O2 -static-libgcc" CXXFLAGS="-g -O2 -static-libgcc -static-libstdc++ -DWIN9X"
 for file in cwcli cwcurses cwwx
 do
 	cp src/${file}.exe binaries/${file}-win32-legacy.exe
 	i686-w64-mingw32-strip binaries/${file}-win32-legacy.exe
 done
 
-tput setaf 4 
+tput setaf 4
 
 make clean
 ./configure --host=i586-pc-msdosdjgpp
 make
-for file in cwcli cwcurses 
+for file in cwcli cwcurses
 do
 	cp src/${file}.exe binaries/${file}-dos32.exe
 	i586-pc-msdosdjgpp-strip binaries/${file}-dos32.exe
@@ -41,5 +41,3 @@ done
 tput sgr0
 
 make clean
-
-
