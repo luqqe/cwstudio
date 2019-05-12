@@ -98,7 +98,7 @@ int							audio;
 int							format, stereo;
 int							speed;
 #elif defined HAVE_COREAUDIO
-#define BUFSIZE 81920
+#define BUFSIZE 8192
 volatile long int	offset = 0, offsetmax = 0;
 AudioQueueRef				queue;
 
@@ -302,13 +302,13 @@ void *cwstudio_playthread(void *arg)
 
 		offset = 0;
 		ossstatus = AudioQueueAllocateBuffer(queue, BUFSIZE, &buf_ref);
-		buf = buf_ref;
-		buf->mAudioDataByteSize = BUFSIZE;
+		//buf = buf_ref;
+		buf_ref->mAudioDataByteSize = BUFSIZE;
 		cwstudio_callback(sample->data, queue, buf_ref);
 
 		ossstatus = AudioQueueAllocateBuffer(queue, BUFSIZE, &buf_ref2);
-		buf = buf_ref2;
-		buf->mAudioDataByteSize = BUFSIZE;
+		//buf = buf_ref2;
+		buf_ref2->mAudioDataByteSize = BUFSIZE;
 		cwstudio_callback(sample->data, queue, buf_ref2);
 
 		while (offset < offsetmax) CFRunLoopRunInMode (kCFRunLoopDefaultMode,1,false);
