@@ -4,7 +4,7 @@
 
     This file is part of CWStudio.
 
-    Copyright 2008-2017 Lukasz Komsta, SP8QED
+    Copyright 2008-2019 Lukasz Komsta, SP8QED
 
     CWStudio is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -310,7 +310,7 @@ void cwstudio_resetwindows()
 	if(has_colors())
 	{
 		start_color();
-		init_pair(1, COLOR_YELLOW, COLOR_RED);
+		init_pair(1, COLOR_GREEN, COLOR_BLACK);
 		init_pair(2, COLOR_WHITE, COLOR_BLUE);
 		init_pair(3, COLOR_BLACK, COLOR_WHITE);
 		init_pair(4, COLOR_BLUE, COLOR_WHITE);
@@ -1220,10 +1220,16 @@ int main(int argc, char **argv)
 			break;
 
 		case '?':
-			if(bits == 16)
-				bits = 8;
-			else
-				bits = 16;
+			if(bits == 8)
+			  	bits = 16;
+				else if(bits ==16)
+					bits = 24;
+				else if(bits ==24)
+					bits = 32;
+				else if(bits ==32)
+					bits = 0;
+				else if(bits ==0)
+					bits = 8;
 			shouldgenerate = 1;
 			break;
 #endif
