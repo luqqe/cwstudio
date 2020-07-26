@@ -231,8 +231,10 @@ void *cwstudio_playthread(void *arg)
 	switch(sample->bits)
 	{
 		case 0:
-			format = AFMT_FLOAT;
+#if defined HAVE_AFMT_FLOAT
+		        format = AFMT_FLOAT;
 			break;
+#endif
 		case 8:
 			format = AFMT_U8;
 			break;

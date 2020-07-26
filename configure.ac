@@ -40,6 +40,13 @@ AC_CHECK_LIB([pulse-simple],[pa_simple_new])
 AC_CHECK_LIB([pthread],[pthread_create])
 AC_CHECK_LIB([sndio],[sio_open])
 
+AC_RUN_IFELSE([AC_LANG_SOURCE([[
+#include <sys/soundcard.h>
+#ifndef AFMT_FLOAT
+exit(1);
+#endif
+]])], [AC_DEFINE([HAVE_AFMT_FLOAT],[1],[Define to 1 if system supports AFMT_FLOAT sound output.])])
+
 # WinMM complex test (previous failed with OpenWATCOM)
 OLDLIBS=$LIBS
 LIBS="$LIBS -lwinmm -lksuser"

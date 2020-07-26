@@ -6,6 +6,9 @@
 /* Canonical target */
 #undef CANONICAL_TARGET
 
+/* Define to 1 if system supports AFMT_FLOAT sound output. */
+#undef HAVE_AFMT_FLOAT
+
 /* Define to 1 if you have AUDIOIO. */
 #undef HAVE_AUDIOIO
 
