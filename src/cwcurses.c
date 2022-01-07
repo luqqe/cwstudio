@@ -138,6 +138,7 @@ void cwstudio_initwinconsole()
 	GetWindowRect(console, &r);
 	GetWindowRect(desktop, &d);
 	MoveWindow(console, (d.right - r.right) / 2, (d.bottom - r.bottom) / 2, r.right, r.bottom, TRUE);
+	SetWindowLong(console, GWL_STYLE, GetWindowLong(console, GWL_STYLE) & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX);
 #endif
 	SetConsoleTitle("CWStudio");
 }
@@ -847,6 +848,10 @@ int main(int argc, char **argv)
 #endif
 		switch(ch)
 		{
+		  /* case KEY_RESIZE:
+		        cwstudio_resizeterm();
+			break; */
+		  
 		case KEY_F(1):
 		case '1':
 			cwstudio_help();
