@@ -424,7 +424,7 @@ CWWindow::CWWindow(const wxString &title, const wxPoint &pos, const wxSize &size
 	wxFont* tempfont = new wxFont(14,wxMODERN,wxNORMAL,wxNORMAL);
     	textctrl->SetFont(*tempfont);
 	mainsizer->Add(lowbuttonsizer, 0, wxEXPAND, 0);
-	for(int i = 0; i < 6; i++) mainsizer->Add(spinsizers[i], 0, 0, 0);
+	for(int i = 0; i < 6; i++) mainsizer->Add(spinsizers[i], 0, wxEXPAND, 0);
 	mainsizer->Add(buttonsizer, 0, wxEXPAND, 0);
 
 	mainsizer->Add(textctrl, 1, wxEXPAND, 0);
