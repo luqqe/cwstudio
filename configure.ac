@@ -47,6 +47,20 @@ exit(1);
 #endif
 ]])], [AC_DEFINE([HAVE_AFMT_FLOAT],[1],[Define to 1 if system supports AFMT_FLOAT sound output.])])
 
+AC_RUN_IFELSE([AC_LANG_SOURCE([[
+#include <sys/soundcard.h>
+#ifndef AFMT_S24_LE
+exit(1);
+#endif
+]])], [AC_DEFINE([HAVE_AFMT_S24_LE],[1],[Define to 1 if system supports AFMT_S24_LE sound output.])])
+
+AC_RUN_IFELSE([AC_LANG_SOURCE([[
+#include <sys/soundcard.h>
+#ifndef AFMT_S32_LE
+exit(1);
+#endif
+]])], [AC_DEFINE([HAVE_AFMT_S32_LE],[1],[Define to 1 if system supports AFMT_S32_LE sound output.])])
+
 # WinMM complex test (previous failed with OpenWATCOM)
 OLDLIBS=$LIBS
 LIBS="$LIBS -lwinmm -lksuser"

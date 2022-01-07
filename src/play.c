@@ -242,11 +242,15 @@ void *cwstudio_playthread(void *arg)
 			format = AFMT_S16_LE;
 			break;
 		case 24:
+#if defined HAVE_AFMT_S24_LE
 			format = AFMT_S24_LE;
 			break;
+#endif      
 		case 32:
+#if defined HAVE_AFMT_S32_LE
 			format = AFMT_S32_LE;
-			break;
+			break; */
+#endif      
 	}
 	ioctl(audio, SNDCTL_DSP_SETFMT, &format);
 //	stereo = (sample->channels > 1);
