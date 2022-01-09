@@ -1,20 +1,21 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.60])
-AC_INIT(cwstudio, 0.9.7)
+AC_PREREQ([2.71])
+AC_INIT([cwstudio],[0.9.7])
 AC_CONFIG_SRCDIR([src/cwcli.c])
 m4_include([m4/ax_with_curses.m4])
+#m4_include([m4/pkg.m4])
 
 # Canonical System
-AC_CANONICAL_SYSTEM
+AC_CANONICAL_TARGET
 AC_USE_SYSTEM_EXTENSIONS
 AC_DEFINE_UNQUOTED([CANONICAL_TARGET], "$target", [Canonical target])
 AC_DEFINE_UNQUOTED([CANONICAL_HOST], "$host", [Canoncal host])
 
 #
 AM_INIT_AUTOMAKE(no-dependencies)
-AM_CONFIG_HEADER([src/config.h])
+AC_CONFIG_HEADERS([src/config.h])
 AM_MAINTAINER_MODE
 
 # Checks for programs.
@@ -40,25 +41,19 @@ AC_CHECK_LIB([pulse-simple],[pa_simple_new])
 AC_CHECK_LIB([pthread],[pthread_create])
 AC_CHECK_LIB([sndio],[sio_open])
 
-AC_RUN_IFELSE([AC_LANG_SOURCE([[
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 #include <sys/soundcard.h>
-#ifndef AFMT_FLOAT
-exit(1);
-#endif
+int i = AFMT_FLOAT;
 ]])], [AC_DEFINE([HAVE_AFMT_FLOAT],[1],[Define to 1 if system supports AFMT_FLOAT sound output.])])
 
-AC_RUN_IFELSE([AC_LANG_SOURCE([[
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 #include <sys/soundcard.h>
-#ifndef AFMT_S24_LE
-exit(1);
-#endif
+int i = AFMT_S24_LE;
 ]])], [AC_DEFINE([HAVE_AFMT_S24_LE],[1],[Define to 1 if system supports AFMT_S24_LE sound output.])])
 
-AC_RUN_IFELSE([AC_LANG_SOURCE([[
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 #include <sys/soundcard.h>
-#ifndef AFMT_S32_LE
-exit(1);
-#endif
+int i = AFMT_S32_LE;
 ]])], [AC_DEFINE([HAVE_AFMT_S32_LE],[1],[Define to 1 if system supports AFMT_S32_LE sound output.])])
 
 # WinMM complex test (previous failed with OpenWATCOM)
