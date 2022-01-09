@@ -4,7 +4,7 @@
 
     This file is part of CWStudio.
 
-    Copyright 2008-2019 Lukasz Komsta, SP8QED
+    Copyright 2008-2021 Lukasz Komsta, SP8QED
 
     CWStudio is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -338,7 +338,7 @@ void cwstudio_resetwindows()
 #else
 	mvwprintw(win_title, 2, 1, "(%s%s%s)", CANONICAL_HOST, SOUND_INTERFACE, THREAD_INTERFACE);
 #endif
-	mvwprintw(win_title, 3, 1, "(C) 2009-2017 Lukasz Komsta, SP8QED");
+	mvwprintw(win_title, 3, 1, "(C) 2009-2022 Lukasz Komsta, SP8QED");
 	wrefresh(win_title);
 
 	win_param = newwin(nrow - 10, SPLIT, 5, 0);
